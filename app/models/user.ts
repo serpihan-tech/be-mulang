@@ -29,7 +29,7 @@ export default class User extends compose(BaseModel, AuthFinder) {
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
-  
+
   currentAccessToken?: AccessToken
 
   static accessTokens = DbAccessTokensProvider.forModel(User, {
