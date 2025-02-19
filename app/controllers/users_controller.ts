@@ -19,16 +19,35 @@ export default class UsersController {
     return user
   }
 
-  async store({ request }: HttpContext) {
-    const { email, password } = request.only(['email', 'password'])
+  async login({ request, auth }: HttpContext) {
+    const { email, password, username } = request.only(['email', 'password', 'username'])
 
-    const user = await User.verifyCredentials(email, password)
-
-    const token = await User.accessTokens.create(user)
-
-    return {
-      user: user,
-      token: token
+    if(!username){
+      const user = await User.verifyCredentials(email, password)
+      const token = await User.accessTokens.create(user)
+  
+      return {
+        user: user,
+        token: token
+      }
     }
+    if(!email){
+      const user = await User.verifyCredentials(username, password)
+      const token = await User.accessTokens.create(user)
+  
+      return {
+        user: user,
+        token: token
+      }
+    }
+  }
+
+  async logout({ response, auth }:HttpContext){
+    const user = auth.user!
+
+    // Hapus token pengguna saat ini
+    await User.accessTokens.delete(user, user.currentAccessToken.identifier)
+
+    return response.ok({ message: 'Logged out successfully', test: auth.getUserOrFail() })
   }
 }
