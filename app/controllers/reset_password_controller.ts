@@ -17,8 +17,9 @@ export default class ResetPasswordController {
     // if the user exists...
     if (user!) {
       // create 6 digits number for otpr
-      const otp = Math.floor(Math.random() * 10000)
+      const otp = Math.floor(1000 + Math.random() * 9000)
       user.otp = otp
+      
       // set TIMEZONE to WIB (Jakarta)
       user.otp_created_at = DateTime.now().setZone('Asia/Jakarta')
 
@@ -67,7 +68,7 @@ export default class ResetPasswordController {
 
       return {
         message: 'OTP Valid',
-        reset_token: user!.reset_token,
+        resetToken: user!.reset_token,
       }
     } else {
       return response.badRequest({ message: 'OTP Tidak Valid atau Kadaluwarsa, Ulangi Proses!' }) // return 400

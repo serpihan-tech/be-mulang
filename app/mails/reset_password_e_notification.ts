@@ -62,7 +62,7 @@ export default class ResetPasswordENotification extends BaseMail {
           <p style="font-size: 14px; color: #666;">Kode ini berlaku selama <strong>5 menit</strong>. Jangan bagikan kepada siapa pun.</p>
 
           <div style="margin-top: 20px;">
-            <p style="font-size: 12px; color: #888;">Butuh bantuan? <a href="#" style="color: #2563eb; text-decoration: none;">Hubungi Dukungan</a></p>
+            <p style="font-size: 12px; color: #888;">Butuh bantuan? <a href="https://www.instagram.com/serpihantech/" style="color: #2563eb; text-decoration: none;">Hubungi Dukungan</a></p>
             <p style="font-size: 12px; color: #aaa;">&copy; ${new Date().getFullYear()} Mulang. Seluruh hak cipta dilindungi.</p>
           </div>
         </div>
