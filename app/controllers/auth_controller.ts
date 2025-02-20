@@ -3,14 +3,27 @@ import User from '#models/user'
 
 export default class AuthController {
   async login({ request }: HttpContext) {
-    const { email, password } = request.only(['email', 'password'])
+    const { email, password, username } = request.only(['email', 'password', 'username'])
 
-    const user = await User.verifyCredentials(email, password)
-    const token = await User.accessTokens.create(user)
+    if (!username) {
+      const user = await User.verifyCredentials(email, password)
+      const token = await User.accessTokens.create(user)
 
-    return {
-      user: user,
-      token: token,
+      return {
+        message: 'Login Berhasil',
+        user: user,
+        token: token,
+      }
+    }
+    if (!email) {
+      const user = await User.verifyCredentials(username, password)
+      const token = await User.accessTokens.create(user)
+
+      return {
+        message: 'Login Berhasil',
+        user: user,
+        token: token,
+      }
     }
   }
 
@@ -22,5 +35,9 @@ export default class AuthController {
     return {
       message: 'Log Out Berhasil',
     }
+  }
+
+  async sendOtp({ request }: HttpContext) {
+    const { email } = request.only(['email'])
   }
 }
