@@ -9,7 +9,9 @@ export default class extends BaseSchema {
       table.string('username').nullable().unique()
       table.string('email', 254).notNullable().unique()
       table.string('password').notNullable()
-
+      table.smallint('otp').nullable()
+      table.timestamp('otp_created_at').nullable()
+      table.string('reset_token').nullable()
       table.timestamp('created_at').notNullable()
       table.timestamp('updated_at').nullable()
     })

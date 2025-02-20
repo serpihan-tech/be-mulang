@@ -24,6 +24,15 @@ export default class User extends compose(BaseModel, AuthFinder) {
   @column({ serializeAs: null })
   declare password: string
 
+  @column({})
+  declare otp: number | null
+
+  @column.dateTime({})
+  declare otp_created_at: DateTime | null
+
+  @column({ serializeAs: null })
+  declare reset_token: string | null
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 

@@ -36,8 +36,4 @@ export default class AuthController {
       message: 'Log Out Berhasil',
     }
   }
-
-  async sendOtp({ request }: HttpContext) {
-    const { email } = request.only(['email'])
-  }
 }
