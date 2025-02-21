@@ -52,9 +52,11 @@
   },
   "dependencies": {
     "@adonisjs/auth": "^9.3.1",
+    "@adonisjs/bouncer": "^3.1.5",
     "@adonisjs/core": "^6.17.2",
     "@adonisjs/cors": "^2.2.1",
     "@adonisjs/lucid": "^21.6.0",
+    "@adonisjs/mail": "^9.2.2",
     "@vinejs/vine": "^3.0.0",
     "luxon": "^3.5.0",
     "mysql2": "^3.12.0",
