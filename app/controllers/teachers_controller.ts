@@ -9,13 +9,19 @@ import db from '@adonisjs/lucid/services/db'
 export default class TeachersController {
   async index({ response }: HttpContext) {
     try {
-      const teachers = await Teacher.all()
-      return response.ok({
+      const teachers = await Teacher.query().preload('user')
+      return response.json({
         message: 'Berhasil Mendapatkan Data Guru',
         teachers,
       })
     } catch (error) {
-      return error
+      console.error(error) // ! for debugging
+
+      return response.status(error.status || 500).json({
+        message: error.message || 'Terjadi kesalahan saat mengambil data',
+        code: error.code || 'INTERNAL_SERVER_ERROR',
+        status: error.status || 500,
+      })
     }
   }
 

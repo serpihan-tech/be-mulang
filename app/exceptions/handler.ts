@@ -1,4 +1,5 @@
 import app from '@adonisjs/core/services/app'
+import { errors } from '@adonisjs/auth'
 import { HttpContext, ExceptionHandler } from '@adonisjs/core/http'
 
 export default class HttpExceptionHandler extends ExceptionHandler {
@@ -13,6 +14,14 @@ export default class HttpExceptionHandler extends ExceptionHandler {
    * response to the client
    */
   async handle(error: unknown, ctx: HttpContext) {
+    if (error instanceof errors.E_INVALID_CREDENTIALS) {
+      return ctx.response.status(error.status).send({
+        message: 'Pastikan Email dan Password yang Anda Masukkan Benar!',
+        cause: 'Invalid Credentials Input',
+        code: error.code,
+        status: error.status,
+      })
+    }
     return super.handle(error, ctx)
   }
 
