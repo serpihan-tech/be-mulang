@@ -51,7 +51,7 @@ export default class User extends compose(BaseModel, AuthFinder) {
   @hasOne(() => Teacher) declare teacher: HasOne<typeof Teacher>
 
   @manyToMany(() => Role, {
-    pivotTable: 'user_has_roles', // Pastikan tabel pivot benar
+    pivotTable: 'user_has_roles',
     pivotForeignKey: 'user_id',
     pivotRelatedForeignKey: 'role_id',
   })
@@ -60,10 +60,21 @@ export default class User extends compose(BaseModel, AuthFinder) {
   currentAccessToken?: AccessToken
 
   static accessTokens = DbAccessTokensProvider.forModel(User, {
-    expiresIn: '30 days',
+    expiresIn: '14 days',
     prefix: 'oat_',
     table: 'auth_access_tokens',
     type: 'auth_token',
     tokenSecretLength: 40,
   })
+
+  static async getRole(user: User) {
+    const roles = await user.related('roles').query().firstOrFail()
+
+    // const roles = await user.related('roles').query()
+
+    // if (roles.length === 1) {
+    //   return roles[0]
+    // }
+    return roles
+  }
 }

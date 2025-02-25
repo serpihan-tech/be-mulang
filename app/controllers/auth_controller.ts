@@ -9,9 +9,12 @@ export default class AuthController {
       const user = await User.verifyCredentials(email, password)
       const token = await User.accessTokens.create(user)
 
+      const role = await User.getRole(user)
+
       return {
         message: 'Login Berhasil',
         user: user,
+        role: role?.role,
         token: token,
       }
     }
@@ -19,20 +22,24 @@ export default class AuthController {
       const user = await User.verifyCredentials(username, password)
       const token = await User.accessTokens.create(user)
 
+      const role = await User.getRole(user)
+
       return {
         message: 'Login Berhasil',
         user: user,
+        role: role?.role,
         token: token,
       }
     }
   }
 
   async logout({ auth }: HttpContext) {
-    const user = auth.user!
-
+    const user = auth.getUserOrFail()
+    // const cek = await User.accessTokens.all(auth.user!)
     await User.accessTokens.delete(user, user.currentAccessToken.identifier)
 
     return {
+      // user: cek,
       message: 'Log Out Berhasil',
     }
   }

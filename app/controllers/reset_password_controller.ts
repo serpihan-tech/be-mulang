@@ -71,6 +71,8 @@ export default class ResetPasswordController {
         resetToken: user!.reset_token,
       }
     } else {
+      user!.otp = null
+      user!.otp_created_at = null
       return response.badRequest({ message: 'OTP Tidak Valid atau Kadaluwarsa, Ulangi Proses!' }) // return 400
     }
   }

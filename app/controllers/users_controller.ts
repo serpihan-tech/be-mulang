@@ -6,7 +6,7 @@ export default class UsersController {
   async index({}: HttpContext) {
     return 'hello'
   }
-  async create({ request }: HttpContext) {
+  async create({ request, response }: HttpContext) {
     const user = new User()
     user.username = request.input('username')
     user.email = request.input('email')
@@ -15,9 +15,9 @@ export default class UsersController {
     await createUserValidator.validate(user)
     await user.save()
 
-    return {
+    return response.created({
       message: 'Pengguna Berhasil Ditambahkan',
       user,
-    }
+    })
   }
 }
