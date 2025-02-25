@@ -7,7 +7,12 @@ export default class extends BaseSchema {
     this.schema.createTable(this.tableName, (table) => {
       table.increments('id')
       table.integer('role_id').unsigned().references('id').inTable('roles').onDelete('CASCADE')
-      table.integer('permission_id').unsigned().references('id').inTable('permissions').onDelete('CASCADE')
+      table
+        .integer('permission_id')
+        .unsigned()
+        .references('id')
+        .inTable('permissions')
+        .onDelete('CASCADE')
       table.timestamp('created_at')
       table.timestamp('updated_at')
     })
