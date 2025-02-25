@@ -6,7 +6,7 @@ export default class extends BaseSeeder {
   async run() {
     await UserFactory.createMany(10)
 
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i <= 3; i++) {
       await User.create({
         username: `test${i}`,
         email: `test${i}@test.com`,

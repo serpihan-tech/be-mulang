@@ -11,9 +11,9 @@ export default class UserHasRoleSeeder extends BaseSeeder {
 
       if (user.id >= 1 && user.id <= 2) {
         roleId = 1 // Admin
-      } else if (user.id >= 3 && user.id <= 5) {
+      } else if ((user.id >= 3 && user.id <= 5) || user.id === 13) {
         roleId = 2 // Teacher
-      } else if (user.id >= 6 && user.id <= 10) {
+      } else if (user.id >= 6 && user.id <= 12) {
         roleId = 3 // Student
       } else {
         roleId = 1 // Default to admin

@@ -12,13 +12,14 @@ const mailConfig = defineConfig({
    */
   mailers: { 
     smtp: transports.smtp({
-      host: env.get('SMTP_HOST', 'smtp.mailtrap.io'), // Default Mailtrap
+      host: env.get('SMTP_HOST', 'sandbox.smtp.mailtrap.io'), // Default Mailtrap
       port: env.get('SMTP_PORT'), // Default port Mailtrap
       auth: {
         type: 'login',
         user: env.get('SMTP_USERNAME', ''), // Pastikan selalu string
         pass: env.get('SMTP_PASSWORD', ''), // Pastikan selalu string
       },
+      secure: false,
     }),
   },
 })
