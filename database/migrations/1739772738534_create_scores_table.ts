@@ -7,10 +7,10 @@ export default class extends BaseSchema {
     this.schema.createTable(this.tableName, (table) => {
       table.increments('id')
       table
-        .integer('student_id')
+        .integer('class_student_id')
         .unsigned()
         .references('id')
-        .inTable('students')
+        .inTable('class_students')
         .onDelete('CASCADE')
       table.integer('module_id').unsigned().references('id').inTable('modules').onDelete('CASCADE')
       table.integer('score').notNullable()
