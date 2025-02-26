@@ -1,8 +1,7 @@
 import { BaseSeeder } from '@adonisjs/lucid/seeders'
-import { TeacherFactory } from '#database/factories/teacher_factory'
 
 export default class extends BaseSeeder {
   async run() {
-    await TeacherFactory.createMany(8)
+    // Write your database queries inside the run method
   }
 }

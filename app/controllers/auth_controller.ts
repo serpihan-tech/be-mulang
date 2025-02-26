@@ -1,5 +1,6 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import User from '#models/user'
+import Role from '#models/role'
 
 export default class AuthController {
   async login({ request }: HttpContext) {
@@ -10,11 +11,12 @@ export default class AuthController {
       const token = await User.accessTokens.create(user)
 
       const role = await User.getRole(user)
+      const data = await this.getProfile(role, user)
 
       return {
         message: 'Login Berhasil',
-        user: user,
         role: role?.role,
+        data,
         token: token,
       }
     }
@@ -23,13 +25,40 @@ export default class AuthController {
       const token = await User.accessTokens.create(user)
 
       const role = await User.getRole(user)
+      const data = await this.getProfile(role, user)
 
       return {
         message: 'Login Berhasil',
-        user: user,
         role: role?.role,
+        data,
         token: token,
       }
+    }
+  }
+
+  async getProfile(role: Role, user: User) {
+    let profile
+    let details
+
+    switch (role?.role) {
+      case 'admin':
+        profile = await user.related('admin').query().first()
+        break
+      case 'teacher':
+        profile = await user.related('teacher').query().first()
+        break
+      case 'student':
+        profile = await user.related('student').query().first()
+        details = await profile?.related('studentDetail').query().first()
+        break
+    }
+
+    return {
+      user,
+      profile: {
+        ...profile?.serialize(),
+        details: details,
+      },
     }
   }
 

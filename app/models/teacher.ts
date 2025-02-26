@@ -1,7 +1,9 @@
-import { BaseModel, column, belongsTo } from '@adonisjs/lucid/orm'
-import type { BelongsTo } from '@adonisjs/lucid/types/relations'
+import { BaseModel, column, belongsTo, hasOne, hasMany } from '@adonisjs/lucid/orm'
+import type { BelongsTo, HasMany, HasOne } from '@adonisjs/lucid/types/relations'
 import User from '#models/user'
 import { DateTime } from 'luxon'
+import Class from './class.js'
+import Module from './module.js'
 
 export default class Teacher extends BaseModel {
   @column({ isPrimary: true })
@@ -39,4 +41,10 @@ export default class Teacher extends BaseModel {
 
   @belongsTo(() => User, { foreignKey: 'user_id' })
   declare user: BelongsTo<typeof User>
+
+  @hasOne(() => Class, { foreignKey: 'class_id' })
+  declare class: HasOne<typeof Class>
+
+  @hasMany(() => Module, { foreignKey: 'teacher_id' })
+  declare modules: HasMany<typeof Module>
 }

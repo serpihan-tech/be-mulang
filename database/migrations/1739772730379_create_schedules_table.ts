@@ -7,7 +7,9 @@ export default class extends BaseSchema {
     this.schema.createTable(this.tableName, (table) => {
       table.increments('id')
       table.integer('class_id').unsigned().references('id').inTable('classes').onDelete('CASCADE')
-      table.date('date').notNullable()
+      table
+        .enum('days', ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'])
+        .notNullable()
       table.time('start_time').notNullable()
       table.time('end_time').notNullable()
       table.integer('room_id').unsigned().references('id').inTable('rooms').onDelete('CASCADE')

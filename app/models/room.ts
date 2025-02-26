@@ -1,5 +1,7 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column } from '@adonisjs/lucid/orm'
+import { BaseModel, column, hasOne } from '@adonisjs/lucid/orm'
+import type { HasOne } from '@adonisjs/lucid/types/relations'
+import Schedule from './schedule.js'
 
 export default class Room extends BaseModel {
   @column({ isPrimary: true })
@@ -13,4 +15,7 @@ export default class Room extends BaseModel {
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
+
+  @hasOne(() => Schedule, { foreignKey: 'room_id' })
+  declare schedule: HasOne<typeof Schedule>
 }

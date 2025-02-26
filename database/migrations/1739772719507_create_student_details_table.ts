@@ -14,6 +14,7 @@ export default class extends BaseSchema {
       table.string('students_phone').nullable()
       table.string('nis').notNullable().unique()
       table.string('nisn').notNullable().unique()
+      table.enum('gender', ['Laki-Laki', 'Perempuan']).notNullable()
       table.date('enrollment_year').notNullable()
       table.timestamp('created_at')
       table.timestamp('updated_at')

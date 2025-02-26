@@ -8,6 +8,8 @@ import { DbAccessTokensProvider } from '@adonisjs/auth/access_tokens'
 import { AccessToken } from '@adonisjs/auth/access_tokens'
 import Role from '#models/role'
 import Teacher from './teacher.js'
+import Admin from './admin.js'
+import Student from './student.js'
 
 const AuthFinder = withAuthFinder(() => hash.use('scrypt'), {
   uids: ['email', 'username'],
@@ -48,7 +50,11 @@ export default class User extends compose(BaseModel, AuthFinder) {
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
 
-  @hasOne(() => Teacher) declare teacher: HasOne<typeof Teacher>
+  @hasOne(() => Teacher, { foreignKey: 'user_id' }) declare teacher: HasOne<typeof Teacher>
+
+  @hasOne(() => Admin, { foreignKey: 'user_id' }) declare admin: HasOne<typeof Admin>
+
+  @hasOne(() => Student, { foreignKey: 'user_id' }) declare student: HasOne<typeof Student>
 
   @manyToMany(() => Role, {
     pivotTable: 'user_has_roles',
