@@ -10,6 +10,7 @@ export default class extends BaseSchema {
       table.string('name').notNullable()
       table.string('nip').notNullable().unique()
       table.string('phone').nullable()
+      table.string('birth_date').nullable()
       table.string('address').nullable()
       table.string('profile_picture').notNullable()
       table.timestamp('created_at')

@@ -13,6 +13,7 @@ export default class extends BaseSchema {
       table.string('parents_job').nullable()
       table.string('students_phone').nullable()
       table.string('nis').notNullable().unique()
+      table.string('nisn').notNullable().unique()
       table.date('enrollment_year').notNullable()
       table.timestamp('created_at')
       table.timestamp('updated_at')

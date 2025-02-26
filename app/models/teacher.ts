@@ -25,6 +25,12 @@ export default class Teacher extends BaseModel {
   @column()
   declare profile_picture: string
 
+  @column()
+  declare birth_date: DateTime
+
+  @column()
+  declare gender: string
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 
