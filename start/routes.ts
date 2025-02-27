@@ -14,6 +14,7 @@ const AuthController = () => import('#controllers/auth_controller')
 const TeacherController = () => import('#controllers/teachers_controller')
 const ResetPasswordController = () => import('#controllers/reset_password_controller')
 const StudentsController = () => import('#controllers/students_controller')
+const DashboardController = () => import('#controllers/dashboard_controller')
 
 import { middleware } from '#start/kernel'
 
@@ -34,6 +35,7 @@ router.group(() => {
 
 router.group(() => {
     router.post('/logout', [AuthController, 'logout']).as('auth.logout').use(middleware.auth())
+    router.get('/dashboard', [DashboardController, 'indexAdmin']).as('dashboard.admin')
     router.group(() => {
         router.get('/schedule', [StudentsController, 'getPresenceSchedule']).as('student.schedule')
     }).prefix('/students').use(middleware.auth())

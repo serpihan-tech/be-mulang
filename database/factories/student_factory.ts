@@ -28,9 +28,16 @@ export const StudentFactory = factory
     // Tambahkan user_id ke set agar tidak dipakai lagi
     usedUserIds.add(user.id)
 
+    let Graduate = false
+
+    if (user.id >= 100 && user.id <= 112) {
+      Graduate = true
+    }
+
     return {
       user_id: user.id,
       name: `${firstName} ${lastName}`,
+      is_graduate: Graduate,
     }
   })
   .build()

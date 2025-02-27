@@ -15,6 +15,9 @@ export default class Student extends BaseModel {
   @column()
   declare name: string
 
+  @column()
+  declare is_graduate: boolean
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 
