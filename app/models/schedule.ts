@@ -1,27 +1,36 @@
 import { DateTime } from 'luxon'
 import { BaseModel, belongsTo, column, hasMany, hasOne } from '@adonisjs/lucid/orm'
-import type { EnumType } from 'typescript'
 import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
 import Module from './module.js'
 import Absence from './absence.js'
 import Class from './class.js'
 import Room from './room.js'
 
+export enum Days {
+  SENIN = 'Senin',
+  SELASA = 'Selasa',
+  RABU = 'Rabu',
+  KAMIS = 'Kamis',
+  JUMAT = 'Jumat',
+  SABTU = 'Sabtu',
+  MINGGU = 'Minggu',
+}
+
 export default class Schedule extends BaseModel {
   @column({ isPrimary: true })
   declare id: number
 
   @column()
-  declare start_time: DateTime
+  declare start_time: string
 
   @column()
-  declare end_time: DateTime
+  declare end_time: string
 
   @column()
   declare module_id: number
 
   @column()
-  declare day: EnumType
+  declare days: Days
 
   @column()
   declare class_id: number
@@ -46,4 +55,11 @@ export default class Schedule extends BaseModel {
 
   @hasMany(() => Absence, { foreignKey: 'schedule_id' })
   declare absences: HasMany<typeof Absence>
+
+  public serializeExtras() {
+    return {
+      start_time: DateTime.fromFormat(this.start_time, 'HH:mm:ss').toFormat('HH:mm:ss'),
+      end_time: DateTime.fromFormat(this.end_time, 'HH:mm:ss').toFormat('HH:mm:ss'),
+    }
+  }
 }

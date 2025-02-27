@@ -11,11 +11,11 @@ import StudentDetailSeeder from '../student_detail_seeder.js'
 import ClassStudentSeeder from '../class_student_seeder.js'
 import ModuleSeeder from '../module_seeder.js'
 import RoomSeeder from '../room_seeder.js'
-import AbsenceSeeder from '../absence_seeder.js'
-import ScheduleSeeder from '../schedule_seeder.js'
 import ScoreSeeder from '../score_seeder.js'
 import ScoreTypeSeeder from '../score_type_seeder.js'
 import SemesterSeeder from '../semester_seeder.js'
+import AbsenceSeeder from '../absence_seeder.js'
+import ScheduleSeeder from '../schedule_seeder.js'
 
 export default class IndexSeeder extends BaseSeeder {
   public async run() {
@@ -28,13 +28,13 @@ export default class IndexSeeder extends BaseSeeder {
     await new StudentSeeder(this.client).run()
     await new StudentDetailSeeder(this.client).run()
     await new ClassSeeder(this.client).run()
-    // await new SemesterSeeder(this.client).run()
-    // await new ClassStudentSeeder(this.client).run()
-    // await new ModuleSeeder(this.client).run()
-    // await new RoomSeeder(this.client).run()
-    // await new ScheduleSeeder(this.client).run()
-    // await new ScoreTypeSeeder(this.client).run()
-    // await new ScoreSeeder(this.client).run()
-    // await new AbsenceSeeder(this.client).run()
+    await new SemesterSeeder(this.client).run()
+    await new ModuleSeeder(this.client).run()
+    await new ClassStudentSeeder(this.client).run()
+    await new RoomSeeder(this.client).run()
+    await new ScoreTypeSeeder(this.client).run()
+    await new ScoreSeeder(this.client).run()
+    await new ScheduleSeeder(this.client).run()
+    await new AbsenceSeeder(this.client).run()
   }
 }

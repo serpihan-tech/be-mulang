@@ -4,6 +4,13 @@ import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import ClassStudent from './class_student.js'
 import Schedule from './schedule.js'
 
+export enum Status {
+  HADIR = 'Hadir',
+  IZIN = 'Izin',
+  SAKIT = 'Sakit',
+  LAINNYA = 'Alfa',
+}
+
 export default class Absence extends BaseModel {
   @column({ isPrimary: true })
   declare id: number
@@ -11,7 +18,7 @@ export default class Absence extends BaseModel {
   @column()
   declare reason: string
 
-  @column()
+  @column.dateTime()
   declare date: DateTime
 
   @column()
@@ -21,7 +28,7 @@ export default class Absence extends BaseModel {
   declare schedule_id: number
 
   @column()
-  declare status: boolean
+  declare status: Status
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime

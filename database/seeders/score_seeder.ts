@@ -1,7 +1,8 @@
+import { ScoreFactory } from '#database/factories/score_factory'
 import { BaseSeeder } from '@adonisjs/lucid/seeders'
 
 export default class extends BaseSeeder {
   async run() {
-    // Write your database queries inside the run method
+    await ScoreFactory.createMany(25)
   }
 }
