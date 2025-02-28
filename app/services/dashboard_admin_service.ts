@@ -1,11 +1,8 @@
 import { HttpContext } from '@adonisjs/core/http'
 import { DateTime } from 'luxon'
 import db from '@adonisjs/lucid/services/db'
-import Student from '#models/student'
-// import User from '#models/user'
-// import Absence from '#models/absence'
 
-export default class DashboardService {
+export default class AdminDashboardService {
   /**
    *@returns total siswa yang BELUM lulus
    */

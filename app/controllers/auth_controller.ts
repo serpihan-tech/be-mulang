@@ -3,6 +3,21 @@ import User from '#models/user'
 import Role from '#models/role'
 
 export default class AuthController {
+  async checkRole({ request, response }: HttpContext) {
+    const { email, password, username } = request.only(['email', 'password', 'username'])
+
+    if (!username) {
+      const user = await User.verifyCredentials(email, password)
+      const role = await User.getRole(user)
+      return response.ok({ role: role?.role })
+    }
+    if (!email) {
+      const user = await User.verifyCredentials(username, password)
+      const role = await User.getRole(user)
+      return response.ok({ role: role?.role })
+    }
+  }
+
   async login({ request }: HttpContext) {
     const { email, password, username } = request.only(['email', 'password', 'username'])
 
