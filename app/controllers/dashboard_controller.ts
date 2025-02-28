@@ -14,8 +14,8 @@ export default class DashboardController {
     private teacherDashboardService: TeacherDashboardService
   ) {}
 
-  async indexAdmin(ctx: HttpContext) {
-    const data = await this.adminDashboardService.dashboardAdmin(ctx)
+  async indexAdmin(ctx: HttpContext, sId: number | undefined) {
+    const data = await this.adminDashboardService.dashboardAdmin(ctx, sId)
     return {
       message: 'Success Data Dashboard Admin + Chart',
       data: data,
@@ -43,13 +43,15 @@ export default class DashboardController {
    * * Landing method dari route ('/')
    * @return data dashbard sesuai role
    */
-  async index({ auth, response }: HttpContext) {
+  async index({ auth, response, request }: HttpContext) {
     const user = auth.user!
     const role = await User.getRole(user)
+    const sId = request.input('semesterId')
+    console.log('Semester ID:', sId)
 
     switch (role?.role) {
       case 'admin':
-        return await this.indexAdmin({ auth, response } as HttpContext)
+        return await this.indexAdmin({ auth, response } as HttpContext, sId)
       case 'student':
         return await this.indexStudent({ auth, response } as HttpContext)
       case 'teacher':

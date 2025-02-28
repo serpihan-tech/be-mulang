@@ -13,9 +13,16 @@ export default class CreateContractCommand extends BaseCommand {
   async run() {
     try {
       const formattedName = this.filename.toLowerCase() + '_contract.ts'
+      const className = this.filename.charAt(0).toUpperCase() + this.filename.slice(1) + 'Contract'
       const filePath = join(fileURLToPath(this.app.appRoot), 'app/contracts', formattedName)
 
-      await writeFile(filePath, '', 'utf-8')
+      const template = `import type { HttpContext } from '@adonisjs/core/http'
+
+export default interface ${className} {
+  
+}`
+
+      await writeFile(filePath, template, 'utf-8')
       this.logger.success(`Contract file created: ${filePath}`)
     } catch (error) {
       this.logger.error(`Failed to create contract file: ${error.message}`)

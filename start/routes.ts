@@ -37,7 +37,9 @@ router.post('/check-role', [AuthController, 'checkRole']).as('auth.check-role')
 router.group(() => {
 
     router.post('/logout', [AuthController, 'logout']).as('auth.logout')
-    router.get('/dashboard', [DashboardController, 'index']).as('dashboard.index')
+    router.get('/dashboard', [DashboardController, 'index'])
+    router.post('/dashboard', [DashboardController, 'index'])
+
 
     // untuk admin
     router.group(() => {

@@ -55,7 +55,7 @@ export default class ResetPasswordController {
     // set TIMEZONE to WIB (Jakarta) and calculate the difference in minutes
     const diffMinutes = DateTime.now().setZone('Asia/Jakarta').diff(otpCreatedAt, 'minutes').minutes
   
-    console.log('Diff in Minutes:', diffMinutes)
+    // console.log('Diff in Minutes:', diffMinutes)
   
     // if the otp is valid and not expired (Change to 5 Minutes Expire)
     if (String(user.otp) === String(otp) && Math.floor(diffMinutes) < 30) { 
