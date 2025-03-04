@@ -22,13 +22,19 @@ export default class Teacher extends BaseModel {
   declare phone: string | null
 
   @column()
+  declare religion: string
+
+  @column()
   declare address: string | null
 
   @column()
   declare profile_picture: string
 
   @column()
-  declare birth_date: DateTime
+  declare birth_date: Date
+
+  @column()
+  declare birth_place: string
 
   @column()
   declare gender: string

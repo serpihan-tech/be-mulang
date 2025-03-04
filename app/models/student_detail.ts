@@ -11,6 +11,9 @@ export default class StudentDetail extends BaseModel {
   declare student_id: number
 
   @column()
+  declare religion: string
+
+  @column()
   declare gender: string
 
   @column()
@@ -35,7 +38,16 @@ export default class StudentDetail extends BaseModel {
   declare nisn: string
 
   @column()
+  declare birth_date: Date
+
+  @column()
+  declare birth_place: string
+
+  @column()
   declare enrollment_year: Date
+
+  @column()
+  declare profile_picture: string
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime

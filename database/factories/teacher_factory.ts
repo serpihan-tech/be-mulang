@@ -7,7 +7,7 @@ import User from '#models/user'
 const usedUserIds = new Set<number>()
 
 export const TeacherFactory = factory
-  .define(Teacher, async () => {
+  .define(Teacher, async ({}) => {
     // Ambil semua user yang memenuhi kriteria
     let users = await User.query()
       .whereBetween('id', [3, 10])
@@ -22,8 +22,20 @@ export const TeacherFactory = factory
       throw new Error('Tidak ada user yang tersedia untuk menjadi teacher.')
     }
 
+    const religion = faker.helpers.arrayElement([
+      'Kristen',
+      'Katolik',
+      'Islam',
+      'Hindu',
+      'Budha',
+      'Konghucu',
+    ])
+
     // Pilih user secara acak
     const user = faker.helpers.arrayElement(users)
+    const city = faker.location.city()
+    const birthDate = faker.date.between({ from: '1970-01-01', to: '2003-06-01' })
+    const birthPlace = city
 
     // Tambahkan user_id ke set agar tidak dipakai lagi
     usedUserIds.add(user.id)
@@ -32,8 +44,12 @@ export const TeacherFactory = factory
       user_id: user.id,
       name: `${faker.person.firstName()} ${faker.person.lastName()}`,
       nip: faker.string.numeric({ length: 18 }),
+      religion: religion,
       phone: faker.phone.number({ style: 'human' }),
-      address: `${faker.location.streetAddress()}, ${faker.location.city()}, ${faker.location.county()}`,
+      birth_date: birthDate,
+      birth_place: birthPlace,
+      gender: faker.helpers.arrayElement(['pria', 'wanita']),
+      address: `${faker.location.streetAddress()}, ${city}, ${faker.location.state()}`,
       profile_picture: faker.image.avatar(),
     }
   })
