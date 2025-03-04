@@ -67,8 +67,7 @@ export default class TeachersController {
 
   async destroy({ params, response }: HttpContext) {
     try {
-      const teacher = await Teacher.query().where('id', params.id).preload('user').firstOrFail()
-      await this.teacherService.delete(teacher.user)
+      await this.teacherService.delete(params.id)
       return response.ok({
         message: 'Guru Berhasil Dihapus',
       })

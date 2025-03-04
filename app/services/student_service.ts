@@ -130,8 +130,9 @@ export default class StudentsService implements StudentContract, UserContract {
     }
   }
 
-  async delete(user: User): Promise<any> {
-    return await user.delete()
+  async delete(id: number): Promise<any> {
+    const student = await Student.query().where('id', id).firstOrFail()
+    return await student.user.delete()
   }
 
   /**
@@ -193,4 +194,6 @@ export default class StudentsService implements StudentContract, UserContract {
       tidak_hadir: result?.$extras.tidak_hadir ?? 0,
     }
   }
+
+  async studentPromoted()
 }

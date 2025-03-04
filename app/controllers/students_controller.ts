@@ -75,11 +75,9 @@ export default class StudentsController {
 
   async destroy({ params, response }: HttpContext) {
     try {
-      const student = await Student.query().where('id', params.id).preload('user').firstOrFail()
-      const name = student.name ?? 'Tidak diketahui'
-      await this.studentsService.delete(student.user)
+      const student = await this.studentsService.delete(params.id)
 
-      return response.ok({ message: `Murid atas nama (${name}) Berhasil Dihapus!` })
+      return response.ok({ message: `Murid atas nama (${student?.name}) Berhasil Dihapus!` })
     } catch (error) {
       return response.badRequest({ error: { message: error.message } })
     }
