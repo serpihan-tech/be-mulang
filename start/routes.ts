@@ -41,6 +41,7 @@ router.group(() => {
         // TODO : Implementasi Fitur Admin
     }).prefix('/admins')
 
+    
     // untuk students
     router.resource('/students', StudentsController)
         .use(['store', 'update'], middleware.role(['teacher', 'admin']))
@@ -58,6 +59,5 @@ router.group(() => {
     router.group(() => {
         // TODO : Implementasi Fitur Teacher
     }).prefix('/teachers')
-
 }).use(middleware.auth())
 

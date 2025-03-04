@@ -2,6 +2,13 @@ import type { HttpContext } from '@adonisjs/core/http'
 import StudentsService from '#services/student_service'
 import { inject } from '@adonisjs/core'
 import Student from '#models/student'
+import { createUserValidator, updateUserValidator } from '#validators/user'
+import {
+  createStudentDetailValidator,
+  createStudentValidator,
+  updateStudentDetailValidator,
+  updateStudentValidator,
+} from '#validators/student'
 
 @inject()
 export default class StudentsController {
@@ -36,22 +43,33 @@ export default class StudentsController {
 
   async store({ request, response }: HttpContext) {
     try {
+      await createUserValidator.validate(request.input('user'))
+      await createStudentValidator.validate(request.input('student'))
+      await createStudentDetailValidator.validate(request.input('student_detail'))
+
       const student = await this.studentsService.create(request.all())
       return response.created({
         message: 'Murid Berhasil Ditambahkan',
         student,
       })
     } catch (error) {
-      return response.badRequest({ error: { message: error.message } })
+      return response.unprocessableEntity({ error })
     }
   }
 
   async update({ params, request, response }: HttpContext) {
     try {
+      await updateUserValidator.validate(request.input('user'))
+      await updateStudentValidator.validate(request.input('student'))
+      await updateStudentDetailValidator.validate(request.input('student_detail'))
+
       const student = await this.studentsService.update(params.id, request.all())
-      return response.ok(student)
+      return response.ok({
+        message: 'Murid Berhasil Diupdate',
+        student,
+      })
     } catch (error) {
-      return response.badRequest({ error: { message: error.message } })
+      return response.unprocessableEntity({ error })
     }
   }
 

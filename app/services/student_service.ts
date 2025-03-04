@@ -25,7 +25,15 @@ export default class StudentsService implements StudentContract, UserContract {
   }
 
   async show(id: number): Promise<any> {
-    return await Student.query().where('id', id).preload('user').preload('studentDetail')
+    return await Student.query()
+      .where('id', id)
+      .preload('user')
+      .preload('studentDetail')
+      .preload('classStudent', (cs) => {
+        cs.preload('class')
+        cs.preload('semester')
+      })
+      .firstOrFail()
   }
 
   async create(data: any): Promise<any> {

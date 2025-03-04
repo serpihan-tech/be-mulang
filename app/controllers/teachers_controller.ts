@@ -4,6 +4,7 @@ import TeacherService from '#services/teacher_service'
 import { createUserValidator, updateUserValidator } from '#validators/user'
 import { createTeacherValidator, updateTeacherValidator } from '#validators/teacher'
 import User from '#models/user'
+import Teacher from '#models/teacher'
 
 @inject()
 export default class TeachersController {
@@ -66,8 +67,8 @@ export default class TeachersController {
 
   async destroy({ params, response }: HttpContext) {
     try {
-      const user = await User.findOrFail(params.id)
-      await this.teacherService.delete(user)
+      const teacher = await Teacher.query().where('id', params.id).preload('user').firstOrFail()
+      await this.teacherService.delete(teacher.user)
       return response.ok({
         message: 'Guru Berhasil Dihapus',
       })
