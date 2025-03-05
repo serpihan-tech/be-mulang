@@ -10,7 +10,7 @@ import AcademicYearService from '#services/academic_year_service'
 export default class AcademicYearsController {
   constructor(private academicYearService: AcademicYearService) { }
   /**
-   * Display a list of resource
+   * Display a list of resources
    */
   async index({ response }: HttpContext) {
     try {
