@@ -166,31 +166,50 @@ export default class StudentsService implements StudentContract, UserContract {
 
     return await Schedule.query()
       .where('class_id', classStudent.class_id)
-      .preload('module')
+      .preload('module', (m) =>
+        m.preload('teacher', (t) => {
+          t.select('id', 'name')
+        })
+      )
       .preload('room')
   }
 
   /**
    * Mengambil data presensi siswa berdasarkan student_id.
+   * Presensi yang diambil hanya dari tahun ajar yang aktif.
    */
   async getPresence(studentId: number) {
+    const student = await Student.query().where('id', studentId).firstOrFail()
+
+    const now = new Date()
+
+    const activeAcademicYear = await AcademicYear.query()
+      .where('status', 1)
+      .where('date_start', '<', now)
+      .where('date_end', '>', now)
+      .firstOrFail()
+
     const result = await Absence.query()
       .join('class_students', 'absences.class_student_id', '=', 'class_students.id')
       .join('students', 'class_students.student_id', '=', 'students.id')
+      .join('academic_years', 'class_students.academic_year_id', '=', 'academic_years.id')
       .where('class_students.student_id', studentId)
+      .where('class_students.academic_year_id', activeAcademicYear.id)
       .select(
+        'students.name as student_name',
         db.raw(`COUNT(*) as total`),
         db.raw(`COUNT(CASE WHEN absences.status = 'Hadir' THEN 1 END) as hadir`),
         db.raw(
           `COUNT(CASE WHEN absences.status IN ('Sakit', 'Izin', 'Alfa') THEN 1 END) as tidak_hadir`
         )
       )
+      .groupBy('students.name')
       .first()
 
     return {
-      message: result
-        ? 'Data presensi siswa berhasil ditemukan'
-        : 'Data presensi siswa tidak ditemukan / hasilnya 0',
+      student_name: student.name ?? null,
+      tahun_ajar: activeAcademicYear.name ?? null,
+      semester: activeAcademicYear.semester ?? null,
       total: result?.$extras.total ?? 0,
       hadir: result?.$extras.hadir ?? 0,
       tidak_hadir: result?.$extras.tidak_hadir ?? 0,

@@ -80,7 +80,7 @@ export default class StudentsController {
 
       return response.ok({ message: `Murid atas nama (${student?.name}) Berhasil Dihapus!` })
     } catch (error) {
-      return response.badRequest({ error: { message: error.message } })
+      return response.notFound({ error: { message: 'ID Murid Tidak Ditemukan' } })
     }
   }
 

@@ -1,10 +1,9 @@
 import Teacher from '#models/teacher'
 import db from '@adonisjs/lucid/services/db'
 import UserContract from '../contracts/user_contract.js'
-import TeacherContract from '../contracts/teacher_contract.js'
 import User from '#models/user'
 
-export default class TeacherService implements TeacherContract, UserContract {
+export default class TeacherService implements UserContract {
   async index(page: number): Promise<any> {
     const limit = 10
     const teachers = await Teacher.query().preload('user').paginate(page, limit)

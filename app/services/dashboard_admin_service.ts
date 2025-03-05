@@ -94,7 +94,10 @@ export default class AdminDashboardService {
       .select(db.raw("SUM(CASE WHEN status = 'Izin' THEN 1 ELSE 0 END) as izin"))
       .select(db.raw("SUM(CASE WHEN status = 'Sakit' THEN 1 ELSE 0 END) as sakit"))
       .select(db.raw("SUM(CASE WHEN status = 'Alfa' THEN 1 ELSE 0 END) as alfa"))
-      .whereBetween('date', [startOfWeek.toISODate(), endOfWeek.toISODate()])
+
+    if (!_sId) {
+      absences.whereBetween('date', [startOfWeek.toISODate(), endOfWeek.toISODate()])
+    }
 
     if (_sId) {
       absences.andWhere('class_students.academic_year_id', _sId)

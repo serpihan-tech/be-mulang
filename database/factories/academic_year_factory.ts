@@ -21,7 +21,7 @@ export const AcademicYearFactory = factory
       status: status,
       date_start: faker.date.past(),
       date_end: faker.date.future(),
-      academic_year: faker.helpers.arrayElement(['ganjil', 'genap']),
+      semester: faker.helpers.arrayElement(['ganjil', 'genap']),
     }
   })
   .build()

@@ -9,7 +9,7 @@ export default class extends BaseSchema {
       table.string('name').notNullable()
       table.date('date_start').notNullable()
       table.date('date_end').notNullable()
-      table.enum('academic_year', ['ganjil', 'genap']).notNullable()
+      table.enum('semester', ['ganjil', 'genap']).notNullable()
       table.boolean('status').defaultTo(false)
       table.timestamp('created_at')
       table.timestamp('updated_at')

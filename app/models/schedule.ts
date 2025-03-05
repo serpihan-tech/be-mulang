@@ -20,10 +20,10 @@ export default class Schedule extends BaseModel {
   @column({ isPrimary: true })
   declare id: number
 
-  @column()
+  @column({ serializeAs: null })
   declare start_time: string
 
-  @column()
+  @column({ serializeAs: null })
   declare end_time: string
 
   @column()

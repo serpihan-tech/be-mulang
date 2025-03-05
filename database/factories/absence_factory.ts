@@ -22,7 +22,7 @@ export const AbsenceFactory = factory
     ])
     const reason = status === Status.LAINNYA ? faker.lorem.sentence() : ''
 
-    const date = DateTime.now().set({ day: 1, month: 2, year: 2025 })
+    const date = DateTime.now().set({ month: 2, year: 2025 })
 
     return {
       class_student_id: faker.helpers.arrayElement(csIds),

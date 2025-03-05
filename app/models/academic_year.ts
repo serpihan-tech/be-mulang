@@ -18,7 +18,7 @@ export default class AcademicYear extends BaseModel {
   declare date_end: Date
 
   @column()
-  declare academic_year: string
+  declare semester: string
 
   @column()
   declare status: boolean
