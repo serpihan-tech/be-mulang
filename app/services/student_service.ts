@@ -7,6 +7,8 @@ import StudentContract from '../contracts/student_contract.js'
 import UserContract from '../contracts/user_contract.js'
 import User from '#models/user'
 import StudentDetail from '#models/student_detail'
+import Semester from '#models/semester'
+import Class from '#models/class'
 
 export default class StudentsService implements StudentContract, UserContract {
   async index(page: number): Promise<any> {
@@ -195,5 +197,23 @@ export default class StudentsService implements StudentContract, UserContract {
     }
   }
 
-  async studentPromoted()
+  async studentPromoted(data: any) {
+    try {
+      for (const datum of data) {
+        const student = await Student.query().where('id', datum.student_id).firstOrFail()
+
+        const kelas = await Class.query().where('id', datum.class_id).firstOrFail()
+
+        const academicYear = await Semester.query().where('id', datum.semester_id).firstOrFail()
+
+        await ClassStudent.create({
+          student_id: student.id,
+          class_id: kelas.id,
+          semester_id: academicYear.id,
+        })
+      }
+    } catch (error) {
+      throw error
+    }
+  }
 }

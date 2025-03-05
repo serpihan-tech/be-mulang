@@ -41,17 +41,19 @@ router.group(() => {
         // TODO : Implementasi Fitur Admin
     }).prefix('/admins')
 
-    
     // untuk students
-    router.resource('/students', StudentsController)
-        .use(['store', 'update'], middleware.role(['teacher', 'admin']))
-        .use('destroy', middleware.role(['admin']))
-    
     router.group(() => {
-        router.get('/presence/:studentId', [StudentsController, 'getPresence'])
-        router.get('/schedule/:studentId', [StudentsController, 'getSchedule'])
-    }).prefix('/students')
-    
+        router.resource('/students', StudentsController)
+            .use(['store', 'update'], middleware.role(['teacher', 'admin']))
+            .use('destroy', middleware.role(['admin']))
+        
+        router.group(() => {
+            router.post('/promote', [StudentsController, 'promoteClass'])
+            router.get('/presence/:studentId', [StudentsController, 'getPresence'])
+            router.get('/schedule/:studentId', [StudentsController, 'getSchedule'])
+        }).prefix('/students')     
+    })
+
     //untuk teachers
     router.resource('/teachers', TeacherController)
         .use(['store', 'destroy'], middleware.role(['admin']))

@@ -115,4 +115,23 @@ export default class StudentsController {
     const presenceData = await this.studentsService.getPresence(params.studentId)
     return response.ok(presenceData)
   }
+
+  /**
+   * Naik Kelas
+   */
+  async promoteClass({ request, response }: HttpContext) {
+    try {
+      const data = request.input('data')
+
+      if (!Array.isArray(data) || data.length === 0) {
+        return response.badRequest({ error: { message: 'Tidak ada siswa yang diproses' } })
+      }
+
+      const student = await this.studentsService.studentPromoted(data)
+
+      return response.created({ message: 'Berhasil Naik Kelas', student })
+    } catch (error) {
+      return response.badRequest({ error })
+    }
+  }
 }
