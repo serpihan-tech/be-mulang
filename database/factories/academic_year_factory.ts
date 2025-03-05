@@ -12,7 +12,7 @@ export const AcademicYearFactory = factory
     ])
     let status: boolean = false
 
-    if (name === '2023/2024') {
+    if (name === '2024/2025') {
       status = true
     }
 

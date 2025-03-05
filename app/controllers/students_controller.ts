@@ -9,6 +9,7 @@ import {
   updateStudentDetailValidator,
   updateStudentValidator,
 } from '#validators/student'
+import { errors as lucidErrors } from '@adonisjs/lucid'
 
 @inject()
 export default class StudentsController {
@@ -87,13 +88,19 @@ export default class StudentsController {
    * Mengambil data siswa dari pengguna yang sedang login.
    */
   async getStudent({ auth, response }: HttpContext) {
-    const user = auth.user
-    if (!user) {
-      return response.unauthorized({ message: 'Unauthorized' })
+    try {
+      const user = auth.user
+      if (!user) {
+        return response.unauthorized({ message: 'Unauthorized' })
+      }
+      const student = await this.studentsService.show(user.id)
+      return response.ok({
+        message: 'Data Siswa Berhasil Ditemukan',
+        student,
+      })
+    } catch (error) {
+      return error
     }
-
-    const student = await this.studentsService.show(user.id)
-    return response.ok(student)
   }
 
   /**
@@ -102,7 +109,10 @@ export default class StudentsController {
   async getSchedule({ params, response }: HttpContext) {
     try {
       const schedule = await this.studentsService.getSchedule(params.studentId)
-      return response.ok(schedule)
+      return response.ok({
+        message: 'Data Jadwal Berhasil Ditemukan',
+        schedule,
+      })
     } catch (error) {
       return response.badRequest({ error: { message: error.message } })
     }
@@ -112,8 +122,15 @@ export default class StudentsController {
    * Mengambil data presensi siswa berdasarkan student_id.
    */
   async getPresence({ params, response }: HttpContext) {
-    const presenceData = await this.studentsService.getPresence(params.studentId)
-    return response.ok(presenceData)
+    try {
+      const presenceData = await this.studentsService.getPresence(params.studentId)
+      return response.ok({
+        message: 'Data Presensi Berhasil Ditemukan',
+        presenceData,
+      })
+    } catch (error) {
+      return error
+    }
   }
 
   /**
@@ -131,7 +148,12 @@ export default class StudentsController {
 
       return response.created({ message: 'Berhasil Naik Kelas', student })
     } catch (error) {
-      return response.badRequest({ error })
+      if (error instanceof lucidErrors.E_ROW_NOT_FOUND) {
+        return response.notFound({
+          error: { message: 'Record tidak ditemukan dalam database. Periksa Input Anda!' },
+        })
+      }
+      return response.badRequest({ error: { message: error.message, status: error.status } })
     }
   }
 }
