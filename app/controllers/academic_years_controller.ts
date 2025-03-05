@@ -22,11 +22,7 @@ export default class AcademicYearsController {
         academicYears
       })
     } catch (error) {
-      return response.status(400).send({
-        error: {
-          message: error.message || "Terjadi kesalahan pada server"
-        }
-      })
+      return response.badRequest({error})
     }
   }
 
@@ -49,11 +45,7 @@ export default class AcademicYearsController {
         academicYear
       })
     } catch (error) {
-      return response.status(400).send({
-        error: {
-          message: error.message || "Terjadi kesalahan pada server"
-        }
-      })
+      return response.badRequest({error})
     }
   }
 
@@ -70,11 +62,7 @@ export default class AcademicYearsController {
         academicYears
       })
     } catch (error) {
-      return response.status(400).send({
-        error: {
-          message: error.message || "Terjadi kesalahan pada server"
-        }
-      })
+      return response.badRequest({error})
     }
 
 
@@ -93,11 +81,7 @@ export default class AcademicYearsController {
         message: 'Tahun Ajaran Berhasil Diubah', academicYear 
       })
     } catch (error) {
-      return response.status(400).send({
-        error: {
-          message: error.message || "Terjadi kesalahan pada server"
-        }
-      })
+      return response.badRequest({error})
     }
   }
 
@@ -117,11 +101,7 @@ export default class AcademicYearsController {
         message: 'Kelas Berhasil Dihapus' 
       })
     } catch (error) {
-      return response.status(400).send({
-        error: {
-          message: error.message || "Terjadi kesalahan pada server"
-        }
-      })
+      return response.badRequest({error})
     }
   }
 }

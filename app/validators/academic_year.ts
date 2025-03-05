@@ -1,6 +1,5 @@
 import vine, { SimpleMessagesProvider } from '@vinejs/vine'
 import { messages } from '../utils/validation_message.js'
-import { create } from 'domain'
 
 export const createAcademicYearValidator = vine.compile(
   vine.object({

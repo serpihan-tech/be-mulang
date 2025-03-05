@@ -1,10 +1,7 @@
-import Class from '#models/class'
 import { createClassValidator, updateClassValidator } from '#validators/class'
 import type { HttpContext } from '@adonisjs/core/http'
-import db from '@adonisjs/lucid/services/db'
 import { inject } from '@adonisjs/core'
 import { ClassService } from '#services/class_service'
-import { messages } from '../utils/validation_message.js'
 
 @inject()
 export default class ClassesController {
@@ -21,11 +18,7 @@ export default class ClassesController {
         data: classes 
       })
     } catch (error) {
-      return response.status(400).send({
-        error: {
-          message: error.message || "Terjadi kesalahan pada server"
-        }
-      })
+      return response.badRequest({error})
     }
   }
 
@@ -41,50 +34,47 @@ export default class ClassesController {
         data: classes
       })
     } catch (error) {
-      return response.status(400).send({
-        error: {
-          message: error.message || "Terjadi kesalahan pada server"
-        }
-      })
+      return response.badRequest({error})
     }
   }
 
-  async show({ params, response }: HttpContext) {
+  async show({ params, response, request }: HttpContext) {
+    const classId: number = params.id
+    const page = request.input('page', 1)
+    const limit = request.input('limit', 2)
     try {
-      const classId: number = params.id
-      const classes = await db.from('classes').where('id', classId).select('id', 'name')
+      const classes = await this.classService.get(['id', 'name'], page, limit, classId)
       return response.ok({ 
         messages: "berhasil ditampilkan",
         data: classes 
       })
     } catch (error) {
-      return response.status(400).send({
-        error: {
-          message: error.message || "Terjadi kesalahan pada server"
-        }
-      })
+      return response.badRequest({error})
     }
   }
 
-  async edit({ params, request, response }: HttpContext) {
-    const id:number = params.classId
+  async edit({ }: HttpContext) {}
+  
+  async update({ params, request, response }: HttpContext) {
+    const classId:number = params.id
     try {
-      await updateClassValidator.validate(request.all())
-      const theClass = await this.classService.update(request.all(), id)
+      await updateClassValidator.validate({
+        name: request.input('name'),
+        teacher_id: request.input('teacher_id')
+      })
+      const theClass = await this.classService.update({
+        name: request.input('name'),
+        teacher_id: request.input('teacher_id')
+      }, classId)
+
       return response.ok({
         messages: 'Kelas Berhasil Diubah',
-        theClass
+        data: theClass
       })
     } catch (error) {
-      return response.status(400).send({
-        error: {
-          message: error.message || "Terjadi kesalahan pada server"
-        }
-      })
+      return response.badRequest({error})
     }
   }
-  
-  async update({  }: HttpContext) {  }
 
   async destroy({ params, response }: HttpContext) {
     try {
@@ -94,11 +84,7 @@ export default class ClassesController {
         message: 'Kelas Berhasil Dihapus' 
       })
     } catch (error) {
-      return response.status(400).send({
-        error: {
-          message: error.message || "Terjadi kesalahan pada server"
-        }
-      })
+      return response.badRequest({error})
     }
   }
 

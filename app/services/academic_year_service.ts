@@ -28,7 +28,9 @@ export default class AcademicYearService {
     try {
       const academicYear = await AcademicYear.findOrFail(academicYearId)
       academicYear.merge(data)
-      return await academicYear.useTransaction(trx).save()
+      await academicYear.useTransaction(trx).save()
+      await trx.commit()
+      return academicYear
     } catch (error) {
       await trx.rollback()
       throw error
