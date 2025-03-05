@@ -17,7 +17,7 @@ export default class AcademicYearService {
   }
 
   async delete(id: number) { 
-    const academic_year = await db.from('academic_years').where('id', id).delete()
-    return academic_year
+    const academic_year = await AcademicYear.query().where('id', id).firstOrFail()
+    return await academic_year.delete()
   }
 }

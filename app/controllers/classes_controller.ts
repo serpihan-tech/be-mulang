@@ -2,12 +2,17 @@ import Class from '#models/class'
 import { createClassValidator } from '#validators/class'
 import type { HttpContext } from '@adonisjs/core/http'
 import db from '@adonisjs/lucid/services/db'
+import { inject } from '@adonisjs/core'
+import { ClassService } from '#services/class_service'
 
+@inject()
 export default class ClassesController {
+  constructor(private classService: ClassService) { }
   async index({ request, response }: HttpContext) {
     const page = request.input('page', 1)
     const limit = request.input('limit', 2)
-    const classes = await db.from('classes').select('id', 'name').paginate(page, limit)
+    const classes = await this.classService.get(['id', 'name'], page, limit)
+    
     return response.ok({ 
       status: true,
       code: 200,
@@ -51,13 +56,10 @@ export default class ClassesController {
 
   async edit({ params, request }: HttpContext) {
     const id:number = params.classId
-    const classes = await Class.findOrFail(id)
     try {
-      classes.name = request.input('name')
-      classes.teacher_id = request.input('teacher_id')
-      await createClassValidator.validate(classes)
-
-      await classes.save()
+      
+      const editClass = await this.classService.update(request.all(), id)
+      await editClass.save()
       
       return {
         messages: "berhasil diubah",
