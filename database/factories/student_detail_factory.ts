@@ -7,10 +7,19 @@ const usedStudentIds = new Set<number>()
 
 export const StudentDetailFactory = factory
   .define(StudentDetail, async ({}) => {
+    const religion = faker.helpers.arrayElement([
+      'Kristen',
+      'Katolik',
+      'Islam',
+      'Hindu',
+      'Budha',
+      'Konghucu',
+    ])
     const gender = faker.helpers.arrayElement(['laki-laki', 'perempuan'])
     const state = faker.location.state()
+    const city = faker.location.city()
     const address = `${faker.location.streetAddress({ useFullAddress: true })}, 
-        ${faker.location.city()}, 
+        ${city}, 
         ${state},
         ${faker.location.zipCode({ format: '#####' })}`
     const parentsName = faker.person.fullName()
@@ -75,6 +84,8 @@ export const StudentDetailFactory = factory
     const studentsPhone = faker.phone.number({ style: 'human' })
     const nis = faker.string.numeric(10)
     const nisn = faker.string.numeric(10)
+    const birthDate = faker.date.between({ from: '2007-01-01', to: '2010-12-31' })
+    const birthPlace = city
     const enrollmentYear = faker.date.between({ from: '2023', to: '2025' })
 
     let students = await Student.query()
@@ -98,6 +109,7 @@ export const StudentDetailFactory = factory
 
     return {
       student_id: student.id,
+      religion,
       gender,
       address,
       parents_name: parentsName,
@@ -106,7 +118,10 @@ export const StudentDetailFactory = factory
       students_phone: studentsPhone,
       nis,
       nisn,
+      birth_date: birthDate,
+      birth_place: birthPlace,
       enrollment_year: enrollmentYear,
+      profile_picture: faker.image.avatar(),
     }
   })
   .build()

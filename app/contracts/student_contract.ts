@@ -2,14 +2,6 @@ import type { HttpContext } from '@adonisjs/core/http'
 
 export default interface StudentContract {
   /**
-   * Mengambil data siswa dari pengguna yang sedang login.
-   *
-   * @param {HttpContext} ctx
-   * @return {Promise<any | null>} Mengembalikan data siswa jika ditemukan, atau null jika tidak ada.
-   */
-  getStudent(ctx: HttpContext): Promise<any | null>
-
-  /**
    * Mengambil informasi kelas siswa berdasarkan student_id.
    *
    * @param {number} studentId - ID siswa yang akan dicari.

@@ -1,7 +1,6 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import AcademicYear from '#models/academic_year'
 import { createRecordValidator } from '#validators/academic_year'
-import db from '@adonisjs/lucid/services/db'
 import { inject } from '@adonisjs/core'
 import AcademicYearService from '#services/academic_year_service'
 

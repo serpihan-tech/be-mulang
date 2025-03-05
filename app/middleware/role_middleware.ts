@@ -13,7 +13,7 @@ export default class RoleMiddleware {
     const user = auth.user as User | null
     console.log(user)
     if (!user) {
-      return response.unauthorized({ message: 'Anda Harus Login Terlebih Dahulu' })
+      return response.unauthorized({ error: { message: 'Anda Harus Login Terlebih Dahulu' } })
     }
 
     // Load roles from pivot table `user_has_roles`
@@ -23,7 +23,7 @@ export default class RoleMiddleware {
     const hasRole = user.roles.some((role) => allowedRoles.includes(role.role))
 
     if (!hasRole) {
-      return response.forbidden({ message: 'Anda Tidak Memiliki Akses Untuk Hal Ini' })
+      return response.forbidden({ error: { message: 'Anda Tidak Memiliki Akses Untuk Hal Ini' } })
     }
 
     // continue to the next middleware or request handler

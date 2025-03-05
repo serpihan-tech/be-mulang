@@ -1,61 +1,78 @@
 import type { HttpContext } from '@adonisjs/core/http'
+import { inject } from '@adonisjs/core'
+import TeacherService from '#services/teacher_service'
+import { createUserValidator, updateUserValidator } from '#validators/user'
+import { createTeacherValidator, updateTeacherValidator } from '#validators/teacher'
 import User from '#models/user'
 import Teacher from '#models/teacher'
 
-import { createUserValidator } from '#validators/user'
-import { createTeacherValidator } from '#validators/teacher'
-import db from '@adonisjs/lucid/services/db'
-
+@inject()
 export default class TeachersController {
-  async index({ response }: HttpContext) {
+  constructor(private teacherService: TeacherService) {}
+
+  async index({ request, response }: HttpContext) {
     try {
-      const teachers = await Teacher.query().preload('user')
-      return response.json({
-        message: 'Berhasil Mendapatkan Data Guru',
+      const teachers = await this.teacherService.index(request.input('page', 1))
+      return response.ok({
+        messsage: 'Berhasil Mendapatkan Data Semua Guru',
         teachers,
       })
     } catch (error) {
-      console.error(error) // ! for debugging
-
-      return response.status(error.status || 500).json({
-        message: error.message || 'Terjadi kesalahan saat mengambil data',
-        code: error.code || 'INTERNAL_SERVER_ERROR',
-        status: error.status || 500,
-      })
+      return response.badRequest({ error: { message: error.message } })
     }
   }
 
-  async create({ request, response }: HttpContext) {
-    const trx = await db.transaction()
-
+  async show({ params, response }: HttpContext) {
     try {
-      const user = new User()
-      user.username = request.input('username')
-      user.email = request.input('email')
-      user.password = request.input('password')
-
-      await createUserValidator.validate(user)
-
-      const teacher = new Teacher()
-      teacher.user_id = user.id
-      teacher.name = request.input('name')
-      teacher.nip = request.input('nip')
-      teacher.phone = request.input('phone')
-      teacher.address = request.input('address')
-      teacher.profile_picture = request.input('profile_picture')
-
-      await createTeacherValidator.validate(teacher)
-
-      trx.commit()
-
-      return response.created({
-        messages: 'Pengguna dan Guru Berhasil Ditambahkan',
-        user,
+      const teacher = await this.teacherService.show(params.id)
+      return response.ok({
+        message: 'Berhasil Mendapatkan Data Guru',
         teacher,
       })
     } catch (error) {
-      trx.rollback()
-      return error
+      return response.badRequest({ error: { message: error.message } })
+    }
+  }
+
+  async store({ request, response }: HttpContext) {
+    try {
+      await createUserValidator.validate(request.input('user'))
+      await createTeacherValidator.validate(request.input('teacher'))
+
+      const teacher = await this.teacherService.create(request.all())
+
+      return response.created({
+        message: 'Guru Berhasil Ditambahkan',
+        teacher,
+      })
+    } catch (error) {
+      return response.unprocessableEntity({ error })
+    }
+  }
+
+  async update({ params, request, response }: HttpContext) {
+    try {
+      await updateUserValidator.validate(request.input('user'))
+      await updateTeacherValidator.validate(request.input('teacher'))
+
+      const teacher = await this.teacherService.update(params.id, request.all())
+      return response.ok({
+        message: 'Data Guru Berhasil Diubah',
+        teacher,
+      })
+    } catch (error) {
+      return response.unprocessableEntity({ error })
+    }
+  }
+
+  async destroy({ params, response }: HttpContext) {
+    try {
+      await this.teacherService.delete(params.id)
+      return response.ok({
+        message: 'Guru Berhasil Dihapus',
+      })
+    } catch (error) {
+      return response.badRequest({ error: { message: error.message } })
     }
   }
 }

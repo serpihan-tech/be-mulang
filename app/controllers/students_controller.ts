@@ -1,98 +1,118 @@
 import type { HttpContext } from '@adonisjs/core/http'
-import StudentContract from '../contracts/student_contract.js'
+import StudentsService from '#services/student_service'
+import { inject } from '@adonisjs/core'
 import Student from '#models/student'
-import Schedule from '#models/schedule'
-import Absence from '#models/absence'
-import ClassStudent from '#models/class_student'
-import db from '@adonisjs/lucid/services/db'
+import { createUserValidator, updateUserValidator } from '#validators/user'
+import {
+  createStudentDetailValidator,
+  createStudentValidator,
+  updateStudentDetailValidator,
+  updateStudentValidator,
+} from '#validators/student'
 
-export default class StudentsController implements StudentContract {
+@inject()
+export default class StudentsController {
   /**
-   * Mengambil data siswa dari pengguna yang sedang login.
-   */
-  async getStudent({ auth, response }: HttpContext): Promise<Student | null> {
-    const user = auth.user
-    if (!user) {
-      response.unauthorized({ message: 'Unauthorized' })
-      return null
+   * Constructor
+   * */
+  constructor(private studentsService: StudentsService) {}
+
+  async index(ctx: HttpContext) {
+    try {
+      const students = await this.studentsService.index(ctx.request.input('page', 1))
+      return ctx.response.ok({
+        messsage: 'Berhasil Mendapatkan Data Semua Murid',
+        students,
+      })
+    } catch (error) {
+      return ctx.response.badRequest({ error: { message: error.message } })
     }
-    return await user.related('student').query().first()
+  }
+
+  async show({ params, response }: HttpContext) {
+    try {
+      const student = await this.studentsService.show(params.id)
+      return response.ok({
+        message: 'Murid Ditemukan',
+        student,
+      })
+    } catch (error) {
+      return response.badRequest({ error: { message: error.message } })
+    }
+  }
+
+  async store({ request, response }: HttpContext) {
+    try {
+      await createUserValidator.validate(request.input('user'))
+      await createStudentValidator.validate(request.input('student'))
+      await createStudentDetailValidator.validate(request.input('student_detail'))
+
+      const student = await this.studentsService.create(request.all())
+      return response.created({
+        message: 'Murid Berhasil Ditambahkan',
+        student,
+      })
+    } catch (error) {
+      return response.unprocessableEntity({ error })
+    }
+  }
+
+  async update({ params, request, response }: HttpContext) {
+    try {
+      await updateUserValidator.validate(request.input('user'))
+      await updateStudentValidator.validate(request.input('student'))
+      await updateStudentDetailValidator.validate(request.input('student_detail'))
+
+      const student = await this.studentsService.update(params.id, request.all())
+      return response.ok({
+        message: 'Murid Berhasil Diupdate',
+        student,
+      })
+    } catch (error) {
+      return response.unprocessableEntity({ error })
+    }
+  }
+
+  async destroy({ params, response }: HttpContext) {
+    try {
+      const student = await this.studentsService.delete(params.id)
+
+      return response.ok({ message: `Murid atas nama (${student?.name}) Berhasil Dihapus!` })
+    } catch (error) {
+      return response.badRequest({ error: { message: error.message } })
+    }
   }
 
   /**
-   * Mengambil informasi kelas siswa berdasarkan student_id.
+   * Mengambil data siswa dari pengguna yang sedang login.
    */
-  async getClassStudent(studentId: number): Promise<ClassStudent | null> {
-    return await ClassStudent.query()
-      .where('student_id', studentId)
-      .select('class_id', 'semester_id')
-      .preload('semester')
-      .preload('class')
-      .first()
+  async getStudent({ auth, response }: HttpContext) {
+    const user = auth.user
+    if (!user) {
+      return response.unauthorized({ message: 'Unauthorized' })
+    }
+
+    const student = await this.studentsService.show(user.id)
+    return response.ok(student)
   }
 
   /**
    * Mengambil jadwal pelajaran berdasarkan studentId.
    */
-  async getSchedule({ params, response }: HttpContext): Promise<any> {
-    const studentId: number = params.studentId
-
-    if (!studentId) {
-      return response.badRequest({ error: { message: 'id siswa tidak ditemukan' } })
+  async getSchedule({ params, response }: HttpContext) {
+    try {
+      const schedule = await this.studentsService.getSchedule(params.studentId)
+      return response.ok(schedule)
+    } catch (error) {
+      return response.badRequest({ error: { message: error.message } })
     }
-
-    const classStudent = await ClassStudent.query()
-      .where('student_id', studentId)
-      .select('class_id', 'semester_id')
-      .preload('semester')
-      .preload('class')
-      .first()
-
-    if (!classStudent) {
-      return response.notFound({ error: { message: 'Kelas siswa tidak ditemukan' } })
-    }
-
-    const schedule = await Schedule.query()
-      .where('class_id', classStudent.class_id)
-      .preload('module')
-      .preload('room')
-
-    return response.ok(schedule)
   }
 
   /**
    * Mengambil data presensi siswa berdasarkan student_id.
    */
-  async getPresence({ params }: HttpContext): Promise<Object> {
-    const studentId: number = params.studentId
-
-    const result = await Absence.query()
-      .join('class_students', 'absences.class_student_id', '=', 'class_students.id')
-      .join('students', 'class_students.student_id', '=', 'students.id')
-      .where('class_students.student_id', studentId)
-      .select(
-        db.raw(`COUNT(*) as total`),
-        db.raw(`COUNT(CASE WHEN absences.status = 'Hadir' THEN 1 END) as hadir`),
-        db.raw(
-          `COUNT(CASE WHEN absences.status IN ('Sakit', 'Izin', 'Alfa') THEN 1 END) as tidak_hadir`
-        )
-      )
-      .first()
-
-    if (!result) {
-      return {
-        message: 'Data presensi siswa tidak ditemukan / hasilnya 0',
-        total: 0,
-        hadir: 0,
-        tidak_hadir: 0,
-      }
-    }
-
-    return {
-      message: 'Data presensi siswa berhasil ditemukan',
-      total: result.$extras.total ?? 0,
-      hadir: result.$extras.hadir ?? 0,
-      tidak_hadir: result.$extras.tidak_hadir ?? 0,
-    }
+  async getPresence({ params, response }: HttpContext) {
+    const presenceData = await this.studentsService.getPresence(params.studentId)
+    return response.ok(presenceData)
   }
 }

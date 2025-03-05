@@ -8,7 +8,7 @@ export default class extends BaseSchema {
       table.increments('id')
       table.integer('user_id').unsigned().references('id').inTable('users').onDelete('CASCADE')
       table.string('name').notNullable()
-      table.boolean('is_graduate') // 1 is Graduate, 0 is Active Student
+      table.boolean('is_graduate').defaultTo(false)
       table.timestamp('created_at')
       table.timestamp('updated_at')
     })

@@ -76,11 +76,22 @@ export default class User extends compose(BaseModel, AuthFinder) {
   static async getRole(user: User) {
     const roles = await user.related('roles').query().firstOrFail()
 
+    // semisal 1 user bisa memiliki lebih dari 1 role
     // const roles = await user.related('roles').query()
 
     // if (roles.length === 1) {
     //   return roles[0]
     // }
     return roles
+  }
+
+  static async assignRole(user: User, role: string) {
+    const roleData = await Role.findBy('role', role)
+
+    if (!roleData) {
+      throw new Error(`Role "${role}" Tidak Ditemukan!`)
+    }
+
+    await user.related('roles').attach([roleData.id])
   }
 }

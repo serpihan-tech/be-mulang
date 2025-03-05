@@ -29,11 +29,6 @@ router.group(() => {
     router.post('/reset-password', [ResetPasswordController, 'resetPassword']).as('reset-password.reset')
 }).prefix('/forgot-password')
 
-// * Test Role Middleware
-router.group(() => {
-    router.get('/teachers', [TeacherController, 'index']).as('teachers.index').use([middleware.auth(), middleware.role(['admin'])])
-}).prefix('/users')
-
 router.post('/check-role', [AuthController, 'checkRole']).as('auth.check-role')
 
 router.group(() => {
@@ -48,13 +43,21 @@ router.group(() => {
         // TODO : Implementasi Fitur Admin
     }).prefix('/admins')
 
+    
     // untuk students
+    router.resource('/students', StudentsController)
+        .use(['store', 'update'], middleware.role(['teacher', 'admin']))
+        .use('destroy', middleware.role(['admin']))
+    
     router.group(() => {
         router.get('/presence/:studentId', [StudentsController, 'getPresence'])
         router.get('/schedule/:studentId', [StudentsController, 'getSchedule'])
     }).prefix('/students')
 
     //untuk teachers
+    router.resource('/teachers', TeacherController)
+        .use(['store', 'destroy'], middleware.role(['admin']))
+        .use('update', middleware.role(['teacher', 'admin']))
     router.group(() => {
         // TODO : Implementasi Fitur Teacher
     }).prefix('/teachers')
