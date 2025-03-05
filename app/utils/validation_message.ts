@@ -9,4 +9,5 @@ export const messages = {
   email: '{{ field }} harus berupa alamat email yang valid',
   numeric: '{{ field }} harus berupa angka',
   unique: '{{ field }} harus unik',
+  "database.exists": '{{ field }} tidak ditemukan',
 }

@@ -1,11 +1,11 @@
 import factory from '@adonisjs/lucid/factories'
-import Semester from '#models/semester'
+import AcademicYear from '#models/academic_year'
 import { fakerID_ID as faker } from '@faker-js/faker'
 
 const usedNames = new Set<string>() // Menyimpan nama yang sudah dibuat
 
-export const SemesterFactory = factory
-  .define(Semester, async () => {
+export const AcademicYearFactory = factory
+  .define(AcademicYear, async () => {
     let name: string
 
     do {

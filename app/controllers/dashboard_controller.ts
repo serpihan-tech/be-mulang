@@ -46,12 +46,13 @@ export default class DashboardController {
   async index({ auth, response, request }: HttpContext) {
     const user = auth.user!
     const role = await User.getRole(user)
-    const sId = request.input('semesterId')
-    console.log('Semester ID:', sId)
 
     switch (role?.role) {
       case 'admin':
-        return await this.indexAdmin({ auth, response } as HttpContext, sId)
+        return await this.indexAdmin(
+          { auth, response } as HttpContext,
+          request.input('semester_id')
+        )
       case 'student':
         return await this.indexStudent({ auth, response } as HttpContext)
       case 'teacher':
