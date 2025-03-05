@@ -7,7 +7,7 @@ import StudentContract from '../contracts/student_contract.js'
 import UserContract from '../contracts/user_contract.js'
 import User from '#models/user'
 import StudentDetail from '#models/student_detail'
-import Semester from '#models/semester'
+import AcademicYear from '#models/academic_year'
 import Class from '#models/class'
 
 export default class StudentsService implements StudentContract, UserContract {
@@ -21,7 +21,7 @@ export default class StudentsService implements StudentContract, UserContract {
       .preload('studentDetail')
       .preload('classStudent', (cs) => {
         cs.preload('class')
-        cs.preload('semester')
+        cs.preload('academicYear')
       })
       .paginate(pages, limit)
   }
@@ -33,7 +33,7 @@ export default class StudentsService implements StudentContract, UserContract {
       .preload('studentDetail')
       .preload('classStudent', (cs) => {
         cs.preload('class')
-        cs.preload('semester')
+        cs.preload('academicYear')
       })
       .firstOrFail()
   }
@@ -143,8 +143,8 @@ export default class StudentsService implements StudentContract, UserContract {
   async getClassStudent(studentId: number) {
     return await ClassStudent.query()
       .where('student_id', studentId)
-      .select('class_id', 'semester_id')
-      .preload('semester')
+      .select('class_id', 'academic_year_id')
+      .preload('academicYear')
       .preload('class')
       .first()
   }
@@ -157,8 +157,8 @@ export default class StudentsService implements StudentContract, UserContract {
 
     const classStudent = await ClassStudent.query()
       .where('student_id', studentId)
-      .select('class_id', 'semester_id')
-      .preload('semester')
+      .select('class_id', 'academic_year_id')
+      .preload('academicYear')
       .preload('class')
       .first()
 
@@ -204,12 +204,14 @@ export default class StudentsService implements StudentContract, UserContract {
 
         const kelas = await Class.query().where('id', datum.class_id).firstOrFail()
 
-        const academicYear = await Semester.query().where('id', datum.semester_id).firstOrFail()
+        const academicYear = await AcademicYear.query()
+          .where('id', datum.academic_year_id)
+          .firstOrFail()
 
         await ClassStudent.create({
           student_id: student.id,
           class_id: kelas.id,
-          semester_id: academicYear.id,
+          academic_year_id: academicYear.id,
         })
       }
     } catch (error) {

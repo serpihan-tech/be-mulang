@@ -8,10 +8,10 @@ export default class extends BaseSchema {
       table.increments('id')
       table.string('name').unique()
       table
-        .integer('semester_id')
+        .integer('academic_year_id')
         .unsigned()
         .references('id')
-        .inTable('semesters')
+        .inTable('academic_years')
         .onDelete('CASCADE')
       table
         .integer('teacher_id')

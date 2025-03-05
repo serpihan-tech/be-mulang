@@ -46,8 +46,8 @@ export default class DashboardController {
   async index({ auth, response, request }: HttpContext) {
     const user = auth.user!
     const role = await User.getRole(user)
-    const sId = request.input('semesterId')
-    console.log('Semester ID:', sId)
+    const sId = request.input('academic_yearId')
+    console.log('AcademicYear ID:', sId)
 
     switch (role?.role) {
       case 'admin':

@@ -20,8 +20,8 @@ export default class StudentDashboardService {
   private async getClassStudent(studentId: number) {
     const classStudent = await ClassStudent.query()
       .where('student_id', studentId)
-      .select('class_id', 'semester_id')
-      .preload('semester')
+      .select('class_id', 'academic_year_id')
+      .preload('academicYear')
       .preload('class')
       .first()
 
@@ -91,7 +91,7 @@ export default class StudentDashboardService {
       data: {
         schedule,
         class: classStudent?.class,
-        semester: classStudent?.semester,
+        academic_year: classStudent?.academicYear,
         totalPresence: presence,
       },
     })

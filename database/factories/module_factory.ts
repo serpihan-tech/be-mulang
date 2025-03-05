@@ -1,14 +1,14 @@
 import factory from '@adonisjs/lucid/factories'
 import Module from '#models/module'
 import { fakerID_ID as faker } from '@faker-js/faker'
-import Semester from '#models/semester'
 import Teacher from '#models/teacher'
+import AcademicYear from '#models/academic_year'
 
 const usedModuleNames = new Set<string>()
 
 export const ModuleFactory = factory
   .define(Module, async () => {
-    const semesters = await Semester.all()
+    const academicYears = await AcademicYear.all()
     const teachers = await Teacher.all()
 
     let moduleName: string
@@ -47,7 +47,7 @@ export const ModuleFactory = factory
 
     return {
       name: moduleName,
-      semester_id: faker.helpers.arrayElement(semesters).id,
+      academic_year_id: faker.helpers.arrayElement(academicYears).id,
       teacher_id: faker.helpers.arrayElement(teachers).id,
     }
   })

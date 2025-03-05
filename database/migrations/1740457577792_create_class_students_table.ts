@@ -14,10 +14,10 @@ export default class extends BaseSchema {
         .inTable('students')
         .onDelete('CASCADE')
       table
-        .integer('semester_id')
+        .integer('academic_year_id')
         .unsigned()
         .references('id')
-        .inTable('semesters')
+        .inTable('academic_years')
         .onDelete('CASCADE')
       table.timestamp('created_at')
       table.timestamp('updated_at')

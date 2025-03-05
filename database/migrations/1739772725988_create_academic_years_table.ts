@@ -7,9 +7,9 @@ export default class extends BaseSchema {
     this.schema.createTable(this.tableName, (table) => {
       table.increments('id')
       table.string('name').notNullable()
-      table.datetime('date_start').notNullable()
-      table.datetime('date_end').notNullable()
-      table.string('semester')
+      table.date('date_start').notNullable()
+      table.date('date_end').notNullable()
+      table.enum('academic_year', ['ganjil', 'genap']).notNullable()
       table.boolean('status').defaultTo(false)
       table.timestamp('created_at')
       table.timestamp('updated_at')

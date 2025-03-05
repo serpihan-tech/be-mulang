@@ -12,7 +12,7 @@ export default class AcademicYearsController {
    */
   async index({ response }: HttpContext) {
     try {
-      const column = ['id', 'name', 'date_start', 'date_end', 'semester', 'status']
+      const column = ['id', 'name', 'date_start', 'date_end', 'academic_year', 'status']
       const academic_years = await this.academicYearService.get(column)
 
       return response.ok({
@@ -44,7 +44,7 @@ export default class AcademicYearsController {
       academicYear.name = request.input('name')
       academicYear.date_start = request.input('date_start')
       academicYear.date_end = request.input('date_end')
-      academicYear.semester = request.input('semester')
+      academicYear.academic_year = request.input('academic_year')
       academicYear.status = request.input('status')
 
       await createRecordValidator.validate(academicYear)
@@ -66,7 +66,7 @@ export default class AcademicYearsController {
   async show({ params, response }: HttpContext) {
     const id: number = params.id
     try {
-      const column = ['id', 'name', 'date_start', 'date_end', 'semester', 'status']
+      const column = ['id', 'name', 'date_start', 'date_end', 'academic_year', 'status']
       const academic_years = await this.academicYearService.get(column, id)
       return response.ok({
         status: true,
