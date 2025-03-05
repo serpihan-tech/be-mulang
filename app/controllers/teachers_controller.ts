@@ -3,8 +3,6 @@ import { inject } from '@adonisjs/core'
 import TeacherService from '#services/teacher_service'
 import { createUserValidator, updateUserValidator } from '#validators/user'
 import { createTeacherValidator, updateTeacherValidator } from '#validators/teacher'
-import User from '#models/user'
-import Teacher from '#models/teacher'
 
 @inject()
 export default class TeachersController {
@@ -72,7 +70,7 @@ export default class TeachersController {
         message: 'Guru Berhasil Dihapus',
       })
     } catch (error) {
-      return response.badRequest({ error: { message: error.message } })
+      return response.notFound({ error: { message: 'ID Guru Tidak Ditemukan' } })
     }
   }
 }

@@ -7,6 +7,8 @@ import StudentContract from '../contracts/student_contract.js'
 import UserContract from '../contracts/user_contract.js'
 import User from '#models/user'
 import StudentDetail from '#models/student_detail'
+import AcademicYear from '#models/academic_year'
+import Class from '#models/class'
 
 export default class StudentsService implements StudentContract, UserContract {
   async index(page: number): Promise<any> {
@@ -19,7 +21,7 @@ export default class StudentsService implements StudentContract, UserContract {
       .preload('studentDetail')
       .preload('classStudent', (cs) => {
         cs.preload('class')
-        cs.preload('semester')
+        cs.preload('academicYear')
       })
       .paginate(pages, limit)
   }
@@ -31,7 +33,7 @@ export default class StudentsService implements StudentContract, UserContract {
       .preload('studentDetail')
       .preload('classStudent', (cs) => {
         cs.preload('class')
-        cs.preload('semester')
+        cs.preload('academicYear')
       })
       .firstOrFail()
   }
@@ -141,8 +143,8 @@ export default class StudentsService implements StudentContract, UserContract {
   async getClassStudent(studentId: number) {
     return await ClassStudent.query()
       .where('student_id', studentId)
-      .select('class_id', 'semester_id')
-      .preload('semester')
+      .select('class_id', 'academic_year_id')
+      .preload('academicYear')
       .preload('class')
       .first()
   }
@@ -155,8 +157,8 @@ export default class StudentsService implements StudentContract, UserContract {
 
     const classStudent = await ClassStudent.query()
       .where('student_id', studentId)
-      .select('class_id', 'semester_id')
-      .preload('semester')
+      .select('class_id', 'academic_year_id')
+      .preload('academicYear')
       .preload('class')
       .first()
 
@@ -164,36 +166,75 @@ export default class StudentsService implements StudentContract, UserContract {
 
     return await Schedule.query()
       .where('class_id', classStudent.class_id)
-      .preload('module')
+      .preload('module', (m) =>
+        m.preload('teacher', (t) => {
+          t.select('id', 'name')
+        })
+      )
       .preload('room')
   }
 
   /**
    * Mengambil data presensi siswa berdasarkan student_id.
+   * Presensi yang diambil hanya dari tahun ajar yang aktif.
    */
   async getPresence(studentId: number) {
+    const student = await Student.query().where('id', studentId).firstOrFail()
+
+    const now = new Date()
+
+    const activeAcademicYear = await AcademicYear.query()
+      .where('status', 1)
+      .where('date_start', '<', now)
+      .where('date_end', '>', now)
+      .firstOrFail()
+
     const result = await Absence.query()
       .join('class_students', 'absences.class_student_id', '=', 'class_students.id')
       .join('students', 'class_students.student_id', '=', 'students.id')
+      .join('academic_years', 'class_students.academic_year_id', '=', 'academic_years.id')
       .where('class_students.student_id', studentId)
+      .where('class_students.academic_year_id', activeAcademicYear.id)
       .select(
+        'students.name as student_name',
         db.raw(`COUNT(*) as total`),
         db.raw(`COUNT(CASE WHEN absences.status = 'Hadir' THEN 1 END) as hadir`),
         db.raw(
           `COUNT(CASE WHEN absences.status IN ('Sakit', 'Izin', 'Alfa') THEN 1 END) as tidak_hadir`
         )
       )
+      .groupBy('students.name')
       .first()
 
     return {
-      message: result
-        ? 'Data presensi siswa berhasil ditemukan'
-        : 'Data presensi siswa tidak ditemukan / hasilnya 0',
+      student_name: student.name ?? null,
+      tahun_ajar: activeAcademicYear.name ?? null,
+      semester: activeAcademicYear.semester ?? null,
       total: result?.$extras.total ?? 0,
       hadir: result?.$extras.hadir ?? 0,
       tidak_hadir: result?.$extras.tidak_hadir ?? 0,
     }
   }
 
-  async studentPromoted()
+  async studentPromoted(data: any) {
+    try {
+      for (const datum of data) {
+        const student = await Student.query().where('id', datum.student_id).firstOrFail()
+
+        const kelas = await Class.query().where('id', datum.class_id).firstOrFail()
+
+        const academicYear = await AcademicYear.query()
+          .where('id', datum.academic_year_id)
+          .firstOrFail()
+
+        await ClassStudent.create({
+          student_id: student.id,
+          class_id: kelas.id,
+          academic_year_id: academicYear.id,
+        })
+      }
+    } catch (error) {
+      throw error
+    }
+  }
 }

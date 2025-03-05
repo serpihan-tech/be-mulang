@@ -3,12 +3,12 @@ import { DateTime } from 'luxon'
 import db from '@adonisjs/lucid/services/db'
 
 export default class AdminDashboardService {
-  private semesterId: number | undefined
+  private academic_yearId: number | undefined
   /**
    *@returns total siswa yang BELUM lulus
    */
   async getAllStudents({}: HttpContext, _sId?: number) {
-    _sId = this.semesterId
+    _sId = this.academic_yearId
 
     const query = db
       .from('students')
@@ -16,7 +16,7 @@ export default class AdminDashboardService {
       .where('students.is_graduate', false)
 
     if (_sId) {
-      query.andWhere('class_students.semester_id', _sId)
+      query.andWhere('class_students.academic_year_id', _sId)
     }
 
     const studentCount = await query.count('* as total')
@@ -39,12 +39,12 @@ export default class AdminDashboardService {
    * @return total mata pelajaran
    */
   async getAllModules({}: HttpContext, _sId?: number) {
-    _sId = this.semesterId
+    _sId = this.academic_yearId
 
     const module = db.from('modules') //
 
     if (_sId) {
-      module.where('modules.semester_id', _sId)
+      module.where('modules.academic_year_id', _sId)
     }
 
     const moduleCount = await module.count('* as total')
@@ -79,7 +79,7 @@ export default class AdminDashboardService {
    *           ]
    */
   async getAbsenceByWeek({}: HttpContext, _sId?: number) {
-    _sId = this.semesterId
+    _sId = this.academic_yearId
 
     const startOfWeek = DateTime.local().startOf('week')
     const endOfWeek = DateTime.local().endOf('week')
@@ -94,10 +94,13 @@ export default class AdminDashboardService {
       .select(db.raw("SUM(CASE WHEN status = 'Izin' THEN 1 ELSE 0 END) as izin"))
       .select(db.raw("SUM(CASE WHEN status = 'Sakit' THEN 1 ELSE 0 END) as sakit"))
       .select(db.raw("SUM(CASE WHEN status = 'Alfa' THEN 1 ELSE 0 END) as alfa"))
-      .whereBetween('date', [startOfWeek.toISODate(), endOfWeek.toISODate()])
+
+    if (!_sId) {
+      absences.whereBetween('date', [startOfWeek.toISODate(), endOfWeek.toISODate()])
+    }
 
     if (_sId) {
-      absences.andWhere('class_students.semester_id', _sId)
+      absences.andWhere('class_students.academic_year_id', _sId)
     }
 
     const absencesResult = await absences.groupBy('date')
@@ -131,12 +134,12 @@ export default class AdminDashboardService {
 
   /**
    *
-   * @returns semua semester
+   * @returns semua academic_year
    */
-  async getAllSemesters({}: HttpContext) {
-    const semesters = await db.from('semesters').select('id', 'name')
+  async getAllAcademicYears({}: HttpContext) {
+    const academicYears = await db.from('academic_years').select('id', 'name')
 
-    return semesters
+    return academicYears
   }
 
   /**
@@ -145,14 +148,14 @@ export default class AdminDashboardService {
    * @returns total siswa, total guru, total mapel, total alumni, dan absensi
    */
   async dashboardAdmin(ctx: HttpContext, _sId?: number) {
-    this.semesterId = _sId
+    this.academic_yearId = _sId
     const data = {
-      total_students: await this.getAllStudents(ctx, this.semesterId),
+      total_students: await this.getAllStudents(ctx, this.academic_yearId),
       total_teachers: await this.getAllTeachers(ctx),
-      total_modules: await this.getAllModules(ctx, this.semesterId),
+      total_modules: await this.getAllModules(ctx, this.academic_yearId),
       total_alumni: await this.getAlumni(ctx),
-      absences: await this.getAbsenceByWeek(ctx, this.semesterId),
-      semesters: await this.getAllSemesters(ctx),
+      absences: await this.getAbsenceByWeek(ctx, this.academic_yearId),
+      academic_years: await this.getAllAcademicYears(ctx),
     }
 
     return data
