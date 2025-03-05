@@ -15,6 +15,8 @@ const TeacherController = () => import('#controllers/teachers_controller')
 const ResetPasswordController = () => import('#controllers/reset_password_controller')
 const StudentsController = () => import('#controllers/students_controller')
 const DashboardController = () => import('#controllers/dashboard_controller')
+const ClassesController = () => import('#controllers/classes_controller')
+const AcademicYearsController = () => import('#controllers/academic_years_controller')
 import { middleware } from '#start/kernel'
 
 router.post('/user/create', [UserController, 'create']).as('user.create') // TODO: Tambah Middleware Auth
@@ -61,5 +63,8 @@ router.group(() => {
     router.group(() => {
         // TODO : Implementasi Fitur Teacher
     }).prefix('/teachers')
-}).use(middleware.auth())
 
+    router.resource('/classes', ClassesController)
+    router.resource('/academic-years', AcademicYearsController)
+    
+}).use(middleware.auth())
