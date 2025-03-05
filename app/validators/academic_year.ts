@@ -1,7 +1,18 @@
 import vine, { SimpleMessagesProvider } from '@vinejs/vine'
-import { messages } from '../utils/message_validation.js'
+import { messages } from '../utils/validation_message.js'
+import { create } from 'domain'
 
-export const createRecordValidator = vine.compile(
+export const createAcademicYearValidator = vine.compile(
+  vine.object({
+    name: vine.string().trim().minLength(3).maxLength(255),
+    date_start: vine.date(),
+    date_end: vine.date().afterField('date_start'),
+    semester: vine.enum(['ganjil', 'genap']),
+    status: vine.boolean(),
+  })
+)
+
+export const updateAcademicYearValidator = vine.compile(
   vine.object({
     name: vine.string().trim().minLength(3).maxLength(255),
     date_start: vine.date(),
@@ -19,4 +30,5 @@ const field = {
   status: 'Status',
 }
 
-createRecordValidator.messagesProvider = new SimpleMessagesProvider(messages, field)
+createAcademicYearValidator.messagesProvider = new SimpleMessagesProvider(messages, field)
+updateAcademicYearValidator.messagesProvider = new SimpleMessagesProvider(messages, field)

@@ -10,13 +10,32 @@ export default class AcademicYearService {
     return academic_years
   }
 
-  async update(data: any, academicYearId: number):Promise<any> {
-    const academicYear = await AcademicYear.findOrFail(academicYearId)
-    academicYear.merge(data)
-    return await academicYear.save()
+  async create(data: any) {
+    const trx = await db.transaction()
+    try {
+      const academic_year = await AcademicYear.create(data, { client: trx })
+      await trx.commit()
+
+      return academic_year
+    } catch (error) {
+      await trx.rollback()
+      throw error
+    }
   }
 
-  async delete(id: number) { 
+  async update(data: any, academicYearId: number): Promise<any> {
+    const trx = await db.transaction()
+    try {
+      const academicYear = await AcademicYear.findOrFail(academicYearId)
+      academicYear.merge(data)
+      return await academicYear.useTransaction(trx).save()
+    } catch (error) {
+      await trx.rollback()
+      throw error
+    }
+  }
+
+  async delete(id: number) {
     const academic_year = await AcademicYear.query().where('id', id).firstOrFail()
     return await academic_year.delete()
   }
