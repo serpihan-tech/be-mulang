@@ -79,7 +79,8 @@ export default class TeacherService implements TeacherContract, UserContract {
     }
   }
 
-  async delete(user: User): Promise<any> {
-    await user.delete()
+  async delete(id: number): Promise<any> {
+    const student = await Teacher.query().where('id', id).preload('user').firstOrFail()
+    return await student?.user.delete()
   }
 }

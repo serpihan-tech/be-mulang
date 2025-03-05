@@ -1,21 +1,5 @@
-import vine from '@vinejs/vine'
-import { FieldContext, MessagesProviderContact } from '@vinejs/vine/types'
-
-export class CustomMessagesProvider implements MessagesProviderContact {
-  getMessage(
-    defaultMessage: string,
-    rule: string,
-    field: FieldContext,
-    meta?: Record<string, any>
-  ) {
-    const messages: Record<string, string> = {
-      'password.minLength': 'Password minimal harus 8 karakter!',
-      'email.email': 'Format email tidak valid!',
-    }
-
-    return messages[`${field.name}.${rule}`] || defaultMessage
-  }
-}
+import vine, { SimpleMessagesProvider } from '@vinejs/vine'
+import { messages } from '../utils/validation_message.js'
 
 export const createUserValidator = vine.compile(
   vine.object({
@@ -39,5 +23,10 @@ export const updateUserValidator = vine.compile(
   })
 )
 
+const fields = {
+  username: 'username',
+  email: 'email',
+  password: 'password',
+}
 // createUserValidator.messagesProvider = new CustomMessagesProvider()
-passwordValidator.messagesProvider = new CustomMessagesProvider()
+passwordValidator.messagesProvider = new SimpleMessagesProvider(messages, fields)
