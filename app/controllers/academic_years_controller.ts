@@ -22,7 +22,7 @@ export default class AcademicYearsController {
         academicYears
       })
     } catch (error) {
-      return response.badRequest({error})
+      return response.badRequest({ error })
     }
   }
 
@@ -45,7 +45,7 @@ export default class AcademicYearsController {
         academicYear
       })
     } catch (error) {
-      return response.badRequest({error})
+      return response.badRequest({ error })
     }
   }
 
@@ -62,7 +62,7 @@ export default class AcademicYearsController {
         academicYears
       })
     } catch (error) {
-      return response.badRequest({error})
+      return response.badRequest({ error })
     }
 
 
@@ -71,24 +71,26 @@ export default class AcademicYearsController {
   /**
    * Edit individual record
    */
-  async edit({ params, request, response }: HttpContext) {
+  async edit({ }: HttpContext) {
+  }
+
+  /**
+   * Handle form submission for the edit action
+  */
+  async update({ params, request, response }: HttpContext) {
     const academicYearId: number = params.id
     try {
       await updateAcademicYearValidator.validate(request.all())
       const academicYear = await this.academicYearService.update(request.all(), academicYearId)
 
-      return response.ok({ 
-        message: 'Tahun Ajaran Berhasil Diubah', academicYear 
+      return response.ok({
+        message: 'Tahun Ajaran Berhasil Diubah', academicYear
       })
     } catch (error) {
-      return response.badRequest({error})
+      return response.badRequest({ error })
     }
-  }
 
-  /**
-   * Handle form submission for the edit action
-   */
-  async update({ }: HttpContext) { }
+  }
 
   /**
    * Delete record
@@ -97,11 +99,11 @@ export default class AcademicYearsController {
     try {
       const id: number = params.id
       await this.academicYearService.delete(id)
-      return response.ok({ 
-        message: 'Kelas Berhasil Dihapus' 
+      return response.ok({
+        message: 'Kelas Berhasil Dihapus'
       })
     } catch (error) {
-      return response.badRequest({error})
+      return response.badRequest({ error })
     }
   }
 }
