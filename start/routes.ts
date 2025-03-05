@@ -15,6 +15,8 @@ const TeacherController = () => import('#controllers/teachers_controller')
 const ResetPasswordController = () => import('#controllers/reset_password_controller')
 const StudentsController = () => import('#controllers/students_controller')
 const DashboardController = () => import('#controllers/dashboard_controller')
+const ClassesController = () => import('#controllers/classes_controller')
+const AcademicYearsController = () => import('#controllers/academic_years_controller')
 import { middleware } from '#start/kernel'
 
 router.post('/user/create', [UserController, 'create']).as('user.create') // TODO: Tambah Middleware Auth
@@ -41,6 +43,7 @@ router.group(() => {
         // TODO : Implementasi Fitur Admin
     }).prefix('/admins')
 
+    
     // untuk students
     router.resource('/students', StudentsController)
         .use(['store', 'update'], middleware.role(['teacher', 'admin']))
@@ -50,7 +53,7 @@ router.group(() => {
         router.get('/presence/:studentId', [StudentsController, 'getPresence'])
         router.get('/schedule/:studentId', [StudentsController, 'getSchedule'])
     }).prefix('/students')
-    
+
     //untuk teachers
     router.resource('/teachers', TeacherController)
         .use(['store', 'destroy'], middleware.role(['admin']))
@@ -59,5 +62,7 @@ router.group(() => {
         // TODO : Implementasi Fitur Teacher
     }).prefix('/teachers')
 
+    router.resource('/classes', ClassesController)
+    router.resource('/academic-years', AcademicYearsController)
+    
 }).use(middleware.auth())
-

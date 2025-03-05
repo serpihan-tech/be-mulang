@@ -25,5 +25,5 @@ export default interface UserContract {
   /**
    * Menghapus data pengguna berdasarkan ID
    */
-  delete(user: User): Promise<any>
+  delete(id: number): Promise<any>
 }

@@ -25,7 +25,15 @@ export default class StudentsService implements StudentContract, UserContract {
   }
 
   async show(id: number): Promise<any> {
-    return await Student.query().where('id', id).preload('user').preload('studentDetail')
+    return await Student.query()
+      .where('id', id)
+      .preload('user')
+      .preload('studentDetail')
+      .preload('classStudent', (cs) => {
+        cs.preload('class')
+        cs.preload('semester')
+      })
+      .firstOrFail()
   }
 
   async create(data: any): Promise<any> {
@@ -122,8 +130,9 @@ export default class StudentsService implements StudentContract, UserContract {
     }
   }
 
-  async delete(user: User): Promise<any> {
-    return await user.delete()
+  async delete(id: number): Promise<any> {
+    const student = await Student.query().where('id', id).firstOrFail()
+    return await student.user.delete()
   }
 
   /**
@@ -185,4 +194,6 @@ export default class StudentsService implements StudentContract, UserContract {
       tidak_hadir: result?.$extras.tidak_hadir ?? 0,
     }
   }
+
+  async studentPromoted()
 }

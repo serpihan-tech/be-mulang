@@ -1,4 +1,5 @@
 import vine, { SimpleMessagesProvider } from '@vinejs/vine'
+import { messages } from '../utils/validation_message.js'
 // import { CustomAPIVineError } from '#start/validator'
 
 export const createTeacherValidator = vine.compile(
@@ -28,21 +29,6 @@ export const updateTeacherValidator = vine.compile(
     profile_picture: vine.string().optional(),
   })
 )
-
-const messages: Record<string, string> = {
-  'gender.enum': '{{ field }} harus pria atau wanita',
-  'religion.enum':
-    '{{ field }} harus salah satu dari Kristen, Katolik, Islam, Hindu, Budha, atau Konghucu',
-  'phone.minLength': '{{ field }} harus memiliki panjang minimal 11 karakter',
-  'phone.maxLength': '{{ field }} harus memiliki panjang maksimal 13 karakter',
-  'birth_date.date': '{{ field }} harus berupa tanggal',
-  'birth_date.requiredifexists': '{{ field }} harus diisi',
-  'birth_place.string': '{{ field }} harus berupa teks',
-  'name.minLength': '{{ field }} harus memiliki panjang minimal 4 karakter',
-  'nip.minLength': '{{ field }} harus memiliki panjang minimal 4 karakter',
-  'address.minLength': '{{ field }} harus memiliki panjang minimal 4 karakter',
-  'profile_picture.minLength': 'URL {{ field }} harus memiliki panjang minimal 4 karakter',
-}
 
 const fields = {
   gender: 'Jenis Kelamin',
