@@ -10,7 +10,7 @@ import AcademicYearService from '#services/academic_year_service'
 export default class AcademicYearsController {
   constructor(private academicYearService: AcademicYearService) { }
   /**
-   * Display a list of resource
+   * Display a list of resources
    */
   async index({ response }: HttpContext) {
     try {
@@ -29,8 +29,7 @@ export default class AcademicYearsController {
   /**
    * Display form to create a new record
    */
-  async create({ }: HttpContext) {
-  }
+  async create({ }: HttpContext) {}
 
   /**
    * Handle form submission for the create action
