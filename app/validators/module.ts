@@ -17,6 +17,14 @@ export const updateModuleValidator = vine.compile(
   })
 )
 
+export const filterModuleValidator = vine.compile(
+  vine.object({
+    name: vine.string().optional(),
+    teacherNip: vine.string().exists({ table: 'teachers', column: 'nip' }).optional(),
+    academicYear: vine.string().exists({ table: 'academic_years', column: 'name' }).optional(),
+  })
+)
+
 const fields = {
   name: 'Nama Modul',
   teacher_id: 'ID Guru',
@@ -25,3 +33,4 @@ const fields = {
 
 createModuleValidator.messagesProvider = new SimpleMessagesProvider(messages, fields)
 updateModuleValidator.messagesProvider = new SimpleMessagesProvider(messages, fields)
+filterModuleValidator.messagesProvider = new SimpleMessagesProvider(messages, fields)

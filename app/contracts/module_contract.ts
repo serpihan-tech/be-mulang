@@ -6,4 +6,6 @@ export default interface ModuleContract {
   update(id:any, data:any):Promise<any>
 
   delete(id:number):Promise<any>
+
+  getByFilter(filter:any, columns?:string[]):Promise<any>
 }

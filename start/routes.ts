@@ -81,4 +81,5 @@ router.group(() => {
     
 }).use(middleware.auth())
 
+router.get('/modules/filter', [ModulesController, 'getByFilter'])
 router.resource('/modules', ModulesController)

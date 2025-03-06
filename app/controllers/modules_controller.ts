@@ -1,7 +1,7 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import { inject } from '@adonisjs/core'
 import ModuleService from '#services/module_service'
-import { createModuleValidator, updateModuleValidator } from '#validators/module'
+import { createModuleValidator, filterModuleValidator, updateModuleValidator } from '#validators/module'
 
 @inject()
 export default class ModulesController {
@@ -25,6 +25,31 @@ export default class ModulesController {
           ...error
         }
       }) 
+    }
+  }
+
+  async getByFilter({request, response}: HttpContext) {
+    const filter = {
+      name: request.input('name'),
+      teacherNip: request.input('teacherNip'),
+      academicYear: request.input('academicYear')
+    }
+    await filterModuleValidator.validate({...filter})
+    try {
+      const columns = ['name', 'teacher_id', 'academic_year_id']
+
+      const modules = await this.moduleService.getByFilter(filter, columns)
+
+      return response.ok({
+        message: 'Berhasil Mendapatkan Data Modul',
+        modules
+      })
+    } catch (error) {
+      throw response.send({
+        "error": {
+          ...error
+        }
+      })
     }
   }
 
