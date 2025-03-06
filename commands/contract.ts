@@ -16,8 +16,7 @@ export default class CreateContractCommand extends BaseCommand {
       const className = this.filename.charAt(0).toUpperCase() + this.filename.slice(1) + 'Contract'
       const filePath = join(fileURLToPath(this.app.appRoot), 'app/contracts', formattedName)
 
-      const template = `import type { HttpContext } from '@adonisjs/core/http'
-
+      const template = `
 export default interface ${className} {
   
 }`

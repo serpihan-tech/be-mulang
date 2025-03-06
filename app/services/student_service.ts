@@ -15,7 +15,7 @@ export default class StudentsService implements StudentContract, UserContract {
     const pages = page
     const limit = 10
 
-    return await Student.query()
+    const students = await Student.query()
       .where('is_graduate', false)
       .preload('user')
       .preload('studentDetail')
@@ -23,7 +23,10 @@ export default class StudentsService implements StudentContract, UserContract {
         cs.preload('class')
         cs.preload('academicYear')
       })
+      .has('classStudent')
       .paginate(pages, limit)
+
+    return students
   }
 
   async show(id: number): Promise<any> {
