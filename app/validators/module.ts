@@ -4,13 +4,24 @@ import { messages } from '../utils/validation_message.js'
 export const createModuleValidator = vine.compile(
   vine.object({
     name: vine.string(),
-    class_id: vine.number().exists({ table: 'classes', column: 'id' }),
+    teacher_id: vine.number().exists({ table: 'teachers', column: 'id' }),
+    academic_year_id: vine.number().exists({ table: 'academic_years', column: 'id' }),
   })
 )
 
 export const updateModuleValidator = vine.compile(
   vine.object({
     name: vine.string(),
-    class_id: vine.number().exists({ table: 'classes', column: 'id' }),
+    teacher_id: vine.number().exists({ table: 'teachers', column: 'id' }),
+    academic_year_id: vine.number().exists({ table: 'academic_years', column: 'id' }),
   })
 )
+
+const fields = {
+  name: 'Nama Modul',
+  teacher_id: 'ID Guru',
+  academic_year_id: 'ID Tahun Ajaran',
+}
+
+createModuleValidator.messagesProvider = new SimpleMessagesProvider(messages, fields)
+updateModuleValidator.messagesProvider = new SimpleMessagesProvider(messages, fields)

@@ -3,13 +3,13 @@ import ModuleContract from "../contracts/module_contract.js";
 import Module from "#models/module";
 
 export default class ModuleService implements ModuleContract{
-  async get(id?: number): Promise<any> {
+  async get(columns?: string[] , id?: number): Promise<any> {
     try {
       if (id) {
-        const dataModule = await db.from('modules').where('id', id).select('*')
+        const dataModule = await db.from('modules').where('id', id).select(columns? columns : ['*'])
         return dataModule
       }
-      const modules = await db.from('modules').select('*')
+      const modules = await db.from('modules').select(columns? columns : ['*'])
       return modules
       
     } catch (error) {
@@ -26,7 +26,7 @@ export default class ModuleService implements ModuleContract{
       throw new Error("Method not implemented.");
     }
   }
-  async update(id: number, data: any): Promise<any> {
+  async update(data: any, id: number): Promise<any> {
     const trx = await db.transaction()
     try {
       const modules = await Module.findOrFail(id, { client: trx })

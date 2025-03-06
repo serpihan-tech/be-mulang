@@ -29,8 +29,7 @@ export default class AcademicYearsController {
   /**
    * Display form to create a new record
    */
-  async create({ }: HttpContext) {
-  }
+  async create({ }: HttpContext) {}
 
   /**
    * Handle form submission for the create action
