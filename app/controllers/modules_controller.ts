@@ -20,7 +20,11 @@ export default class ModulesController {
         modules
       })
     } catch (error) {
-      return response.badRequest({ error })
+      throw response.send({
+        "error": {
+          ...error
+        }
+      }) 
     }
   }
 
@@ -42,7 +46,7 @@ export default class ModulesController {
         module
       })
     }catch (error){
-      return  response.badRequest({ error })
+      return  error
     }
   }
 
