@@ -18,6 +18,7 @@ const DashboardController = () => import('#controllers/dashboard_controller')
 const ClassesController = () => import('#controllers/classes_controller')
 const AcademicYearsController = () => import('#controllers/academic_years_controller')
 const AbsenceController = () => import('#controllers/absences_controller')
+const SchedulesController = () => import('#controllers/schedules_controller')
 
 import { middleware } from '#start/kernel'
 
@@ -67,13 +68,24 @@ router.group(() => {
         }).prefix('/teachers')
     })
 
+    // Schedule / Jadwal
+    router.group(() => {
+        router.resource('/schedules', SchedulesController)
+    })
+
     // Absensi
-    router.resource('/absences', AbsenceController)
+    router.group(() => {
+        router.resource('/absences', AbsenceController)
+    })
 
     // Classes
-    router.resource('/classes', ClassesController)
+    router.group(() => {
+        router.resource('/classes', ClassesController)
+    })
     
     // Academic Years
-    router.resource('/academic-years', AcademicYearsController)
+    router.group(() => {
+        router.resource('/academic-years', AcademicYearsController)
+    })
     
 }).use(middleware.auth())
