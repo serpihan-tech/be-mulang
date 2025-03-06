@@ -4,7 +4,7 @@ import Module from "#models/module";
 import Teacher from "#models/teacher";
 import AcademicYear from "#models/academic_year";
 
-export default class ModuleService implements ModuleContract{
+export default class ModuleService {
   async get(columns?: string[], id?: number): Promise<any> {
     try {
       if (id) {
@@ -19,33 +19,35 @@ export default class ModuleService implements ModuleContract{
     }
   }
 
-  async getByFilter(filter: any, columns?: string[]): Promise<any> {
+  async getByFilter(filter: any, page?: number, limit?: number, columns?: string[]): Promise<any> {
     let { name = "", teacherNip = "", academicYear = "" } = filter
 
     if (teacherNip) {
-      const teacher = await Teacher.query().where('nip', teacherNip).firstOrFail()
-      teacherNip = teacher.id || null
+      const teacher = await Teacher.query().where('nip', teacherNip).first()
+      teacherNip = teacher?.id || ""
     }
 
     if (academicYear) {
-      const academicYearModel = await AcademicYear.query().where('name', academicYear).firstOrFail()
-      academicYear = academicYearModel.id || null
+      const academicYearModel = await AcademicYear.query().where('name', academicYear).first()
+      academicYear = academicYearModel?.id || ""
     }
 
     try {
-      let modules = db.from('modules')
+      const modules = await Module.query()
+      .if(name, (query) => {
+        query.where('name', 'like', `%${name}%`)
+      })
+      .if(teacherNip, (query) => {
+        query.where('teacher_id', teacherNip)
+      })
+      .if(academicYear, (query) => {
+        query.where('academic_year_id', academicYear)
+      })
+      .select(columns ? columns : ['*'])
+      .paginate((page||1), (limit||1))
 
-      if (name) {
-        await modules.where('name', 'like', `%${name}%`).select(columns ? columns : ['*'])
-      }
-      if (teacherNip) {
-        await modules.where('teacher_id', teacherNip).select(columns ? columns : ['*'])
-      }
-      if (academicYear) {
-        await modules.where('academic_year_id', academicYear).select(columns ? columns : ['*'])
-      }
-
-      return modules
+      return {modules, 
+        test: limit}
     } catch (error) {
       throw new Error("Method not implemented.");
     }

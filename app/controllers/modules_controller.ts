@@ -30,15 +30,17 @@ export default class ModulesController {
 
   async getByFilter({request, response}: HttpContext) {
     const filter = {
-      name: request.input('name'),
-      teacherNip: request.input('teacherNip'),
-      academicYear: request.input('academicYear')
+      name: request.input('name', null),
+      teacherNip: request.input('teacherNip', null),
+      academicYear: request.input('academicYear', null)
     }
-    await filterModuleValidator.validate({...filter})
+    const page = request.input('page')
+    const limit = request.input('limit')
+
     try {
       const columns = ['name', 'teacher_id', 'academic_year_id']
 
-      const modules = await this.moduleService.getByFilter(filter, columns)
+      const modules = await this.moduleService.getByFilter(filter, page, limit, columns)
 
       return response.ok({
         message: 'Berhasil Mendapatkan Data Modul',
