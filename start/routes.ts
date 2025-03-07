@@ -20,6 +20,7 @@ const AcademicYearsController = () => import('#controllers/academic_years_contro
 const AbsenceController = () => import('#controllers/absences_controller')
 const SchedulesController = () => import('#controllers/schedules_controller')
 const ModulesController = () => import('#controllers/modules_controller')
+const ScoreController = () => import('#controllers/scores_controller')
 
 import { middleware } from '#start/kernel'
 
@@ -93,3 +94,7 @@ router.group(() => {
     router.get('/modules/filter', [ModulesController, 'getByFilter'])
     router.resource('/modules', ModulesController)
 }).use(middleware.auth())
+
+
+router.get('/scores/filter', [ScoreController, 'getByFilter'])
+router.resource('/scores', ScoreController)
