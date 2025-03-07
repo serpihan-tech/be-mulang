@@ -1,14 +1,11 @@
 import type { HttpContext } from '@adonisjs/core/http'
-import {
-  createAcademicYearValidator,
-  updateAcademicYearValidator
-} from '#validators/academic_year'
+import { createAcademicYearValidator, updateAcademicYearValidator } from '#validators/academic_year'
 import { inject } from '@adonisjs/core'
 import AcademicYearService from '#services/academic_year_service'
 
 @inject()
 export default class AcademicYearsController {
-  constructor(private academicYearService: AcademicYearService) { }
+  constructor(private academicYearService: AcademicYearService) {}
   /**
    * Display a list of resources
    */
@@ -19,7 +16,7 @@ export default class AcademicYearsController {
 
       return response.ok({
         message: 'Berhasil Mendapatkan Data Tahun Ajaran',
-        academicYears
+        academicYears,
       })
     } catch (error) {
       return response.badRequest({ error })
@@ -29,11 +26,11 @@ export default class AcademicYearsController {
   /**
    * Display form to create a new record
    */
-  async create({ }: HttpContext) {}
+  async create({}: HttpContext) {}
 
   /**
    * Handle form submission for the create action
-  */
+   */
   async store({ request, response }: HttpContext) {
     try {
       await createAcademicYearValidator.validate(request.all())
@@ -41,7 +38,7 @@ export default class AcademicYearsController {
 
       return response.ok({
         message: 'Tahun Ajaran Berhasil Ditambahkan',
-        academicYear
+        academicYear,
       })
     } catch (error) {
       return response.badRequest({ error })
@@ -50,7 +47,7 @@ export default class AcademicYearsController {
 
   /**
    * Show individual record
-  */
+   */
   async show({ params, response }: HttpContext) {
     const id: number = params.id
     try {
@@ -58,24 +55,21 @@ export default class AcademicYearsController {
       const academicYears = await this.academicYearService.get(column, id)
       return response.ok({
         message: 'Berhasil Mendapatkan Data Tahun Ajaran',
-        academicYears
+        academicYears,
       })
     } catch (error) {
       return response.badRequest({ error })
     }
-
-
   }
 
   /**
    * Edit individual record
    */
-  async edit({ }: HttpContext) {
-  }
+  async edit({}: HttpContext) {}
 
   /**
    * Handle form submission for the edit action
-  */
+   */
   async update({ params, request, response }: HttpContext) {
     const academicYearId: number = params.id
     try {
@@ -83,12 +77,12 @@ export default class AcademicYearsController {
       const academicYear = await this.academicYearService.update(request.all(), academicYearId)
 
       return response.ok({
-        message: 'Tahun Ajaran Berhasil Diubah', academicYear
+        message: 'Tahun Ajaran Berhasil Diubah',
+        academicYear,
       })
     } catch (error) {
       return response.badRequest({ error })
     }
-
   }
 
   /**
@@ -99,7 +93,7 @@ export default class AcademicYearsController {
       const id: number = params.id
       await this.academicYearService.delete(id)
       return response.ok({
-        message: 'Kelas Berhasil Dihapus'
+        message: 'Kelas Berhasil Dihapus',
       })
     } catch (error) {
       return response.badRequest({ error })

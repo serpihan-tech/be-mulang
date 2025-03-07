@@ -93,3 +93,8 @@ router.group(() => {
     router.get('/modules/filter', [ModulesController, 'getByFilter'])
     router.resource('/modules', ModulesController)
 }).use(middleware.auth())
+
+// Cek IP Address
+router.get('/cek-ip', async ({ request, response }) => {
+    return response.ok({ ip: request.ip })
+}).use(middleware.ip('absen'))
