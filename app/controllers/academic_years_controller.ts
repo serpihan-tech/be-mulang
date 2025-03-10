@@ -1,105 +1,102 @@
 import type { HttpContext } from '@adonisjs/core/http'
-import AcademicYear from '#models/academic_year'
-import { createRecordValidator } from '#validators/academic_year'
+import { createAcademicYearValidator, updateAcademicYearValidator } from '#validators/academic_year'
 import { inject } from '@adonisjs/core'
 import AcademicYearService from '#services/academic_year_service'
 
 @inject()
 export default class AcademicYearsController {
-  constructor(private academicYearService: AcademicYearService) { }
+  constructor(private academicYearService: AcademicYearService) {}
   /**
-   * Display a list of resource
+   * Display a list of resources
    */
   async index({ response }: HttpContext) {
     try {
       const column = ['id', 'name', 'date_start', 'date_end', 'semester', 'status']
-      const academic_years = await this.academicYearService.get(column)
+      const academicYears = await this.academicYearService.get(column)
 
       return response.ok({
-        status: true,
-        code: 200,
-        data: academic_years
+        message: 'Berhasil Mendapatkan Data Tahun Ajaran',
+        academicYears,
       })
     } catch (error) {
-      return response.status(400).send({
-        error: {
-          message: error.message || "Terjadi kesalahan pada server"
-        }
-      })
+      return response.badRequest({ error })
     }
   }
 
   /**
    * Display form to create a new record
    */
-  async create({ }: HttpContext) {
-  }
+  async create({}: HttpContext) {}
 
   /**
    * Handle form submission for the create action
-  */
+   */
   async store({ request, response }: HttpContext) {
-    const academicYear = new AcademicYear()
     try {
-      academicYear.name = request.input('name')
-      academicYear.date_start = request.input('date_start')
-      academicYear.date_end = request.input('date_end')
-      academicYear.semester = request.input('semester')
-      academicYear.status = request.input('status')
+      await createAcademicYearValidator.validate(request.all())
+      const academicYear = await this.academicYearService.create(request.all())
 
-      await createRecordValidator.validate(academicYear)
-      await academicYear.save()
-
-      return { message: 'Tahun Ajaran Berhasil Ditambahkan', data: academicYear }
-    } catch (error) {
-      return response.status(400).send({
-        error: {
-          message: error.message || "Terjadi kesalahan pada server"
-        }
+      return response.ok({
+        message: 'Tahun Ajaran Berhasil Ditambahkan',
+        academicYear,
       })
+    } catch (error) {
+      return response.badRequest({ error })
     }
   }
 
   /**
    * Show individual record
-  */
+   */
   async show({ params, response }: HttpContext) {
     const id: number = params.id
     try {
       const column = ['id', 'name', 'date_start', 'date_end', 'semester', 'status']
-      const academic_years = await this.academicYearService.get(column, id)
+      const academicYears = await this.academicYearService.get(column, id)
       return response.ok({
-        status: true,
-        code: 200,
-        data: academic_years
+        message: 'Berhasil Mendapatkan Data Tahun Ajaran',
+        academicYears,
       })
     } catch (error) {
-      return response.status(400).send({
-        error: {
-          message: error.message || "Terjadi kesalahan pada server"
-        }
-      })
+      return response.badRequest({ error })
     }
-    
-
   }
 
   /**
    * Edit individual record
    */
-  async edit({ params }: HttpContext) { }
+  async edit({}: HttpContext) {}
 
   /**
    * Handle form submission for the edit action
    */
-  async update({ }: HttpContext) { }
+  async update({ params, request, response }: HttpContext) {
+    const academicYearId: number = params.id
+    try {
+      await updateAcademicYearValidator.validate(request.all())
+      const academicYear = await this.academicYearService.update(request.all(), academicYearId)
+
+      return response.ok({
+        message: 'Tahun Ajaran Berhasil Diubah',
+        academicYear,
+      })
+    } catch (error) {
+      return response.badRequest({ error })
+    }
+  }
 
   /**
    * Delete record
    */
-  async destroy({ params }: HttpContext) {
-    const id: number = params.id
-    await this.academicYearService.delete(id)
-    return { message: 'Kelas Berhasil Dihapus' }
+  async destroy({ params, response }: HttpContext) {
+    try {
+      const id: number = params.id
+      await this.academicYearService.delete(id)
+      return response.ok({
+        message: 'Kelas Berhasil Dihapus',
+      })
+    } catch (error) {
+      return response.badRequest({ error })
+    }
   }
 }

@@ -6,11 +6,11 @@ export default class extends BaseSeeder {
     await ScoreType.createMany([
       {
         name: 'Tugas / Ulangan Harian',
-        weight: 30,
+        weight: 35,
       },
       {
         name: 'UTS',
-        weight: 30,
+        weight: 25,
       },
       {
         name: 'UAS',

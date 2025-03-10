@@ -4,7 +4,7 @@ import User from '#models/user'
 
 export default class extends BaseSeeder {
   async run() {
-    await UserFactory.createMany(110)
+    await UserFactory.createMany(480)
 
     for (let i = 0; i <= 3; i++) {
       await User.create({

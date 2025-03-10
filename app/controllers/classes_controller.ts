@@ -1,80 +1,91 @@
-import Class from '#models/class'
-import { createClassValidator } from '#validators/class'
+import { createClassValidator, updateClassValidator } from '#validators/class'
 import type { HttpContext } from '@adonisjs/core/http'
-import db from '@adonisjs/lucid/services/db'
+import { inject } from '@adonisjs/core'
+import { ClassService } from '#services/class_service'
 
+@inject()
 export default class ClassesController {
+  constructor(private classService: ClassService) { }
   async index({ request, response }: HttpContext) {
     const page = request.input('page', 1)
     const limit = request.input('limit', 2)
-    const classes = await db.from('classes').select('id', 'name').paginate(page, limit)
-    return response.ok({ 
-      status: true,
-      code: 200,
-      data: classes 
-    })
+    try {
+      const classes = await this.classService.get(['id', 'name'], page, limit)
+      
+      return response.ok({ 
+        status: true,
+        code: 200,
+        data: classes 
+      })
+    } catch (error) {
+      return response.badRequest({error})
+    }
   }
 
   async create({ }: HttpContext) {
   }
   
   async store ({  request, response }: HttpContext) {
-    const classes = new Class()
-    classes.name = request.input('name')
-    classes.teacher_id = request.input('teacher_id')
-    await createClassValidator.validate(classes)
-    
-    const teacherList = await db.from('teachers').select('id').where('id', classes.teacher_id)
-    if (teacherList.length === 0) {
-      return response.badRequest({ error: { message: 'Guru Tidak Ditemukan' } })
-    }
-    
-    await classes.save()
-    
-    return response.created({
-      status: true,
-      code: 200,
-      message: 'Kelas Berhasil Ditambahkan',
-      data: classes
-    })
-  }
-
-  async show({ params, response }: HttpContext) {
-    const classId: number = params.id
-    const classes = await db.from('classes').where('id', classId).select('id', 'name')
-    return response.ok({ 
-      status: true,
-      code: 200,
-      data: classes 
-    })
-  }
-
-  async edit({ params, request }: HttpContext) {
-    const id:number = params.classId
-    const classes = await Class.findOrFail(id)
     try {
-      classes.name = request.input('name')
-      classes.teacher_id = request.input('teacher_id')
-      await createClassValidator.validate(classes)
-
-      await classes.save()
-      
-      return {
-        messages: "berhasil diubah",
-      }
+      await createClassValidator.validate(request.all())
+      const classes = await this.classService.create(request.all())
+      return response.created({
+        message: 'Kelas Berhasil Ditambahkan',
+        data: classes
+      })
     } catch (error) {
-      
+      return response.badRequest({error})
     }
-    
-    
   }
-  
-  async update({  }: HttpContext) {  }
 
-  async destroy({ params }: HttpContext) {
+  async show({ params, response, request }: HttpContext) {
+    const classId: number = params.id
+    const page = request.input('page', 1)
+    const limit = request.input('limit', 2)
+    try {
+      const classes = await this.classService.get(['id', 'name'], page, limit, classId)
+      return response.ok({ 
+        messages: "berhasil ditampilkan",
+        data: classes 
+      })
+    } catch (error) {
+      return response.badRequest({error})
+    }
+  }
+
+  async edit({ }: HttpContext) {}
+  
+  async update({ params, request, response }: HttpContext) {
     const classId:number = params.id
-    await db.from('classes').where('id', classId).delete()
-    return { message: 'Kelas Berhasil Dihapus' }
+    try {
+      await updateClassValidator.validate({
+        name: request.input('name'),
+        teacher_id: request.input('teacher_id')
+      })
+      const theClass = await this.classService.update({
+        name: request.input('name'),
+        teacher_id: request.input('teacher_id')
+      }, classId)
+
+      return response.ok({
+        messages: 'Kelas Berhasil Diubah',
+        data: theClass
+      })
+    } catch (error) {
+      return response.badRequest({error})
+    }
+  }
+
+  async destroy({ params, response }: HttpContext) {
+    try {
+      const classId:number = params.id
+      await this.classService.delete(classId)
+      return response.ok({ 
+        message: 'Kelas Berhasil Dihapus' 
+      })
+    } catch (error) {
+      return response.badRequest({error})
+    }
   }
 
 }

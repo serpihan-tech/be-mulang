@@ -5,6 +5,7 @@ import Module from './module.js'
 import Absence from './absence.js'
 import Class from './class.js'
 import Room from './room.js'
+import AnnouncementByTeacher from './announcement_by_teacher.js'
 
 export enum Days {
   SENIN = 'Senin',
@@ -20,10 +21,10 @@ export default class Schedule extends BaseModel {
   @column({ isPrimary: true })
   declare id: number
 
-  @column()
+  @column({ serializeAs: null })
   declare start_time: string
 
-  @column()
+  @column({ serializeAs: null })
   declare end_time: string
 
   @column()
@@ -55,6 +56,9 @@ export default class Schedule extends BaseModel {
 
   @hasMany(() => Absence, { foreignKey: 'schedule_id' })
   declare absences: HasMany<typeof Absence>
+
+  @hasMany(() => AnnouncementByTeacher, { foreignKey: 'schedule_id' })
+  declare announcements: HasMany<typeof AnnouncementByTeacher>
 
   public serializeExtras() {
     return {

@@ -3,7 +3,12 @@ import User from '#models/user'
 
 export default class RoleMiddleware {
   /**
-   * Middleware to check if the user has any of the allowed roles
+   * Middleware untuk cek apakah role user sesuai dengan role yang diinginkan
+   * @param {string[]} allowedRoles Array roles yang diizinkan
+   *
+   * contoh penggunaan : .use(middleware.role(['admin'])) -
+   * jika lebih dari satu maka : .use(middleware.role(['admin', 'teacher']))
+   *
    */
   public async handle(
     { auth, response }: HttpContext,
@@ -11,22 +16,23 @@ export default class RoleMiddleware {
     allowedRoles: string[]
   ) {
     const user = auth.user as User | null
-    console.log(user)
+    // console.log(user)
+
     if (!user) {
       return response.unauthorized({ error: { message: 'Anda Harus Login Terlebih Dahulu' } })
     }
 
-    // Load roles from pivot table `user_has_roles`
+    // Load roles dari pivot table `user_has_roles`
     await user.load('roles')
 
-    // Check if the user has any of the allowed roles
+    // Cek jika user memiliki salah satu role yang diizinkan
     const hasRole = user.roles.some((role) => allowedRoles.includes(role.role))
 
     if (!hasRole) {
       return response.forbidden({ error: { message: 'Anda Tidak Memiliki Akses Untuk Hal Ini' } })
     }
 
-    // continue to the next middleware or request handler
+    // Jika user memiliki role yang diizinkan, lanjutkan ke middleware berikutnya
     await next()
   }
 }

@@ -17,6 +17,11 @@ const StudentsController = () => import('#controllers/students_controller')
 const DashboardController = () => import('#controllers/dashboard_controller')
 const ClassesController = () => import('#controllers/classes_controller')
 const AcademicYearsController = () => import('#controllers/academic_years_controller')
+const AbsenceController = () => import('#controllers/absences_controller')
+const SchedulesController = () => import('#controllers/schedules_controller')
+const ModulesController = () => import('#controllers/modules_controller')
+const ScoreController = () => import('#controllers/scores_controller')
+
 import { middleware } from '#start/kernel'
 
 router.post('/user/create', [UserController, 'create']).as('user.create') // TODO: Tambah Middleware Auth
@@ -35,7 +40,6 @@ router.group(() => {
 
     router.post('/logout', [AuthController, 'logout']).as('auth.logout')
     router.get('/dashboard', [DashboardController, 'index'])
-    router.post('/dashboard', [DashboardController, 'index'])
 
 
     // untuk admin
@@ -43,26 +47,63 @@ router.group(() => {
         // TODO : Implementasi Fitur Admin
     }).prefix('/admins')
 
-    
     // untuk students
-    router.resource('/students', StudentsController)
-        .use(['store', 'update'], middleware.role(['teacher', 'admin']))
-        .use('destroy', middleware.role(['admin']))
-    
     router.group(() => {
-        router.get('/presence/:studentId', [StudentsController, 'getPresence'])
-        router.get('/schedule/:studentId', [StudentsController, 'getSchedule'])
-    }).prefix('/students')
+        router.resource('/students', StudentsController)
+            .use(['store', 'update'], middleware.role(['teacher', 'admin']))
+            .use('destroy', middleware.role(['admin']))
+        
+        router.group(() => {
+            router.post('/promote', [StudentsController, 'promoteClass'])
+            router.get('/presence/:studentId', [StudentsController, 'getPresence'])
+            router.get('/schedule/:studentId', [StudentsController, 'getSchedule'])
+        }).prefix('/students')     
+    })
 
     //untuk teachers
-    router.resource('/teachers', TeacherController)
-        .use(['store', 'destroy'], middleware.role(['admin']))
-        .use('update', middleware.role(['teacher', 'admin']))
-    router.group(() => {
-        // TODO : Implementasi Fitur Teacher
-    }).prefix('/teachers')
+    router.group(() => {     
+        router.resource('/teachers', TeacherController)
+            .use(['store', 'destroy'], middleware.role(['admin']))
+            .use('update', middleware.role(['teacher', 'admin']))
+        router.group(() => {
+            // TODO : Implementasi Fitur Teacher
+        }).prefix('/teachers')
+    })
 
-    router.resource('/classes', ClassesController)
-    router.resource('/academic-years', AcademicYearsController)
+    // Schedule / Jadwal
+    router.group(() => {
+        router.resource('/schedules', SchedulesController)
+    })
+
+    // Absensi
+    router.group(() => {
+        router.resource('/absences', AbsenceController)
+    })
+
+    // Classes
+    router.group(() => {
+        router.resource('/classes', ClassesController)
+    })
+    
+    // Academic Years
+    router.group(() => {
+        router.resource('/academic-years', AcademicYearsController)
+    })
+    
+    // Modules
+    router.get('/modules/filter', [ModulesController, 'getByFilter'])
+    router.resource('/modules', ModulesController)
+
+    // Scores
+    router.get('/scores/filter', [ScoreController, 'getByFilter'])
+    router.patch('/scores/updates', [ScoreController, 'massUpdate'])
+    router.resource('/scores', ScoreController)
+
     
 }).use(middleware.auth())
+
+
+// Cek IP Address
+router.get('/cek-ip', async ({ request, response }) => {
+    return response.ok({ ip: request.ip })
+}).use(middleware.ip('absen'))
