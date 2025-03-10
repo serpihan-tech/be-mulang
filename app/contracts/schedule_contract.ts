@@ -29,5 +29,5 @@ export default interface ScheduleContract {
    * @param id
    * @returns void
    */
-  delete(id: number): Promise<any>
+  delete(id: number): Promise<void>
 }
