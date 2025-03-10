@@ -17,7 +17,7 @@ export default class ScoresController {
         scores
       })
     } catch (error) {
-      throw error
+      return response.send({error})
     }
   }
 
@@ -40,7 +40,7 @@ export default class ScoresController {
       })
     }
     catch (error) {
-      throw error
+      return response.send({error})
     }
   }
 
@@ -73,28 +73,58 @@ export default class ScoresController {
   /**
    * Show individual record
    */
-  async show({ params }: HttpContext) {}
+  async show({ }: HttpContext) {}
 
   /**
    * Edit individual record
    */
-  async edit({ params }: HttpContext) {}
+  async edit({ }: HttpContext) {}
 
   /**
    * Handle form submission for the edit action
    */
   async update({ params, request, response }: HttpContext) {
-    const id = params.id 
-    const data = request.all()
+    try {
+      const id = params.id 
+      const data = request.all()
+  
+      await updateScoreValidator.validate(data)
+  
+      await this.scroreService.update(data, id)
+      
+      return response.ok({
+        message: "Data Berhasil Diupdate",
+        data
+      })
+    } catch (error) {
+      return response.send({error})
+    }
+  }
 
-    await updateScoreValidator.validate(data)
+  async massUpdate({ request, response }: HttpContext) {
+    try {
+      // body data
+      const data = request.input('data')
 
-    await this.scroreService.update(data, id)
-    
-    return response.ok({
-      message: "Data Berhasil Diupdate",
-      data
-    })
+      // checking data is array
+      if (!Array.isArray(data) || data.length === 0) {
+        return response.badRequest({ error: { message: 'Tidak ada data yang diproses' } })
+      }
+
+      // Validasi
+      if(data instanceof Array) {
+        for (let i = 0; i < data.length; i++) {
+          await updateScoreValidator.validate(data[i])
+          await this.scroreService.massUpdate(data[i])
+        }
+      }
+      return response.ok({
+        message: "Data Berhasil Diupdate sercara massive",
+        data
+      })
+    } catch (error) {
+      return response.send({error})
+    }
   }
 
   /**

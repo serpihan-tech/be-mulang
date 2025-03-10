@@ -96,6 +96,7 @@ router.group(() => {
 
     // Scores
     router.get('/scores/filter', [ScoreController, 'getByFilter'])
+    router.patch('/scores/updates', [ScoreController, 'massUpdate'])
     router.resource('/scores', ScoreController)
 
     

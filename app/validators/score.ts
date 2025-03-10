@@ -22,6 +22,7 @@ export const updateScoreValidator = vine.compile(
 )
 
 const fields = {
+  id: 'ID Score Siswa',
   class_student_id: 'ID Siswa',
   module_id: 'ID Modul',
   score: 'Nilai',

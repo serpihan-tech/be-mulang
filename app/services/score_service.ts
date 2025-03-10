@@ -1,8 +1,5 @@
 import db from "@adonisjs/lucid/services/db";
-import ScoreContract from "../contracts/score_contract.js";
 import Score from "#models/score";
-import { error } from "node:console";
-import score_seeder from "#database/seeders/score_seeder";
 
 export default class ScoreService {
   async get(columns?: string[], page?: number, limit?: number): Promise<any> {
@@ -27,7 +24,7 @@ export default class ScoreService {
       .if(scoreTypeId, (query) => {
         query.where('score_type_id', scoreTypeId).firstOrFail()
       })
-      .select(['*'])
+      .select(columns ? columns : ['*'])
       .paginate((page ?? 1), limit)
 
     return scores
@@ -49,6 +46,21 @@ export default class ScoreService {
     await score.useTransaction(trx).save()
     await trx.commit()
     return score
+
+  }
+
+  async massUpdate(data: any,): Promise<any> {
+    await Score.updateOrCreate(
+      {
+        class_student_id: data.class_student_id,
+        module_id: data.module_id,
+        score_type_id: data.score_type_id,
+        description: data.description
+      }, // Search criteria (harus unik)
+      {
+        score: data.score,
+      } // Data yang akan diupdate
+    )
 
   }
   async delete(id: number): Promise<any> {
