@@ -90,11 +90,14 @@ router.group(() => {
         router.resource('/academic-years', AcademicYearsController)
     })
     
-    
+    // Modules
     router.get('/modules/filter', [ModulesController, 'getByFilter'])
     router.resource('/modules', ModulesController)
+
+    // Scores
+    router.get('/scores/filter', [ScoreController, 'getByFilter'])
+    router.resource('/scores', ScoreController)
+
+    
 }).use(middleware.auth())
 
-
-router.get('/scores/filter', [ScoreController, 'getByFilter'])
-router.resource('/scores', ScoreController)

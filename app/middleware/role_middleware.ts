@@ -11,7 +11,7 @@ export default class RoleMiddleware {
     allowedRoles: string[]
   ) {
     const user = auth.user as User | null
-    console.log(user)
+    
     if (!user) {
       return response.unauthorized({ error: { message: 'Anda Harus Login Terlebih Dahulu' } })
     }

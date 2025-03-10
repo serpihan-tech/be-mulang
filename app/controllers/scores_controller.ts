@@ -1,6 +1,7 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import { inject } from '@adonisjs/core'
 import ScoreService from '#services/score_service'
+import { createScoreValidator, updateScoreValidator } from '#validators/score'
 
 @inject()
 export default class ScoresController {
@@ -33,7 +34,6 @@ export default class ScoresController {
       const columns = ['module_id', 'class_student_id', 'type_score_id']
 
       const scores = await this.scroreService.getByFilter(columns, filter, page, limit)
-
       return response.ok({
         message: 'Berhasil Mendapatkan Data Nilai',
         scores
@@ -52,12 +52,21 @@ export default class ScoresController {
   /**
    * Handle form submission for the create action
    */
-  async store({ request }: HttpContext) {
+  async store({ request, response }: HttpContext) {
     try {
-      const score = await this.scroreService.create(request.all())
+      const data = request.all()
+
+      await createScoreValidator.validate(data)
+
+      const score = await this.scroreService.create(data)
+
+      return response.ok({
+        message: "Score Berhasil Ditambahkan",
+        score
+      })
       
     } catch (error) {
-      
+      return response.send({error})
     }
   }
 
@@ -74,14 +83,34 @@ export default class ScoresController {
   /**
    * Handle form submission for the edit action
    */
-  async update({ params, request }: HttpContext) {
+  async update({ params, request, response }: HttpContext) {
+    const id = params.id 
+    const data = request.all()
 
+    await updateScoreValidator.validate(data)
+
+    await this.scroreService.update(data, id)
+    
+    return response.ok({
+      message: "Data Berhasil Diupdate",
+      data
+    })
   }
 
   /**
    * Delete record
    */
-  async destroy({ params }: HttpContext) {
+  async destroy({ params, response }: HttpContext) {
+    try{
+      const id = params.id
+      await this.scroreService.delete(id)
+  
+      return response.ok({
+        messages: "Data Behasil Dihapus"
+      })
 
+    }catch(error){
+      return response.send({error})
+    }
   }
 }
