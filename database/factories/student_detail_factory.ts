@@ -89,7 +89,7 @@ export const StudentDetailFactory = factory
     const enrollmentYear = faker.date.between({ from: '2023', to: '2025' })
 
     let students = await Student.query()
-      .whereBetween('id', [1, 100])
+      .whereBetween('id', [1, 450])
       .whereNotIn('id', (query) => {
         query.from('student_details').select('student_id')
       })

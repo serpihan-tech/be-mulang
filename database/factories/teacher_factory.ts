@@ -10,7 +10,7 @@ export const TeacherFactory = factory
   .define(Teacher, async ({}) => {
     // Ambil semua user yang memenuhi kriteria
     let users = await User.query()
-      .whereBetween('id', [3, 10])
+      .whereBetween('id', [3, 30])
       .whereNotIn('id', (query) => {
         query.from('teachers').select('user_id')
       })

@@ -10,7 +10,7 @@ export const StudentFactory = factory
     const firstName = faker.person.firstName()
     const lastName = faker.person.lastName()
     let users = await User.query()
-      .whereBetween('id', [11, 111])
+      .whereBetween('id', [31, 481])
       .whereNotIn('id', (query) => {
         query.from('students').select('user_id')
       })
