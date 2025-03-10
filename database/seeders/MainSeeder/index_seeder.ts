@@ -17,6 +17,7 @@ import AcademicYearSeeder from '../academic_year_seeder.js'
 import AbsenceSeeder from '../absence_seeder.js'
 import ScheduleSeeder from '../schedule_seeder.js'
 import AnnouncementByAdmin from '../announcement_by_admin_seeder.js'
+import AnnouncementByTeacher from '../announcement_by_teacher_seeder.js'
 
 export default class IndexSeeder extends BaseSeeder {
   public async run() {
@@ -38,5 +39,6 @@ export default class IndexSeeder extends BaseSeeder {
     await new ScheduleSeeder(this.client).run()
     await new AbsenceSeeder(this.client).run()
     await new AnnouncementByAdmin(this.client).run()
+    await new AnnouncementByTeacher(this.client).run()
   }
 }

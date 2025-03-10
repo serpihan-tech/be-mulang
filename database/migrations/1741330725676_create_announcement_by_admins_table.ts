@@ -7,7 +7,7 @@ export default class extends BaseSchema {
     this.schema.createTable(this.tableName, (table) => {
       table.increments('id')
       table.string('title').notNullable()
-      table.string('content').notNullable()
+      table.text('content').notNullable()
       table.integer('admin_id').unsigned().references('id').inTable('admins').onDelete('CASCADE')
       table.date('date').notNullable()
       table.string('target_roles').notNullable()
