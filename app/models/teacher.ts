@@ -4,6 +4,8 @@ import User from '#models/user'
 import { DateTime } from 'luxon'
 import Class from './class.js'
 import Module from './module.js'
+import AnnouncementByTeacher from './announcement_by_teacher.js'
+import TeacherAbsence from './teacher_absence.js'
 
 export default class Teacher extends BaseModel {
   @column({ isPrimary: true })
@@ -48,9 +50,15 @@ export default class Teacher extends BaseModel {
   @belongsTo(() => User, { foreignKey: 'user_id' })
   declare user: BelongsTo<typeof User>
 
-  @hasOne(() => Class, { foreignKey: 'class_id' })
+  @hasOne(() => Class, { foreignKey: 'teacher_id' })
   declare class: HasOne<typeof Class>
 
   @hasMany(() => Module, { foreignKey: 'teacher_id' })
   declare modules: HasMany<typeof Module>
+
+  @hasMany(() => AnnouncementByTeacher, { foreignKey: 'teacher_id' })
+  declare announcements: HasMany<typeof AnnouncementByTeacher>
+
+  @hasMany(() => TeacherAbsence, { foreignKey: 'teacher_id' })
+  declare absences: HasMany<typeof TeacherAbsence>
 }

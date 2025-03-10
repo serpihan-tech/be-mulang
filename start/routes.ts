@@ -102,3 +102,8 @@ router.group(() => {
     
 }).use(middleware.auth())
 
+
+// Cek IP Address
+router.get('/cek-ip', async ({ request, response }) => {
+    return response.ok({ ip: request.ip })
+}).use(middleware.ip('absen'))

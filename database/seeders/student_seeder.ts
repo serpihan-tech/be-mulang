@@ -3,6 +3,6 @@ import { BaseSeeder } from '@adonisjs/lucid/seeders'
 
 export default class extends BaseSeeder {
   async run() {
-    await StudentFactory.createMany(100)
+    await StudentFactory.createMany(450)
   }
 }

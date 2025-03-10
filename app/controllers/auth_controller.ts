@@ -1,6 +1,7 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import User from '#models/user'
 import Role from '#models/role'
+import AcademicYear from '#models/academic_year'
 
 export default class AuthController {
   async checkRole({ request, response }: HttpContext) {
@@ -51,9 +52,22 @@ export default class AuthController {
     }
   }
 
+  async activeSemester() {
+    const now = new Date()
+
+    const activeSemester = await AcademicYear.query()
+      .where('status', 1)
+      .where('date_start', '<', now)
+      .where('date_end', '>', now)
+      .firstOrFail()
+
+    return activeSemester.id
+  }
+
   async getProfile(role: Role, user: User) {
     let profile
     let details
+    let classStudent
 
     switch (role?.role) {
       case 'admin':
@@ -65,6 +79,12 @@ export default class AuthController {
       case 'student':
         profile = await user.related('student').query().first()
         details = await profile?.related('studentDetail').query().first()
+        classStudent = await profile
+          ?.related('classStudent')
+          .query()
+          .where('academic_year_id', await this.activeSemester())
+          .preload('class', (c) => c.select('id', 'name'))
+          .firstOrFail()
         break
     }
 
@@ -72,7 +92,7 @@ export default class AuthController {
       user,
       profile: {
         ...profile?.serialize(),
-        details: details,
+        details: { ...details?.serialize(), classStudent },
       },
     }
   }
