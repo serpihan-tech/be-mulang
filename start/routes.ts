@@ -111,3 +111,5 @@ router.group(() => {
 router.get('/cek-ip', async ({ request, response }) => {
     return response.ok({ ip: request.ip })
 }).use(middleware.ip('absen'))
+
+router.get('/cek-st', [StudentsController, 'cek'])
