@@ -1,18 +1,19 @@
-import db from "@adonisjs/lucid/services/db";
-import Score from "#models/score";
+import db from '@adonisjs/lucid/services/db'
+import Score from '#models/score'
 
 export default class ScoreService {
   async get(columns?: string[], page?: number, limit?: number): Promise<any> {
     try {
-      const scores = await Score.query().select(columns ? columns : ['*']).paginate((page ?? 1), limit)
+      const scores = await Score.query()
+        .select(columns ? columns : ['*'])
+        .paginate(page ?? 1, limit)
       return scores
-
     } catch (error) {
-      throw new Error('Method not implemented.');
+      throw new Error('Method not implemented.')
     }
   }
   async getByFilter(columns?: string[], filter?: any, page?: number, limit?: number): Promise<any> {
-    const { moduleId = "", classStudentId = "", scoreTypeId = "" } = filter
+    const { moduleId = '', classStudentId = '', scoreTypeId = '' } = filter
 
     const scores = await Score.query()
       .if(moduleId, (query) => {
@@ -25,7 +26,7 @@ export default class ScoreService {
         query.where('score_type_id', scoreTypeId).firstOrFail()
       })
       .select(columns ? columns : ['*'])
-      .paginate((page ?? 1), limit)
+      .paginate(page ?? 1, limit)
 
     return scores
   }
@@ -46,22 +47,20 @@ export default class ScoreService {
     await score.useTransaction(trx).save()
     await trx.commit()
     return score
-
   }
 
-  async massUpdate(data: any,): Promise<any> {
+  async massUpdate(data: any): Promise<any> {
     await Score.updateOrCreate(
       {
         class_student_id: data.class_student_id,
         module_id: data.module_id,
         score_type_id: data.score_type_id,
-        description: data.description
+        description: data.description,
       }, // Search criteria (harus unik)
       {
         score: data.score,
       } // Data yang akan diupdate
     )
-
   }
   async delete(id: number): Promise<any> {
     const score = await Score.query().where('id', id).firstOrFail()
