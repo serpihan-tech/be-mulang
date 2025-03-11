@@ -176,4 +176,12 @@ export default class StudentsController {
       return response.badRequest({ error: { message: error.message, status: error.status } })
     }
   }
+
+  async cek({ response }: HttpContext) {
+    const st = await Student.query().where('id', 45).firstOrFail()
+    if (!st) {
+      return response.status(404).send({ message: 'Data tidak ditemukan' })
+    }
+    return response.ok({ message: 'Berhasil', st })
+  }
 }
