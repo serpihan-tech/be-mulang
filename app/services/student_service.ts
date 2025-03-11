@@ -9,6 +9,8 @@ import User from '#models/user'
 import StudentDetail from '#models/student_detail'
 import AcademicYear from '#models/academic_year'
 import Class from '#models/class'
+import { cuid } from '@adonisjs/core/helpers'
+import app from '@adonisjs/core/services/app'
 
 export default class StudentsService implements StudentContract, UserContract {
   async index(page: number): Promise<any> {
@@ -104,6 +106,7 @@ export default class StudentsService implements StudentContract, UserContract {
         await student.save()
       }
 
+      console.info('STUDENT DETAIL : ', data.student_detail)
       if (data.student_detail && student.studentDetail) {
         student.studentDetail.merge({
           nis: data.student_detail.nis ?? student.studentDetail.nis,
@@ -119,7 +122,25 @@ export default class StudentsService implements StudentContract, UserContract {
           parents_job: data.student_detail.parents_job ?? student.studentDetail.parents_job,
           students_phone:
             data.student_detail.students_phone ?? student.studentDetail.students_phone,
+          profile_picture:
+            data.student_detail.profile_picture ?? student.studentDetail.profile_picture,
         })
+
+        if (data.student_detail.profile_picture) {
+          const profilePicture = data.student_detail.profile_picture
+          const fileName = `${cuid()}.${profilePicture.extname}`
+
+          // Pindahkan file hanya jika `profile_picture` ada dan valid
+          await profilePicture.move(app.makePath('storage/uploads/students-profile'), {
+            name: fileName,
+          })
+
+          // Simpan path file ke dalam database
+          student.studentDetail.profile_picture = `uploads/students-profile/${fileName}`
+        }
+
+        await student.studentDetail.save()
+
         await student.studentDetail.save()
       }
 

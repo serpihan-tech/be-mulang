@@ -38,7 +38,9 @@ export default class StudentsController {
         student,
       })
     } catch (error) {
-      return response.badRequest({ error: { message: error.message } })
+      if (error.code === 'E_ROW_NOT_FOUND')
+        return response.notFound({ error: { message: 'ID Murid Tidak Ditemukan' } })
+      return response.status(error.status).send({ error: { message: error.message } })
     }
   }
 
@@ -54,22 +56,40 @@ export default class StudentsController {
         student,
       })
     } catch (error) {
-      return response.unprocessableEntity({ error })
+      return response.status(error.status).send({ error })
     }
   }
 
   async update({ params, request, response }: HttpContext) {
     try {
+      console.log(request.all()) // Debug untuk data JSON
+      console.log(request.file('student_detail.profile_picture')) // Debug untuk file
+
+      if (!request.input('user') && !request.input('student') && !request.input('student_detail')) {
+        return response.unprocessableEntity({
+          error: {
+            message: 'Field harus berada di dalam object user, student, dan student_detail',
+          },
+        })
+      }
+
       await updateUserValidator.validate(request.input('user'))
       await updateStudentValidator.validate(request.input('student'))
       await updateStudentDetailValidator.validate(request.input('student_detail'))
 
-      const student = await this.studentsService.update(params.id, request.all())
-      return response.ok({
-        message: 'Murid Berhasil Diupdate',
-        student,
-      })
+      const data = request.all()
+
+      // Ambil file profile_picture dari request.file() secara terpisah
+      const profilePicture = request.file('student_detail.profile_picture')
+
+      if (profilePicture) {
+        data.student_detail.profile_picture = profilePicture
+      }
+
+      const student = await this.studentsService.update(params.id, data)
+      return response.ok({ message: 'Murid Berhasil Diupdate', student })
     } catch (error) {
+      console.log(error)
       return response.unprocessableEntity({ error })
     }
   }

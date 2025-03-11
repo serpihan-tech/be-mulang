@@ -10,4 +10,7 @@ export const messages = {
   'numeric': '{{ field }} harus berupa angka',
   'unique': '{{ field }} harus unik',
   'database.exists': '{{ field }} tidak ditemukan',
+  'file': '{{ field }} harus berupa file',
+  'object': '{{ field }} harus berupa objek',
+  'database.unique': '{{ field }} tidak bisa digunakan, coba {{ field }} lain',
 }

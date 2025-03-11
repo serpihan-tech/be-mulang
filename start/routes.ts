@@ -20,6 +20,7 @@ const AcademicYearsController = () => import('#controllers/academic_years_contro
 const AbsenceController = () => import('#controllers/absences_controller')
 const SchedulesController = () => import('#controllers/schedules_controller')
 const ModulesController = () => import('#controllers/modules_controller')
+const AnnouncementByAdmins = () => import('#controllers/announcement_by_admins_controller')
 
 import { middleware } from '#start/kernel'
 
@@ -49,8 +50,6 @@ router.group(() => {
     // untuk students
     router.group(() => {
         router.resource('/students', StudentsController)
-            .use(['store', 'update'], middleware.role(['teacher', 'admin']))
-            .use('destroy', middleware.role(['admin']))
         
         router.group(() => {
             router.post('/promote', [StudentsController, 'promoteClass'])
@@ -89,6 +88,10 @@ router.group(() => {
         router.resource('/academic-years', AcademicYearsController)
     })
     
+    // Announcements By Admin
+    router.group(() => {
+        router.resource('/admin-announcement', AnnouncementByAdmins)
+    })
     
     router.get('/modules/filter', [ModulesController, 'getByFilter'])
     router.resource('/modules', ModulesController)

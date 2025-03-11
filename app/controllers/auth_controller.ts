@@ -2,6 +2,8 @@ import type { HttpContext } from '@adonisjs/core/http'
 import User from '#models/user'
 import Role from '#models/role'
 import AcademicYear from '#models/academic_year'
+import { errors as authErrors } from '@adonisjs/auth'
+import { errors as lucidErrors } from '@adonisjs/lucid'
 
 export default class AuthController {
   async checkRole({ request, response }: HttpContext) {
@@ -19,36 +21,57 @@ export default class AuthController {
     }
   }
 
-  async login({ request }: HttpContext) {
-    const { email, password, username } = request.only(['email', 'password', 'username'])
+  async login({ request, response }: HttpContext) {
+    try {
+      const { email, password, username } = request.only(['email', 'password', 'username'])
 
-    if (!username) {
-      const user = await User.verifyCredentials(email, password)
-      const token = await User.accessTokens.create(user)
+      if (!username) {
+        const user = await User.verifyCredentials(email, password)
+        const token = await User.accessTokens.create(user)
 
-      const role = await User.getRole(user)
-      const data = await this.getProfile(role, user)
+        const role = await User.getRole(user)
+        const data = await this.getProfile(role, user)
 
-      return {
-        message: 'Login Berhasil',
-        role: role?.role,
-        data,
-        token: token,
+        return {
+          message: 'Login Berhasil',
+          role: role?.role,
+          data,
+          token: token,
+        }
       }
-    }
-    if (!email) {
-      const user = await User.verifyCredentials(username, password)
-      const token = await User.accessTokens.create(user)
+      if (!email) {
+        const user = await User.verifyCredentials(username, password)
+        const token = await User.accessTokens.create(user)
 
-      const role = await User.getRole(user)
-      const data = await this.getProfile(role, user)
+        const role = await User.getRole(user)
+        const data = await this.getProfile(role, user)
 
-      return {
-        message: 'Login Berhasil',
-        role: role?.role,
-        data,
-        token: token,
+        return {
+          message: 'Login Berhasil',
+          role: role?.role,
+          data,
+          token: token,
+        }
       }
+    } catch (error) {
+      if (error instanceof authErrors.E_INVALID_CREDENTIALS) {
+        throw error
+      } else if (error instanceof lucidErrors.E_ROW_NOT_FOUND) {
+        return response.notFound({
+          error: {
+            message:
+              'Data yang anda cari tidak memiliki informasi yang dibutuhkan' +
+              ' (contoh: tidak memiliki kelas, tidak aktif, dll)',
+          },
+        })
+      }
+
+      return response.status(500).send({
+        error: {
+          message: 'Terjadi kesalahan pada server',
+          cause: error.message,
+        },
+      })
     }
   }
 
