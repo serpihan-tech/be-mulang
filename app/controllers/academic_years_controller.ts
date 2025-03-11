@@ -2,6 +2,7 @@ import type { HttpContext } from '@adonisjs/core/http'
 import { createAcademicYearValidator, updateAcademicYearValidator } from '#validators/academic_year'
 import { inject } from '@adonisjs/core'
 import AcademicYearService from '#services/academic_year_service'
+import AcademicYear from '#models/academic_year'
 
 @inject()
 export default class AcademicYearsController {
@@ -9,10 +10,9 @@ export default class AcademicYearsController {
   /**
    * Display a list of resources
    */
-  async index({ response }: HttpContext) {
+  async index({ request, response }: HttpContext) {
     try {
-      const column = ['id', 'name', 'date_start', 'date_end', 'semester', 'status']
-      const academicYears = await this.academicYearService.get(column)
+      const academicYears = await this.academicYearService.get(undefined, request.all())
 
       return response.ok({
         message: 'Berhasil Mendapatkan Data Tahun Ajaran',
@@ -51,8 +51,7 @@ export default class AcademicYearsController {
   async show({ params, response }: HttpContext) {
     const id: number = params.id
     try {
-      const column = ['id', 'name', 'date_start', 'date_end', 'semester', 'status']
-      const academicYears = await this.academicYearService.get(column, id)
+      const academicYears = await this.academicYearService.get(id)
       return response.ok({
         message: 'Berhasil Mendapatkan Data Tahun Ajaran',
         academicYears,

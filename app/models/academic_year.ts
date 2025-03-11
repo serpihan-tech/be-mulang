@@ -3,6 +3,7 @@ import { BaseModel, column, hasMany } from '@adonisjs/lucid/orm'
 import Module from '#models/module'
 import type { HasMany } from '@adonisjs/lucid/types/relations'
 import ClassStudent from './class_student.js'
+import ModelFilter from '../utils/filter_query.js'
 
 export default class AcademicYear extends BaseModel {
   @column({ isPrimary: true })
@@ -34,4 +35,23 @@ export default class AcademicYear extends BaseModel {
 
   @hasMany(() => ClassStudent, { foreignKey: 'academic_year_id' })
   declare classStudents: HasMany<typeof ClassStudent>
+
+  /**
+   * Jika butuh filter seperti %LIKE%
+   */
+  public static whiteList = ['name']
+
+  /**
+   * Metode untuk apply filter langsung di model
+   *
+   * @example
+   * // GET /api/academic-years?semester=ganjil&status=true
+   * const academicYears = await AcademicYear.filter(request.all())
+   *
+   * @param queryParams - Parameter yang masuk di request
+   * @returns AcademicYear
+   */
+  public static filter(queryParams: Record<string, any>) {
+    return ModelFilter.apply(this, queryParams)
+  }
 }

@@ -1,25 +1,22 @@
 import AcademicYear from '#models/academic_year'
 import db from '@adonisjs/lucid/services/db'
 export default class AcademicYearService {
-  async get(column: string[], academicYearId?: number) {
+  async get(academicYearId?: number, request?: any) {
     if (academicYearId) {
-      const academicYear = await db
-        .from('academic_years')
-        .where('id', academicYearId)
-        .select(column)
+      const academicYear = await db.from('academic_years').where('id', academicYearId)
       return academicYear
     }
-    const academicYear = await db.from('academic_years').select(column)
+    const academicYear = await AcademicYear.filter(request)
     return academicYear
   }
 
   async create(data: any) {
     const trx = await db.transaction()
     try {
-      const academic_year = await AcademicYear.create(data, { client: trx })
+      const academicYear = await AcademicYear.create(data, { client: trx })
       await trx.commit()
 
-      return academic_year
+      return academicYear
     } catch (error) {
       await trx.rollback()
       throw error
@@ -41,7 +38,7 @@ export default class AcademicYearService {
   }
 
   async delete(id: number) {
-    const academic_year = await AcademicYear.query().where('id', id).firstOrFail()
-    return await academic_year.delete()
+    const academicYear = await AcademicYear.query().where('id', id).firstOrFail()
+    return await academicYear.delete()
   }
 }
