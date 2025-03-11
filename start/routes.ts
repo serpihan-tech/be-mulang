@@ -21,6 +21,7 @@ const AbsenceController = () => import('#controllers/absences_controller')
 const SchedulesController = () => import('#controllers/schedules_controller')
 const ModulesController = () => import('#controllers/modules_controller')
 const AnnouncementByAdmins = () => import('#controllers/announcement_by_admins_controller')
+const ScoreController = () => import('#controllers/scores_controller')
 
 import { middleware } from '#start/kernel'
 
@@ -93,9 +94,18 @@ router.group(() => {
         router.resource('/admin-announcement', AnnouncementByAdmins)
     })
     
+    // Modules
     router.get('/modules/filter', [ModulesController, 'getByFilter'])
     router.resource('/modules', ModulesController)
+
+    // Scores
+    router.get('/scores/filter', [ScoreController, 'getByFilter'])
+    router.patch('/scores/updates', [ScoreController, 'massUpdate'])
+    router.resource('/scores', ScoreController)
+
+    
 }).use(middleware.auth())
+
 
 // Cek IP Address
 router.get('/cek-ip', async ({ request, response }) => {
