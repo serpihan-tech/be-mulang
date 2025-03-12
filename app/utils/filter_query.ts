@@ -21,6 +21,9 @@ export default class ModelFilter {
   ): ModelQueryBuilderContract<T> {
     let query = model.query()
 
+    let sortBy = 'id' // Default sorting column
+    let sortOrder: 'asc' | 'desc' = 'asc' // Default sorting order
+
     Object.entries(queryParams).forEach(([key, value]) => {
       if (!value) return
 
@@ -28,6 +31,14 @@ export default class ModelFilter {
       if (value === 'true') value = 1
 
       switch (true) {
+        case key === 'sortBy':
+          sortBy = value
+          break
+
+        case key === 'sortOrder':
+          sortOrder = value.toLowerCase() === 'desc' ? 'desc' : 'asc'
+          break
+
         case typeof value === 'string' && likeFields.includes(key):
           query.where(key, 'LIKE', `%${value}%`)
           break
@@ -48,10 +59,6 @@ export default class ModelFilter {
           query.where(key, '<', value.replace('<', '').trim())
           break
 
-        case typeof value === 'string' && value.includes('%'):
-          query.where(key, 'LIKE', value)
-          break
-
         case Array.isArray(value):
           query.whereIn(key, value)
           break
@@ -61,6 +68,8 @@ export default class ModelFilter {
           break
       }
     })
+
+    query.orderBy(sortBy, sortOrder) // Apply sorting
 
     return query
   }

@@ -4,6 +4,15 @@ import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import Module from './module.js'
 import ClassStudent from './class_student.js'
 import ScoreType from './score_type.js'
+import ModelFilter from '../utils/filter_query.js'
+
+type FilterProps = {
+  model?: typeof BaseModel
+  queryParams?: Record<string, any>
+  sortBy?: string
+  sortOrder?: 'asc' | 'desc'
+  whiteList?: string[]
+}
 
 export default class Score extends BaseModel {
   @column({ isPrimary: true })
@@ -38,4 +47,10 @@ export default class Score extends BaseModel {
 
   @belongsTo(() => ScoreType, { foreignKey: 'score_type_id' })
   declare scoreType: BelongsTo<typeof ScoreType>
+
+  public static whiteList: string[] = ['description']
+
+  public static filter(queryParams = {}): FilterProps {
+    return ModelFilter.apply(this, queryParams, this.whiteList)
+  }
 }

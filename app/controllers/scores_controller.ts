@@ -2,6 +2,8 @@ import type { HttpContext } from '@adonisjs/core/http'
 import { inject } from '@adonisjs/core'
 import ScoreService from '#services/score_service'
 import { createScoreValidator, updateScoreValidator } from '#validators/score'
+import Score from '#models/score'
+import { accessSync } from 'node:fs'
 
 @inject()
 export default class ScoresController {
@@ -136,6 +138,16 @@ export default class ScoresController {
       return response.ok({
         messages: 'Data Behasil Dihapus',
       })
+    } catch (error) {
+      return response.send({ error })
+    }
+  }
+
+  async cek({ request, response }: HttpContext) {
+    try {
+      console.log(request.all())
+      const score = await Score.filter(request.all())
+      return response.ok(score)
     } catch (error) {
       return response.send({ error })
     }

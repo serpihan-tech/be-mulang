@@ -113,3 +113,5 @@ router.get('/cek-ip', async ({ request, response }) => {
 }).use(middleware.ip('absen'))
 
 router.get('/cek-st', [StudentsController, 'cek'])
+
+router.get('/cek-sc', [ScoreController, 'cek'])
