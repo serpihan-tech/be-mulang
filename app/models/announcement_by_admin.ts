@@ -2,6 +2,7 @@ import { DateTime } from 'luxon'
 import { BaseModel, belongsTo, column } from '@adonisjs/lucid/orm'
 import Admin from './admin.js'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
+import ModelFilter from '../utils/filter_query.js'
 
 export default class AnnouncementByAdmin extends BaseModel {
   @column({ isPrimary: true })
@@ -36,4 +37,6 @@ export default class AnnouncementByAdmin extends BaseModel {
 
   @belongsTo(() => Admin, { foreignKey: 'admin_id' })
   declare admin: BelongsTo<typeof Admin>
+
+  
 }
