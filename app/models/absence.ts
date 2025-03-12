@@ -8,7 +8,7 @@ export enum Status {
   HADIR = 'Hadir',
   IZIN = 'Izin',
   SAKIT = 'Sakit',
-  LAINNYA = 'Alfa',
+  ALFA = 'Alfa',
 }
 
 export default class Absence extends BaseModel {

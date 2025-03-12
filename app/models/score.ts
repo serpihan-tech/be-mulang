@@ -6,14 +6,6 @@ import ClassStudent from './class_student.js'
 import ScoreType from './score_type.js'
 import ModelFilter from '../utils/filter_query.js'
 
-type FilterProps = {
-  model?: typeof BaseModel
-  queryParams?: Record<string, any>
-  sortBy?: string
-  sortOrder?: 'asc' | 'desc'
-  whiteList?: string[]
-}
-
 export default class Score extends BaseModel {
   @column({ isPrimary: true })
   declare id: number
@@ -50,7 +42,7 @@ export default class Score extends BaseModel {
 
   public static whiteList: string[] = ['description']
 
-  public static filter(queryParams = {}): FilterProps {
+  public static filter(queryParams: Record<string, any>) {
     return ModelFilter.apply(this, queryParams, this.whiteList)
   }
 }

@@ -5,6 +5,7 @@ import Student from './student.js'
 import Class from './class.js'
 import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
 import Score from './score.js'
+import Absence from './absence.js'
 
 export default class ClassStudent extends BaseModel {
   @column({ isPrimary: true })
@@ -33,6 +34,9 @@ export default class ClassStudent extends BaseModel {
 
   @belongsTo(() => AcademicYear, { foreignKey: 'academic_year_id' })
   declare academicYear: BelongsTo<typeof AcademicYear>
+
+  @hasMany(() => Absence, { foreignKey: 'class_student_id' })
+  declare absences: HasMany<typeof Absence>
 
   @hasMany(() => Score, { foreignKey: 'class_student_id' })
   declare scores: HasMany<typeof Score>

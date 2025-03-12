@@ -17,7 +17,8 @@ export default class ModelFilter {
   public static apply<T extends typeof BaseModel>(
     model: T,
     queryParams: Record<string, any>,
-    likeFields: string[] = []
+    likeFields: string[] = [],
+    blackList: string[] = ['page', 'limit'] // query param yang tidak diolah oleh filter
   ): ModelQueryBuilderContract<T> {
     let query = model.query()
 
@@ -26,6 +27,8 @@ export default class ModelFilter {
 
     Object.entries(queryParams).forEach(([key, value]) => {
       if (!value) return
+
+      if (blackList.includes(key)) return
 
       if (value === 'false') value = 0
       if (value === 'true') value = 1

@@ -76,6 +76,9 @@ router.group(() => {
 
     // Absensi
     router.group(() => {
+        router.group(() => {
+            router.get('/mine', [AbsenceController, 'getMyAbsences'])
+        }).prefix('/absences')
         router.resource('/absences', AbsenceController)
     })
 
@@ -86,6 +89,9 @@ router.group(() => {
     
     // Academic Years
     router.group(() => {
+        router.group(() => {
+            router.get('/mine', [AcademicYearsController, 'myAcademicYear']).use(middleware.role(['student']))
+        }).prefix('/academic-years')
         router.resource('/academic-years', AcademicYearsController)
     })
     
