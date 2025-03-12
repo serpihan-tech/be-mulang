@@ -24,5 +24,5 @@ export default interface StudentContract {
    * @return {Promise<{ total: number; hadir: number; tidak_hadir: number }>}
    * Mengembalikan jumlah total presensi, jumlah kehadiran, dan jumlah ketidakhadiran.
    */
-  getPresence(studentId: any): Promise<Object>
+  getPresence(studentId: number): Promise<Object>
 }

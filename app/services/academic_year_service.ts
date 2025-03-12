@@ -1,12 +1,34 @@
 import AcademicYear from '#models/academic_year'
 import db from '@adonisjs/lucid/services/db'
-export default class AcademicYearService {
-  async get(academicYearId?: number, request?: any) {
+import AcademicYearContract from '../contracts/academicyear_contract.js'
+import Student from '#models/student'
+
+export default class AcademicYearService implements AcademicYearContract {
+  async getMyAcademicYear(studentId: number): Promise<any> {
+    // console.log('service student id', studentId)
+    const student = await Student.query()
+      .where('id', studentId)
+      .preload('classStudent', (query) => {
+        query
+          .select('academic_year_id')
+          .groupBy('academic_year_id')
+          .distinct()
+          .preload('academicYear', (ay) =>
+            ay.select('name', 'semester', 'date_start', 'date_end', 'status')
+          )
+      })
+      .firstOrFail()
+
+    return student
+  }
+
+  async get(academicYearId?: number, request?: any, page?: number, limit?: number): Promise<any> {
     if (academicYearId) {
       const academicYear = await db.from('academic_years').where('id', academicYearId)
       return academicYear
     }
-    const academicYear = await AcademicYear.filter(request)
+
+    const academicYear = await AcademicYear.filter(request).paginate(page || 1, limit)
     return academicYear
   }
 

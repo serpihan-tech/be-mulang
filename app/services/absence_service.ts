@@ -1,8 +1,49 @@
 import Absence from '#models/absence'
 import AcademicYear from '#models/academic_year'
+import Student from '#models/student'
 import AbsenceContract from '../contracts/absence_contract.js'
+import Database from '@adonisjs/lucid/services/db'
 
 export class AbsenceService implements AbsenceContract {
+  // TODO : Implement
+  getById(absenceId: number): Promise<any> {
+    throw new Error('Method not implemented.')
+  }
+
+  async getByStudentId(studentId: number): Promise<any> {
+    console.log(studentId)
+    const student = await Database.from('students')
+      .where('id', studentId)
+      .select('id')
+      .firstOrFail()
+
+    const absences = await Database.from('absences')
+      .innerJoin('class_students', 'class_students.id', 'absences.class_student_id')
+      .where('class_students.student_id', studentId)
+      .select('absences.date')
+      .groupBy('absences.date')
+      .select(
+        Database.raw(`
+        CASE 
+          WHEN MIN(FIELD(absences.status, 'alfa', 'sakit', 'izin', 'hadir')) = 1 THEN 'Alfa'
+          WHEN MIN(FIELD(absences.status, 'alfa', 'sakit', 'izin', 'hadir')) = 2 THEN 'Sakit'
+          WHEN MIN(FIELD(absences.status, 'alfa', 'sakit', 'izin', 'hadir')) = 3 THEN 'Izin'
+          ELSE 'Hadir'
+        END as status
+      `)
+      )
+      .select(
+        Database.raw(`
+        SUBSTRING_INDEX(GROUP_CONCAT(absences.reason ORDER BY FIELD(absences.status, 'izin', 'sakit', 'alfa', 'hadir') SEPARATOR '|'), '|', 1) as reason
+      `)
+      )
+      .count('* as totalAbsenceInTheSameDay')
+
+    return { student, absences }
+  }
+
+  // TODO
+
   /**
    * Mendapatkan semua absensi dari tahun ajar yang aktif
    * @param page buat pagination
@@ -58,10 +99,12 @@ export class AbsenceService implements AbsenceContract {
       absences,
     }
   }
+
   async update(absenceId: number, data: any): Promise<any> {
     const absence = await Absence.query().where('id', absenceId).firstOrFail()
     return await absence.merge(data).save()
   }
+
   async delete(absenceId: number): Promise<any> {
     const absence = await Absence.query().where('id', absenceId).firstOrFail()
     return await absence.delete()

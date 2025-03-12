@@ -3,6 +3,7 @@ import { createAcademicYearValidator, updateAcademicYearValidator } from '#valid
 import { inject } from '@adonisjs/core'
 import AcademicYearService from '#services/academic_year_service'
 import AcademicYear from '#models/academic_year'
+import User from '#models/user'
 
 @inject()
 export default class AcademicYearsController {
@@ -12,7 +13,12 @@ export default class AcademicYearsController {
    */
   async index({ request, response }: HttpContext) {
     try {
-      const academicYears = await this.academicYearService.get(undefined, request.all())
+      const academicYears = await this.academicYearService.get(
+        undefined,
+        request.all(),
+        request.input('page'),
+        request.input('limit')
+      )
 
       return response.ok({
         message: 'Berhasil Mendapatkan Data Tahun Ajaran',
@@ -94,6 +100,25 @@ export default class AcademicYearsController {
       return response.ok({
         message: 'Kelas Berhasil Dihapus',
       })
+    } catch (error) {
+      return response.badRequest({ error })
+    }
+  }
+
+  async myAcademicYear({ auth, response }: HttpContext) {
+    try {
+      const user = auth.getUserOrFail()
+      await user.load('student')
+
+      // console.log(user)
+      // console.log('student id: ', user.student?.id)
+
+      if (!user.student) {
+        return response.badRequest({ error: { message: 'Data Siswa Tidak Ditemukan' } })
+      }
+
+      const student = await this.academicYearService.getMyAcademicYear(user.student.id)
+      return response.ok({ message: 'Tahun Ajaran Berhasil Ditemukan', student })
     } catch (error) {
       return response.badRequest({ error })
     }

@@ -18,9 +18,9 @@ export const AbsenceFactory = factory
       Status.HADIR,
       Status.IZIN,
       Status.SAKIT,
-      Status.LAINNYA,
+      Status.ALFA,
     ])
-    const reason = status === Status.LAINNYA ? faker.lorem.sentence() : ''
+    const reason = status === Status.IZIN ? faker.lorem.sentence() : ''
 
     const date = DateTime.now().set({ month: 2, year: 2025 })
 

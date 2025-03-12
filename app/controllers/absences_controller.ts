@@ -41,4 +41,22 @@ export default class AbsencesController {
       return response.notFound({ error: { message: 'ID Absensi Tidak Ditemukan' } })
     }
   }
+
+  async getMyAbsences({ auth, response }: HttpContext) {
+    try {
+      const user = auth.getUserOrFail()
+      await user.load('student')
+
+      console.log(user)
+
+      if (!user.student) {
+        return response.badRequest({ error: { message: 'Data Siswa Tidak Ditemukan' } })
+      }
+
+      const st = await this.absenceService.getByStudentId(user.student.id)
+      return response.ok({ message: 'Rekap Absensi Berhasil Ditemukan', studentsPresence: st })
+    } catch (error) {
+      return response.status(error.code).send({ error })
+    }
+  }
 }

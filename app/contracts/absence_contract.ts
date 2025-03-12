@@ -17,4 +17,16 @@ export default interface AbsenceContract {
    * @param absenceId
    */
   delete(absenceId: number): Promise<any>
+
+  /**
+   * @param absenceId - Id Absensi
+   * Mendapatkan absensi berdasarkan id
+   */
+  getById(absenceId: number): Promise<any>
+
+  /**
+   * @param StudentId - Id student
+   * Mendapatkan absensi berdasarkan student_id
+   */
+  getByStudentId(studentId: number): Promise<any>
 }
