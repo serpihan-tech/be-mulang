@@ -2,14 +2,14 @@ export default interface ScheduleContract {
   /**
    * Get semua jadwal
    */
-  getAll(page: number): Promise<any>
+  getAll(data: any, page?: number, limit?: number): Promise<any>
 
   /**
    * Mengambil jadwal berdasarkan id
    * @param id
    * @returns jadwal
    */
-  getById(id: number): Promise<any>
+  getOne(id: number): Promise<any>
 
   /**
    * Membuat jadwal baru
