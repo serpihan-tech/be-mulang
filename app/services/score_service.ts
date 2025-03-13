@@ -4,11 +4,13 @@ import Score from '#models/score'
 export default class ScoreService {
   async getAll(params: any, page?: number, limit?: number): Promise<any> {
     const scores = await Score.filter(params).paginate(page ?? 1, limit)
+
     return scores
   }
 
   async getOne(id: number): Promise<any> {
     const scores = await Score.query().where('id', id).firstOrFail()
+
     return scores
   }
 
@@ -16,6 +18,7 @@ export default class ScoreService {
     const trx = await db.transaction()
     const scores = await Score.create(data, { client: trx })
     await trx.commit()
+
     return scores
   }
 
@@ -27,15 +30,16 @@ export default class ScoreService {
 
     await score.useTransaction(trx).save()
     await trx.commit()
+
     return score
   }
 
   async massUpdate(data: any): Promise<any> {
     await Score.updateOrCreate(
       {
-        class_student_id: data.class_student_id,
-        module_id: data.module_id,
-        score_type_id: data.score_type_id,
+        classStudentId: data.class_student_id,
+        moduleId: data.module_id,
+        scoreTypeId: data.score_type_id,
         description: data.description,
       }, // Search criteria (harus unik)
       {
@@ -43,8 +47,10 @@ export default class ScoreService {
       } // Data yang akan diupdate
     )
   }
+
   async delete(id: number): Promise<any> {
     const score = await Score.query().where('id', id).firstOrFail()
+
     return await score.delete()
   }
 }

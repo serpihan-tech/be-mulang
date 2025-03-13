@@ -52,10 +52,10 @@ export class AnnouncementByAdminService implements AnnouncementByAdminContract {
       title: data.title,
       content: data.content,
       category: data.category,
-      admin_id: adminId,
+      adminId: adminId,
       date: new Date(),
       files: filePath,
-      target_roles: data.target_roles,
+      targetRoles: data.target_roles,
     })
 
     // const users = await User.query().whereHas('roles', (query) => {
@@ -75,9 +75,9 @@ export class AnnouncementByAdminService implements AnnouncementByAdminContract {
     //     },
     //   })
     // }
-    console.log(ann.target_roles)
+    console.log(ann.targetRoles)
 
-    transmit.broadcast(`notifications/${ann.target_roles}`, {
+    transmit.broadcast(`notifications/${ann.targetRoles}`, {
       message: {
         id: ann.id,
         title: ann.title,

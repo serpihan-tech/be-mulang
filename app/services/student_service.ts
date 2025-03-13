@@ -53,9 +53,9 @@ export default class StudentsService implements StudentContract, UserContract {
 
       const student = await Student.create(
         {
-          user_id: user.id,
+          userId: user.id,
           name: data.student.name,
-          is_graduate: data.student.is_graduate,
+          isGraduate: data.student.is_graduate,
         },
         { client: trx }
       )
@@ -101,7 +101,7 @@ export default class StudentsService implements StudentContract, UserContract {
       if (data.student) {
         student.merge({
           name: data.student.name ?? student.name,
-          is_graduate: data.student.is_graduate ?? student.is_graduate,
+          isGraduate: data.student.is_graduate ?? student.isGraduate,
         })
         await student.save()
       }
@@ -112,18 +112,17 @@ export default class StudentsService implements StudentContract, UserContract {
           nis: data.student_detail.nis ?? student.studentDetail.nis,
           nisn: data.student_detail.nisn ?? student.studentDetail.nisn,
           gender: data.student_detail.gender ?? student.studentDetail.gender,
-          birth_date: data.student_detail.birth_date ?? student.studentDetail.birth_date,
-          birth_place: data.student_detail.birth_place ?? student.studentDetail.birth_place,
+          birthDate: data.student_detail.birth_date ?? student.studentDetail.birthDate,
+          birthPlace: data.student_detail.birth_place ?? student.studentDetail.birthPlace,
           address: data.student_detail.address ?? student.studentDetail.address,
-          enrollment_year:
-            data.student_detail.enrollment_year ?? student.studentDetail.enrollment_year,
-          parents_name: data.student_detail.parents_name ?? student.studentDetail.parents_name,
-          parents_phone: data.student_detail.parents_phone ?? student.studentDetail.parents_phone,
-          parents_job: data.student_detail.parents_job ?? student.studentDetail.parents_job,
-          students_phone:
-            data.student_detail.students_phone ?? student.studentDetail.students_phone,
-          profile_picture:
-            data.student_detail.profile_picture ?? student.studentDetail.profile_picture,
+          enrollmentYear:
+            data.student_detail.enrollment_year ?? student.studentDetail.enrollmentYear,
+          parentsName: data.student_detail.parents_name ?? student.studentDetail.parentsName,
+          parentsPhone: data.student_detail.parents_phone ?? student.studentDetail.parentsPhone,
+          parentsJob: data.student_detail.parents_job ?? student.studentDetail.parentsJob,
+          studentsPhone: data.student_detail.students_phone ?? student.studentDetail.studentsPhone,
+          profilePicture:
+            data.student_detail.profile_picture ?? student.studentDetail.profilePicture,
         })
 
         if (data.student_detail.profile_picture) {
@@ -136,7 +135,7 @@ export default class StudentsService implements StudentContract, UserContract {
           })
 
           // Simpan path file ke dalam database
-          student.studentDetail.profile_picture = `${fileName}`
+          student.studentDetail.profilePicture = `${fileName}`
         }
 
         await student.studentDetail.save()
@@ -187,7 +186,7 @@ export default class StudentsService implements StudentContract, UserContract {
     if (!classStudent) throw new Error('Kelas siswa tidak ditemukan')
 
     return await Schedule.query()
-      .where('class_id', classStudent.class_id)
+      .where('class_id', classStudent.classId)
       .preload('module', (m) =>
         m.preload('teacher', (t) => {
           t.select('id', 'name')
@@ -250,9 +249,9 @@ export default class StudentsService implements StudentContract, UserContract {
           .firstOrFail()
 
         await ClassStudent.create({
-          student_id: student.id,
-          class_id: kelas.id,
-          academic_year_id: academicYear.id,
+          studentId: student.id,
+          classId: kelas.id,
+          academicYearId: academicYear.id,
         })
       }
     } catch (error) {
