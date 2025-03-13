@@ -9,7 +9,7 @@ export default class SchedulesController {
 
   async index({ request, response }: HttpContext) {
     try {
-      const schedules = await this.scheduleService.getAll(request.input('page', 1))
+      const schedules = await this.scheduleService.getAll(request.all())
       return response.ok({
         message: 'Jadwal Berhasil Ditemukan',
         schedules,
@@ -21,7 +21,7 @@ export default class SchedulesController {
 
   async show({ params, response }: HttpContext) {
     try {
-      const schedule = await this.scheduleService.getById(params.id)
+      const schedule = await this.scheduleService.getOne(params.id)
       return response.ok({
         message: 'Jadwal Berhasil Ditemukan',
         schedule,

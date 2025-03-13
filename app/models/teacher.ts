@@ -6,6 +6,7 @@ import Class from './class.js'
 import Module from './module.js'
 import AnnouncementByTeacher from './announcement_by_teacher.js'
 import TeacherAbsence from './teacher_absence.js'
+import ModelFilter from '../utils/filter_query.js'
 
 export default class Teacher extends BaseModel {
   @column({ isPrimary: true })
@@ -61,4 +62,11 @@ export default class Teacher extends BaseModel {
 
   @hasMany(() => TeacherAbsence, { foreignKey: 'teacher_id' })
   declare absences: HasMany<typeof TeacherAbsence>
+
+  public static whiteList: string[] = []
+  public static blackList: string[] = ['page', 'limit']
+
+  public static filter(queryParams: Record<string, any>) {
+    return ModelFilter.apply(this, queryParams, this.whiteList, this.blackList)
+  }
 }

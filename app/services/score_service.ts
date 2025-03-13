@@ -2,32 +2,13 @@ import db from '@adonisjs/lucid/services/db'
 import Score from '#models/score'
 
 export default class ScoreService {
-  async get(columns?: string[], page?: number, limit?: number): Promise<any> {
-    try {
-      const scores = await Score.query()
-        .select(columns ? columns : ['*'])
-        .paginate(page ?? 1, limit)
-      return scores
-    } catch (error) {
-      throw new Error('Method not implemented.')
-    }
+  async getAll(params: any, page?: number, limit?: number): Promise<any> {
+    const scores = await Score.filter(params).paginate(page ?? 1, limit)
+    return scores
   }
-  async getByFilter(columns?: string[], filter?: any, page?: number, limit?: number): Promise<any> {
-    const { moduleId = '', classStudentId = '', scoreTypeId = '' } = filter
 
-    const scores = await Score.query()
-      .if(moduleId, (query) => {
-        query.where('moduleId', moduleId).firstOrFail()
-      })
-      .if(classStudentId, (query) => {
-        query.where('class_student_id', classStudentId).firstOrFail()
-      })
-      .if(scoreTypeId, (query) => {
-        query.where('score_type_id', scoreTypeId).firstOrFail()
-      })
-      .select(columns ? columns : ['*'])
-      .paginate(page ?? 1, limit)
-
+  async getOne(id: number): Promise<any> {
+    const scores = await Score.query().where('id', id).firstOrFail()
     return scores
   }
 

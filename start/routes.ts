@@ -21,6 +21,7 @@ const AbsenceController = () => import('#controllers/absences_controller')
 const SchedulesController = () => import('#controllers/schedules_controller')
 const ModulesController = () => import('#controllers/modules_controller')
 const AnnouncementByAdmins = () => import('#controllers/announcement_by_admins_controller')
+const AnnouncementByTeachers = () => import('#controllers/announcement_by_teachers_controller')
 const ScoreController = () => import('#controllers/scores_controller')
 const AnnouncementByAdminsController = () => import('#controllers/announcement_by_admins_controller')
 
@@ -105,13 +106,16 @@ router.group(() => {
     router.group(() => {
         router.resource('/admin-announcement', AnnouncementByAdmins)
     })
+
+    // Announcements By Teachers
+    router.group(() => {
+        router.resource('/teacher-announcement', AnnouncementByTeachers)
+    })
     
     // Modules
-    router.get('/modules/filter', [ModulesController, 'getByFilter'])
     router.resource('/modules', ModulesController)
     
     // Scores
-    router.get('/scores/filter', [ScoreController, 'getByFilter'])
     router.patch('/scores/updates', [ScoreController, 'massUpdate'])
     router.resource('/scores', ScoreController)
     
@@ -123,7 +127,3 @@ router.group(() => {
 router.get('/cek-ip', async ({ request, response }) => {
     return response.ok({ ip: request.ip })
 }).use(middleware.ip('absen'))
-
-router.get('/cek-st', [StudentsController, 'cek'])
-
-router.get('/cek-sc', [ScoreController, 'cek'])

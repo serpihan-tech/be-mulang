@@ -13,10 +13,10 @@ export default class AcademicYear extends BaseModel {
   declare name: string
 
   @column()
-  declare date_start: Date
+  declare dateStart: Date
 
   @column()
-  declare date_end: Date
+  declare dateEnd: Date
 
   @column()
   declare semester: string

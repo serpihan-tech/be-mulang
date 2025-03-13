@@ -2,8 +2,6 @@ import type { HttpContext } from '@adonisjs/core/http'
 import { createAcademicYearValidator, updateAcademicYearValidator } from '#validators/academic_year'
 import { inject } from '@adonisjs/core'
 import AcademicYearService from '#services/academic_year_service'
-import AcademicYear from '#models/academic_year'
-import User from '#models/user'
 
 @inject()
 export default class AcademicYearsController {

@@ -4,6 +4,7 @@ import Score from './score.js'
 import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
 import AcademicYear from './academic_year.js'
 import Teacher from './teacher.js'
+import ModelFilter from '../utils/filter_query.js'
 
 export default class Module extends BaseModel {
   @column({ isPrimary: true })
@@ -13,10 +14,10 @@ export default class Module extends BaseModel {
   declare name: string
 
   @column()
-  declare teacher_id: number
+  declare teacherId: number
 
   @column()
-  declare academic_year_id: number
+  declare academicYearId: number
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -32,4 +33,8 @@ export default class Module extends BaseModel {
 
   @hasMany(() => Score, { foreignKey: 'module_id' })
   declare scores: HasMany<typeof Score>
+
+  public static filter(queryParams: Record<string, any>) {
+    return ModelFilter.apply(this, queryParams)
+  }
 }
