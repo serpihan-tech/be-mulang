@@ -31,7 +31,7 @@ export default class Module extends BaseModel {
   @belongsTo(() => AcademicYear, { foreignKey: 'academicYearId' })
   declare academicYear: BelongsTo<typeof AcademicYear>
 
-  @hasMany(() => Score, { foreignKey: 'module_id' })
+  @hasMany(() => Score, { foreignKey: 'moduleId' })
   declare scores: HasMany<typeof Score>
 
   public static filter(queryParams: Record<string, any>) {

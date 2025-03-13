@@ -16,6 +16,6 @@ export default class Room extends BaseModel {
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 
-  @hasOne(() => Schedule, { foreignKey: 'room_id' })
+  @hasOne(() => Schedule, { foreignKey: 'roomId' })
   declare schedule: HasOne<typeof Schedule>
 }

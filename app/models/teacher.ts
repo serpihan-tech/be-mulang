@@ -13,7 +13,7 @@ export default class Teacher extends BaseModel {
   declare id: number
 
   @column()
-  declare user_id: number
+  declare userId: number
 
   @column()
   declare name: string
@@ -48,19 +48,19 @@ export default class Teacher extends BaseModel {
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 
-  @belongsTo(() => User, { foreignKey: 'user_id' })
+  @belongsTo(() => User, { foreignKey: 'userId' })
   declare user: BelongsTo<typeof User>
 
-  @hasOne(() => Class, { foreignKey: 'teacher_id' })
+  @hasOne(() => Class, { foreignKey: 'teacherId' })
   declare class: HasOne<typeof Class>
 
-  @hasMany(() => Module, { foreignKey: 'teacher_id' })
+  @hasMany(() => Module, { foreignKey: 'teacherId' })
   declare modules: HasMany<typeof Module>
 
-  @hasMany(() => AnnouncementByTeacher, { foreignKey: 'teacher_id' })
+  @hasMany(() => AnnouncementByTeacher, { foreignKey: 'teacherId' })
   declare announcements: HasMany<typeof AnnouncementByTeacher>
 
-  @hasMany(() => TeacherAbsence, { foreignKey: 'teacher_id' })
+  @hasMany(() => TeacherAbsence, { foreignKey: 'teacherId' })
   declare absences: HasMany<typeof TeacherAbsence>
 
   public static whiteList: string[] = []

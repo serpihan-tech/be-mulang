@@ -23,22 +23,22 @@ export default class Schedule extends BaseModel {
   declare id: number
 
   @column({ serializeAs: null })
-  declare start_time: string
+  declare startTime: string
 
   @column({ serializeAs: null })
-  declare end_time: string
+  declare endTime: string
 
   @column()
-  declare module_id: number
+  declare moduleId: number
 
   @column()
   declare days: Days
 
   @column()
-  declare class_id: number
+  declare classId: number
 
   @column()
-  declare room_id: number
+  declare roomId: number
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -46,27 +46,27 @@ export default class Schedule extends BaseModel {
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 
-  @belongsTo(() => Module, { foreignKey: 'module_id' })
+  @belongsTo(() => Module, { foreignKey: 'moduleId' })
   declare module: BelongsTo<typeof Module>
 
-  @belongsTo(() => Class, { foreignKey: 'class_id' })
+  @belongsTo(() => Class, { foreignKey: 'classId' })
   declare class: BelongsTo<typeof Class>
 
-  @belongsTo(() => Room, { foreignKey: 'room_id' })
+  @belongsTo(() => Room, { foreignKey: 'roomId' })
   declare room: BelongsTo<typeof Room>
 
-  @hasMany(() => Absence, { foreignKey: 'schedule_id' })
+  @hasMany(() => Absence, { foreignKey: 'scheduleId' })
   declare absences: HasMany<typeof Absence>
 
-  @hasMany(() => AnnouncementByTeacher, { foreignKey: 'schedule_id' })
+  @hasMany(() => AnnouncementByTeacher, { foreignKey: 'scheduleId' })
   declare announcements: HasMany<typeof AnnouncementByTeacher>
 
-  public serializeExtras() {
-    return {
-      start_time: DateTime.fromFormat(this.start_time, 'HH:mm:ss').toFormat('HH:mm:ss'),
-      end_time: DateTime.fromFormat(this.end_time, 'HH:mm:ss').toFormat('HH:mm:ss'),
-    }
-  }
+  // public serializeExtras() {
+  //   return {
+  //     startTime: DateTime.fromFormat(this.startTime, 'HH:mm:ss').toFormat('HH:mm:ss'),
+  //     endTime: DateTime.fromFormat(this.endTime, 'HH:mm:ss').toFormat('HH:mm:ss'),
+  //   }
+  // }
 
   public static filter(queryParams: Record<string, any>) {
     return ModelFilter.apply(this, queryParams)

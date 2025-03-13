@@ -33,10 +33,10 @@ export default class AnnouncementByTeacher extends BaseModel {
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 
-  @belongsTo(() => Teacher, { foreignKey: 'teacher_id' })
+  @belongsTo(() => Teacher, { foreignKey: 'teacherId' })
   declare teacher: BelongsTo<typeof Teacher>
 
-  @belongsTo(() => Schedule, { foreignKey: 'schedule_id' })
+  @belongsTo(() => Schedule, { foreignKey: 'scheduleId' })
   declare schedule: BelongsTo<typeof Schedule>
 
   public static filter(queryParams: Record<string, any>) {

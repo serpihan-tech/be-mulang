@@ -15,7 +15,7 @@ export default class AnnouncementByAdmin extends BaseModel {
   declare content: string
 
   @column()
-  declare admin_id: number // fk
+  declare adminId: number // fk
 
   @column()
   declare files: string
@@ -35,7 +35,7 @@ export default class AnnouncementByAdmin extends BaseModel {
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 
-  @belongsTo(() => Admin, { foreignKey: 'admin_id' })
+  @belongsTo(() => Admin, { foreignKey: 'adminId' })
   declare admin: BelongsTo<typeof Admin>
 
   public static whiteList: string[] = ['description']

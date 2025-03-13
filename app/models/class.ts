@@ -33,7 +33,7 @@ export default class Class extends BaseModel {
   @belongsTo(() => Teacher, { foreignKey: 'teacherId' })
   declare teacher: BelongsTo<typeof Teacher>
 
-  @hasMany(() => ClassStudent, { foreignKey: 'class_id' })
+  @hasMany(() => ClassStudent, { foreignKey: 'classId' })
   declare classStudent: HasMany<typeof ClassStudent>
 
   // @beforeFind()
