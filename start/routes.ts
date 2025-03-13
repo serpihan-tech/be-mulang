@@ -27,6 +27,7 @@ const AnnouncementByAdminsController = () => import('#controllers/announcement_b
 
 import { middleware } from '#start/kernel'
 import transmit from '@adonisjs/transmit/services/main'
+import app from '@adonisjs/core/services/app'
 
 transmit.registerRoutes()
 
@@ -42,14 +43,19 @@ router.group(() => {
 
 router.post('/check-role', [AuthController, 'checkRole']).as('auth.check-role')
 
+// cek return gambar
+router.get('/:url', async ({ params, response }) => {
+    const filePath = app.makePath('storage/uploads/announcement-admins', params.url)
+
+    return response.download(filePath) // {{ ngrok }}/namaFile ... e.g : localhost:3333/test.jpg
+})
+
 router.group(() => {
-    router.post('/notif', [AnnouncementByAdminsController, 'test'])
-    router.get('/notif', [AnnouncementByAdminsController, 'list'])
     
     router.post('/logout', [AuthController, 'logout']).as('auth.logout')
     router.get('/dashboard', [DashboardController, 'index'])
-
-
+    
+    
     // untuk admin
     router.group(() => {
         // TODO : Implementasi Fitur Admin
@@ -68,19 +74,19 @@ router.group(() => {
     
     //untuk teachers   
     router.resource('/teachers', TeacherController)
-        .use(['store', 'destroy'], middleware.role(['admin']))
+    .use(['store', 'destroy'], middleware.role(['admin']))
         .use('update', middleware.role(['teacher', 'admin']))
-    
+        
     router.group(() => {
         // TODO : Implementasi Fitur Teacher
         router.get('/id-name', [TeacherController, 'getIdName'])
     }).prefix('/teacher')
-        
+    
     // Schedule / Jadwal
     router.group(() => {
         router.resource('/schedules', SchedulesController)
     })
-
+    
     // Absensi
     router.group(() => {
         router.group(() => {
@@ -88,7 +94,7 @@ router.group(() => {
         }).prefix('/absences')
         router.resource('/absences', AbsenceController)
     })
-
+    
     // Classes
     router.group(() => {
         router.resource('/classes', ClassesController)
@@ -104,12 +110,17 @@ router.group(() => {
     
     // Announcements By Admin
     router.group(() => {
-        router.resource('/admin-announcement', AnnouncementByAdmins)
-    })
+        // router.resource('/admin-announcement', AnnouncementByAdmins)
+        router.get('/', [AnnouncementByAdminsController, 'index'])
+        router.get('/:id', [AnnouncementByAdmins, 'show'])
+        router.post('/', [AnnouncementByAdminsController, 'store']).use(middleware.role(['admin']))
+        router.patch('/:id', [AnnouncementByAdmins, 'update']).use(middleware.role(['admin']))
+        router.delete('/:id', [AnnouncementByAdmins, 'destroy']).use(middleware.role(['admin']))
+    }).prefix('/announcements/admins')
 
     // Announcements By Teachers
     router.group(() => {
-        router.resource('/teacher-announcement', AnnouncementByTeachers)
+        // router.resource('/teacher-announcement', AnnouncementByTeachers)
     })
     
     // Modules

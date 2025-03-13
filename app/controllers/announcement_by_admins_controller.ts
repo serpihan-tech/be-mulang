@@ -2,87 +2,92 @@ import type { HttpContext } from '@adonisjs/core/http'
 import { inject } from '@adonisjs/core'
 import { AnnouncementByAdminService } from '#services/announcement_by_admin_service'
 import AnnouncementByAdmin from '#models/announcement_by_admin'
-import { DateTime } from 'luxon'
-import app from '@adonisjs/core/services/app'
-import transmit from '@adonisjs/transmit/services/main'
 import User from '#models/user'
 
 @inject()
 export default class AnnouncementByAdminsController {
   constructor(private announcementByAdmin: AnnouncementByAdminService) {}
 
-  async test({ auth, request, response }: HttpContext) {
-    const us = auth.user!
-    await us.load('admin')
-    const admin = await us.admin.id
-    console.log(admin)
+  async index({ auth, request, response }: HttpContext) {
+    const user: User = auth.getUserOrFail()
+    const role = await User.getRole(user)
+    const page = request.input('page')
+    const limit = request.input('limit')
+    const data = request.all()
+
     try {
-      const file = request.file('files', {
-        size: '5mb',
-        extnames: ['jpg', 'png', 'pdf', 'docx'],
-      })
-
-      let filePath = ''
-
-      if (file) {
-        await file.move(app.tmpPath('uploads'), {
-          name: `${new Date().getTime()}_${file.clientName}`,
-          overwrite: true,
-        })
-        filePath = `storage/uploads/${file.fileName}`
-      }
-
-      const ann = await AnnouncementByAdmin.create({
-        title: 'Test Announcement', // Hardcoded
-        content: 'This is a test announcement. RISPEEKKKKKKKK', // Hardcoded
-        category: 'Prestasi', // Hardcoded
-        admin_id: auth.user!.admin.id, // Dari user yang login
-        date: new Date(), // Hardcoded
-        files: filePath, // Input dari request
-        target_roles: 'student', // Hardcoded
-      })
-
-      const users = await User.query().whereHas('roles', (query) => {
-        query.where('role', ann.target_roles)
-      })
-
-      // for (const user of users) {
-      //   console.log(`Mengirim notifikasi ke notifications/${user.id}`)
-
-      //   transmit.broadcast(`notifications/${user.id}`, {
-      //     message: {
-      //       id: ann.id,
-      //       title: ann.title,
-      //       content: ann.content,
-      //       category: ann.category,
-      //       date: ann.date.toISOString(),
-      //     },
-      //   })
-      // }
-      console.log(ann.target_roles)
-      transmit.broadcast(`notifications/${ann.target_roles}`, {
-        message: {
-          id: ann.id,
-          title: ann.title,
-          content: ann.content,
-          category: ann.category,
-          date: ann.date.toISOString(),
-        },
-      })
-
-      return response.ok({ ann })
+      console.log(role)
+      const ann = await this.announcementByAdmin.getAll(page, limit, role.role, data, user)
+      return response.ok({ message: 'Pengumuman Admin Berhasil Dimuat!', announcements: ann })
     } catch (error) {
-      console.error(error)
-      return response.status(error.code).send(error)
+      return response.badRequest({ error })
     }
   }
 
-  async list({ response }: HttpContext) {
+  async show({ params, response }: HttpContext) {
     try {
-      const ann = await AnnouncementByAdmin.query().where('target_roles', 'student')
-      return response.ok({ ann })
+      const announcement = await this.announcementByAdmin.getOne(params.id)
+      return response.ok({ message: 'Data Pengumuman Berhasil Dimuat!', announcement })
+    } catch (error) {
+      if (error.code === 'E_ROW_NOT_FOUND')
+        return response.notFound({ error: { message: 'Pengumuman Admin Tidak Ditemukan!' } })
+      return response.badRequest({ error })
+    }
+  }
+
+  async store({ auth, request, response }: HttpContext) {
+    const us = auth.getUserOrFail()
+    await us.load('admin')
+
+    if (!us.admin) {
+      return response.forbidden({ error: { message: 'Anda Tidak Punya Akses!' } })
+    }
+
+    const adminId: number = us.admin.id
+    console.log(adminId)
+
+    try {
+      const files = request.file('files')
+      const data = request.all()
+
+      if (files) data.files = files
+
+      //             TODO : IMPLEMENT VALIDATOR                //
+
+      const announcement = await this.announcementByAdmin.create(data, adminId)
+      return response.created({ message: 'Pengumuman Berhasil Dibuat!', announcement })
     } catch (error) {
       console.error(error)
+      return response.badRequest({ error })
+    }
+  }
+
+  async update({ params, request, response }: HttpContext) {
+    try {
+      console.log(request.file('files'))
+      const files = request.file('files')
+      const data = request.all()
+
+      if (files) data.files = files
+
+      //             TODO : IMPLEMENT VALIDATOR                //
+      const announcement = await this.announcementByAdmin.update(params.id, data)
+      return response.ok({ message: 'Data Pengumuman Berhasil Diubah!', announcement })
+    } catch (error) {
+      if (error.code === 'E_ROW_NOT_FOUND')
+        return response.notFound({ error: { message: 'Pengumuman Admin Tidak Ditemukan!' } })
+      return response.badRequest({ error })
+    }
+  }
+
+  async destroy({ params, response }: HttpContext) {
+    try {
+      await this.announcementByAdmin.delete(params.id)
+      return response.ok({ message: 'Pengumuman Berhasil Dihapus!' })
+    } catch (error) {
+      if (error.code === 'E_ROW_NOT_FOUND')
+        return response.notFound({ error: { message: 'Pengumuman Admin Tidak Ditemukan!' } })
+      return response.badRequest({ error })
     }
   }
 }

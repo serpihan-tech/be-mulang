@@ -136,10 +136,8 @@ export default class StudentsService implements StudentContract, UserContract {
           })
 
           // Simpan path file ke dalam database
-          student.studentDetail.profile_picture = `uploads/students-profile/${fileName}`
+          student.studentDetail.profile_picture = `${fileName}`
         }
-
-        await student.studentDetail.save()
 
         await student.studentDetail.save()
       }
