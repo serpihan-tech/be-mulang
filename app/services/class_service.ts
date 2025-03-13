@@ -55,7 +55,7 @@ export class ClassService {
       const theClass = await Class.query({ client: trx }).where('id', classId).firstOrFail()
       theClass.merge({
         name: data.name ?? theClass.name,
-        teacher_id: data.teacher_id ?? theClass.teacher_id,
+        teacherId: data.teacher_id ?? theClass.teacherId,
       })
 
       await theClass.useTransaction(trx).save()
