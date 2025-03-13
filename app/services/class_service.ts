@@ -2,18 +2,7 @@ import Class from '#models/class'
 import db from '@adonisjs/lucid/services/db'
 
 export class ClassService {
-  async get(page: number, limit?: number, classId?: number) {
-    if (classId) {
-      const theClass = await Class.query()
-        .select('id', 'name', 'teacher_id')
-        .where('id', classId)
-        .preload('teacher', (t) => t.select('id', 'name'))
-        .first()
-
-      if (!theClass) throw new Error('Kelas tidak ditemukan')
-
-      return theClass
-    }
+  async getAll(page: number, limit?: number) {
     const theClass = await Class.query()
       .select('id', 'name', 'teacher_id')
       .withCount('classStudent', (cs) => cs.as('total_student'))
@@ -23,7 +12,7 @@ export class ClassService {
     const formattedData = theClass.all().map((item) => ({
       id: item.id,
       name: item.name,
-      teacherId: item.teacher_id,
+      teacherId: item.teacherId,
       teacher: {
         id: item.teacher.id,
         name: item.teacher.name,
@@ -35,6 +24,15 @@ export class ClassService {
       meta: theClass.getMeta(),
       theClass: formattedData,
     }
+  }
+
+  async getOne(id: number) {
+    const theClass = await Class.query()
+      .where('id', id)
+      .select('id', 'name', 'teacher_id')
+      .preload('teacher', (t) => t.select('id', 'name'))
+      .firstOrFail()
+    return theClass
   }
 
   async create(data: any): Promise<any> {
@@ -74,6 +72,6 @@ export class ClassService {
 
   async countAllStudents(classId: number) {
     const theClass = await Class.query().where('id', classId).firstOrFail()
-    return await theClass
+    return theClass
   }
 }
