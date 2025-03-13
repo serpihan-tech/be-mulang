@@ -6,6 +6,7 @@ import Absence from './absence.js'
 import Class from './class.js'
 import Room from './room.js'
 import AnnouncementByTeacher from './announcement_by_teacher.js'
+import ModelFilter from '../utils/filter_query.js'
 
 export enum Days {
   SENIN = 'Senin',
@@ -65,5 +66,9 @@ export default class Schedule extends BaseModel {
       start_time: DateTime.fromFormat(this.start_time, 'HH:mm:ss').toFormat('HH:mm:ss'),
       end_time: DateTime.fromFormat(this.end_time, 'HH:mm:ss').toFormat('HH:mm:ss'),
     }
+  }
+
+  public static filter(queryParams: Record<string, any>) {
+    return ModelFilter.apply(this, queryParams)
   }
 }

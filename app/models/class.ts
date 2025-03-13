@@ -3,6 +3,7 @@ import { BaseModel, belongsTo, column, hasOne, beforeFetch, beforeFind } from '@
 import Teacher from './teacher.js'
 import type { BelongsTo, HasOne } from '@adonisjs/lucid/types/relations'
 import ClassStudent from './class_student.js'
+import ModelFilter from '../utils/filter_query.js'
 // import type { ModelQueryBuilderContract } from '@adonisjs/lucid/types/model'
 
 export default class Class extends BaseModel {
@@ -36,4 +37,8 @@ export default class Class extends BaseModel {
   // static async addRelationsIndex(query: ModelQueryBuilderContract<typeof Class>) {
   //   query.preload('teacher')
   // }
+
+  public static filter(queryParams: Record<string, any>) {
+    return ModelFilter.apply(this, queryParams)
+  }
 }

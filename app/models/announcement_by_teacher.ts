@@ -3,6 +3,7 @@ import { BaseModel, belongsTo, column } from '@adonisjs/lucid/orm'
 import Teacher from './teacher.js'
 import Schedule from './schedule.js'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
+import ModelFilter from '../utils/filter_query.js'
 
 export default class AnnouncementByTeacher extends BaseModel {
   @column({ isPrimary: true })
@@ -37,4 +38,8 @@ export default class AnnouncementByTeacher extends BaseModel {
 
   @belongsTo(() => Schedule, { foreignKey: 'schedule_id' })
   declare schedule: BelongsTo<typeof Schedule>
+
+  public static filter(queryParams: Record<string, any>) {
+    return ModelFilter.apply(this, queryParams)
+  }
 }
