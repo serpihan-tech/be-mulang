@@ -13,10 +13,10 @@ export default class Module extends BaseModel {
   declare name: string
 
   @column()
-  declare teacher_id: number
+  declare teacherId: number
 
   @column()
-  declare academic_year_id: number
+  declare academicYearId: number
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime

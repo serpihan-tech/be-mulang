@@ -9,10 +9,10 @@ export default class AnnouncementByTeacher extends BaseModel {
   declare id: number
 
   @column()
-  declare teacher_id: number
+  declare teacherId: number
 
   @column()
-  declare schedule_id: number
+  declare scheduleId: number
 
   @column()
   declare title: string
