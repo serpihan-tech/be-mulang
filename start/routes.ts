@@ -55,62 +55,77 @@ router.group(() => {
     router.post('/logout', [AuthController, 'logout']).as('auth.logout')
     router.get('/dashboard', [DashboardController, 'index'])
     
-    
-    // untuk admin
+    // Untuk admin
     router.group(() => {
         // TODO : Implementasi Fitur Admin
     }).prefix('/admins')
 
-    // untuk students
+    // Untuk students
     router.group(() => {
-        router.resource('/students', StudentsController)
-        
-        router.group(() => {
-            router.post('/promote', [StudentsController, 'promoteClass'])
-            router.get('/presence/:studentId', [StudentsController, 'getPresence'])
-            router.get('/schedule/:studentId', [StudentsController, 'getSchedule'])    
-        }).prefix('/students')     
-    })
-    
-    //untuk teachers   
-    router.resource('/teachers', TeacherController)
-    .use(['store', 'destroy'], middleware.role(['admin']))
-        .use('update', middleware.role(['teacher', 'admin']))
-        
+        router.get('/', [StudentsController, 'index'])
+        router.get('/:id', [StudentsController, 'show'])
+        router.post('/', [StudentsController, 'store'])
+        router.patch('/:id', [StudentsController, 'update'])
+        router.delete('/:id', [StudentsController, 'destroy'])
+        router.post('/promote', [StudentsController, 'promoteClass'])
+        router.get('/presence/:studentId', [StudentsController, 'getPresence'])
+        router.get('/schedule/:studentId', [StudentsController, 'getSchedule'])    
+    }).prefix('/students')     
+
+    // Untuk teachers   
     router.group(() => {
-        // TODO : Implementasi Fitur Teacher
+        router.get('/', [TeacherController, 'index'])
+        router.post('/', [TeacherController, 'store']).use(middleware.role(['admin']))
+        router.get('/:id', [TeacherController, 'show'])
+        router.patch('/:id', [TeacherController, 'update']).use(middleware.role(['teacher', 'admin']))
+        router.delete('/:id', [TeacherController, 'destroy']).use(middleware.role(['admin']))
+
         router.get('/id-name', [TeacherController, 'getIdName'])
-    }).prefix('/teacher')
-    
+    }).prefix('/teachers')
+
     // Schedule / Jadwal
     router.group(() => {
-        router.resource('/schedules', SchedulesController)
-    })
-    
+        router.get('/', [SchedulesController, 'index'])
+        router.post('/', [SchedulesController, 'store'])
+        router.get('/:id', [SchedulesController, 'show'])
+        router.patch('/:id', [SchedulesController, 'update'])
+        router.delete('/:id', [SchedulesController, 'destroy'])
+    }).prefix('schedules')
     // Absensi
     router.group(() => {
         router.group(() => {
-            router.get('/mine', [AbsenceController, 'getMyAbsences'])
-        }).prefix('/absences')
-        router.resource('/absences', AbsenceController)
-    })
-    
+            router.get('/mine', [AbsenceController, 'getMyAbsences']) // * untuk data/fitur untuk siswa yang sedang login
+        }).prefix('/')
+        
+        router.get('/', [AbsenceController, 'index'])
+        // router.post('/', [AbsenceController, 'store']) // TODO : Implementasi Absensi
+        // router.get('/:id', [AbsenceController, 'show'])
+        router.patch('/:id', [AbsenceController, 'update'])
+        router.delete('/:id', [AbsenceController, 'destroy'])
+    }).prefix('/absences')
+
     // Classes
     router.group(() => {
-        router.resource('/classes', ClassesController)
-    })
-    
+        router.get('/', [ClassesController, 'index'])
+        router.post('/', [ClassesController, 'store'])
+        router.get('/:id', [ClassesController, 'show'])
+        router.patch('/:id', [ClassesController, 'update'])
+        router.delete('/:id', [ClassesController, 'destroy'])
+    }).prefix('classes')
+
     // Academic Years
     router.group(() => {
-        router.group(() => {
-            router.get('/mine', [AcademicYearsController, 'myAcademicYear']).use(middleware.role(['student']))
-        }).prefix('/academic-years')
-        router.resource('/academic-years', AcademicYearsController)
-    })
-    
+        router.get('/mine', [AcademicYearsController, 'myAcademicYear'])
+            .use(middleware.role(['student'])) // * untuk data/fitur untuk siswa yang sedang login
+        router.get('/', [AcademicYearsController, 'index'])
+        router.post('/', [AcademicYearsController, 'store'])
+        router.get('/:id', [AcademicYearsController, 'show'])
+        router.patch('/:id', [AcademicYearsController, 'update'])
+        router.delete('/:id', [AcademicYearsController, 'destroy'])
+    }).prefix('/academic-years')
+
     // Announcements By Admin
     router.group(() => {
-        // router.resource('/admin-announcement', AnnouncementByAdmins)
         router.get('/', [AnnouncementByAdminsController, 'index'])
         router.get('/:id', [AnnouncementByAdmins, 'show'])
         router.post('/', [AnnouncementByAdminsController, 'store']).use(middleware.role(['admin']))
@@ -120,18 +135,30 @@ router.group(() => {
 
     // Announcements By Teachers
     router.group(() => {
-        // router.resource('/teacher-announcement', AnnouncementByTeachers)
+        // TODO : Implementasi Fitur Teacher
     })
-    
+
     // Modules
-    router.resource('/modules', ModulesController)
-    
+    router.group(() => {
+        router.get('/', [ModulesController, 'index'])
+        router.post('/', [ModulesController, 'store'])
+        router.get('/:id', [ModulesController, 'show'])
+        router.patch('/:id', [ModulesController, 'update'])
+        router.delete('/:id', [ModulesController, 'destroy'])
+    }).prefix('/modules')
+
     // Scores
-    router.patch('/scores/updates', [ScoreController, 'massUpdate'])
-    router.resource('/scores', ScoreController)
-    
-    
+    router.group(() => {
+        router.patch('/updates', [ScoreController, 'massUpdate']) // fitur naik kelas langsung beberapa murid
+        router.get('/', [ScoreController, 'index'])
+        router.post('/', [ScoreController, 'store'])
+        router.get('/:id', [ScoreController, 'show'])
+        router.patch('/:id', [ScoreController, 'update'])
+        router.delete('/:id', [ScoreController, 'destroy'])
+    }).prefix('/scores')
+
 }).use(middleware.auth())
+
 
 
 // Cek IP Address

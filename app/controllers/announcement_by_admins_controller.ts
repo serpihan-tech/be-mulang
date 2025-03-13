@@ -1,7 +1,6 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import { inject } from '@adonisjs/core'
 import { AnnouncementByAdminService } from '#services/announcement_by_admin_service'
-import AnnouncementByAdmin from '#models/announcement_by_admin'
 import User from '#models/user'
 
 @inject()
