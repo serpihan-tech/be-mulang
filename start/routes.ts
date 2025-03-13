@@ -22,8 +22,12 @@ const SchedulesController = () => import('#controllers/schedules_controller')
 const ModulesController = () => import('#controllers/modules_controller')
 const AnnouncementByAdmins = () => import('#controllers/announcement_by_admins_controller')
 const ScoreController = () => import('#controllers/scores_controller')
+const AnnouncementByAdminsController = () => import('#controllers/announcement_by_admins_controller')
 
 import { middleware } from '#start/kernel'
+import transmit from '@adonisjs/transmit/services/main'
+
+transmit.registerRoutes()
 
 router.post('/user/create', [UserController, 'create']).as('user.create') // TODO: Tambah Middleware Auth
 router.post('/login', [AuthController, 'login']).as('auth.login')
@@ -38,7 +42,9 @@ router.group(() => {
 router.post('/check-role', [AuthController, 'checkRole']).as('auth.check-role')
 
 router.group(() => {
-
+    router.post('/notif', [AnnouncementByAdminsController, 'test'])
+    router.get('/notif', [AnnouncementByAdminsController, 'list'])
+    
     router.post('/logout', [AuthController, 'logout']).as('auth.logout')
     router.get('/dashboard', [DashboardController, 'index'])
 
@@ -103,12 +109,12 @@ router.group(() => {
     // Modules
     router.get('/modules/filter', [ModulesController, 'getByFilter'])
     router.resource('/modules', ModulesController)
-
+    
     // Scores
     router.get('/scores/filter', [ScoreController, 'getByFilter'])
     router.patch('/scores/updates', [ScoreController, 'massUpdate'])
     router.resource('/scores', ScoreController)
-
+    
     
 }).use(middleware.auth())
 

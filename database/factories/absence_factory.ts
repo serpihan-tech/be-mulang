@@ -22,7 +22,9 @@ export const AbsenceFactory = factory
     ])
     const reason = status === Status.IZIN ? faker.lorem.sentence() : ''
 
-    const date = DateTime.now().set({ month: 2, year: 2025 })
+    // Generate tanggal acak dalam 1 tahun terakhir hingga hari ini
+    const randomDays = faker.number.int({ min: 0, max: 365 })
+    const date = DateTime.now().minus({ days: randomDays })
 
     return {
       class_student_id: faker.helpers.arrayElement(csIds),

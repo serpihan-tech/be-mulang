@@ -38,5 +38,9 @@ export default class AnnouncementByAdmin extends BaseModel {
   @belongsTo(() => Admin, { foreignKey: 'admin_id' })
   declare admin: BelongsTo<typeof Admin>
 
-  
+  public static whiteList: string[] = ['description']
+
+  public static filter(queryParams: Record<string, any>) {
+    return ModelFilter.apply(this, queryParams, this.whiteList)
+  }
 }
