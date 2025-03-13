@@ -5,53 +5,21 @@ import { createModuleValidator, filterModuleValidator, updateModuleValidator } f
 
 @inject()
 export default class ModulesController {
-  constructor(private moduleService: ModuleService) {}
+  constructor(private moduleService: ModuleService) { }
 
   /**
    * Display a list of resource
    */
-  async index({response}: HttpContext) {
+  async index({ response, request }: HttpContext) {
     try {
-      const columns = ['name', 'teacher_id', 'academic_year_id']
-      const modules = await this.moduleService.get(columns)
+      const modules = await this.moduleService.getAll(request.all())
 
       return response.ok({
         message: 'Berhasil Mendapatkan Data Modul',
-        modules
+        modules,
       })
     } catch (error) {
-      throw response.send({
-        "error": {
-          ...error
-        }
-      }) 
-    }
-  }
-
-  async getByFilter({request, response}: HttpContext) {
-    const filter = {
-      name: request.input('name', null),
-      teacherNip: request.input('teacherNip', null),
-      academicYear: request.input('academicYear', null)
-    }
-    const page = request.input('page')
-    const limit = request.input('limit')
-
-    try {
-      const columns = ['name', 'teacher_id', 'academic_year_id']
-
-      const modules = await this.moduleService.getByFilter(filter, page, limit, columns)
-
-      return response.ok({
-        message: 'Berhasil Mendapatkan Data Modul',
-        modules
-      })
-    } catch (error) {
-      throw response.send({
-        "error": {
-          ...error
-        }
-      })
+      throw response.send({ error })
     }
   }
 
@@ -72,36 +40,56 @@ export default class ModulesController {
         message: 'Modul Berhasil Dibuat',
         module
       })
-    }catch (error){
-      return  error
+    } catch (error) {
+      return response.send({ error })
     }
   }
 
   /**
    * Show individual record
    */
-  async show({ params }: HttpContext) {}
+  async show({ params, response }: HttpContext) {
+    const id = params.id
+    try {
+      const module = await this.moduleService.getOne(id)
+      return response.ok({
+        message: 'Module Berhasil Ditampilkan',
+        module,
+      })
+    } catch (error) {
+      return response.send({ error })
+    }
+  }
 
   /**
    * Edit individual record
    */
-  async edit({ params }: HttpContext) {
-    
+  async edit({ params, request, response }: HttpContext) {
+    const id = params.id
+    try {
+      const module = this.moduleService.update(request, id)
+      return response.ok({
+        message: 'Module Berhasil Diupdate',
+        module,
+      })
+    } catch (error) {
+      return response.send({ error })
+    }
   }
 
   /**
    * Handle form submission for the edit action
    */
   async update({ params, request, response }: HttpContext) {
-    const moduleId= params.id
+    const moduleId = params.id
     try {
       await updateModuleValidator.validate(request.all())
       const module = await this.moduleService.update(request.all(), moduleId)
 
       return response.ok({
         message: 'Modul Berhasil Diubah',
-        module
-      }) 
+        module,
+      })
     } catch (error) {
       return response.badRequest({ error })
     }
@@ -113,9 +101,8 @@ export default class ModulesController {
   async destroy({ params, response }: HttpContext) {
     try {
       await this.moduleService.delete(params.id)
-  
       return response.ok({
-        message: 'Modul Berhasil Dihapus'
+        message: 'Modul Berhasil Dihapus',
       })
     } catch (error) {
       return response.notFound({ error: { message: 'ID Modul Tidak Ditemukan' } })

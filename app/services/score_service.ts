@@ -2,7 +2,7 @@ import db from '@adonisjs/lucid/services/db'
 import Score from '#models/score'
 
 export default class ScoreService {
-  async get(params: any, page?: number, limit?: number): Promise<any> {
+  async getAll(params: any, page?: number, limit?: number): Promise<any> {
     const scores = await Score.filter(params).paginate(page ?? 1, limit)
     return scores
   }

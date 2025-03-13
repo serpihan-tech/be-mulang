@@ -11,33 +11,11 @@ export default class ScoresController {
   /**
    * Display a list of resource
    */
-  async index({ response }: HttpContext) {
+  async index({ response, request }: HttpContext) {
     try {
-      const scores = await this.scroreService.get()
+      const scores = await this.scroreService.getAll(request.all())
       return response.ok({
-        message: 'Berhasil Mendapatkan Data Nilai',
-        scores,
-      })
-    } catch (error) {
-      return response.send({ error })
-    }
-  }
-
-  async getByFilter({ request, response }: HttpContext) {
-    const filter = {
-      moduleId: request.input('moduleId', null),
-      classStudentId: request.input('classStudentId', null),
-      scoreTypeId: request.input('scoreTypeId', null),
-    }
-    const page = request.input('page')
-    const limit = request.input('limit')
-
-    try {
-      const columns = ['module_id', 'class_student_id', 'type_score_id']
-
-      const scores = await this.scroreService.getByFilter(columns, filter, page, limit)
-      return response.ok({
-        message: 'Berhasil Mendapatkan Data Nilai',
+        message: 'Score Ditemukan',
         scores,
       })
     } catch (error) {
@@ -73,7 +51,18 @@ export default class ScoresController {
   /**
    * Show individual record
    */
-  async show({}: HttpContext) {}
+  async show({ params, response }: HttpContext) {
+    try {
+      const id: number = params.id
+      const score = await this.scroreService.getOne(id)
+      return response.ok({
+        message: 'Score Ditemukan',
+        score,
+      })
+    } catch (error) {
+      return response.send({ error })
+    }
+  }
 
   /**
    * Edit individual record
