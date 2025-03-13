@@ -49,7 +49,7 @@ export const ClassFactory = factory
 
     return {
       name: className,
-      teacher_id: teacher.id,
+      teacherId: teacher.id,
     }
   })
   .build()

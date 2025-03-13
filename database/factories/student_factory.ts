@@ -35,9 +35,9 @@ export const StudentFactory = factory
     }
 
     return {
-      user_id: user.id,
+      userId: user.id,
       name: `${firstName} ${lastName}`,
-      is_graduate: Graduate,
+      isGraduate: Graduate,
     }
   })
   .build()

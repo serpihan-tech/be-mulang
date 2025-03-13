@@ -41,16 +41,16 @@ export const TeacherFactory = factory
     usedUserIds.add(user.id)
 
     return {
-      user_id: user.id,
+      userId: user.id,
       name: `${faker.person.firstName()} ${faker.person.lastName()}`,
       nip: faker.string.numeric({ length: 18 }),
       religion: religion,
       phone: faker.phone.number({ style: 'human' }),
-      birth_date: birthDate,
-      birth_place: birthPlace,
+      birthDate: birthDate,
+      birthPlace: birthPlace,
       gender: faker.helpers.arrayElement(['pria', 'wanita']),
       address: `${faker.location.streetAddress()}, ${city}, ${faker.location.state()}`,
-      profile_picture: faker.image.avatar(),
+      profilePicture: faker.image.avatar(),
     }
   })
   .build()

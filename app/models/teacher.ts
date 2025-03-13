@@ -31,13 +31,13 @@ export default class Teacher extends BaseModel {
   declare address: string | null
 
   @column()
-  declare profile_picture: string
+  declare profilePicture: string
 
   @column()
-  declare birth_date: Date
+  declare birthDate: Date
 
   @column()
-  declare birth_place: string
+  declare birthPlace: string
 
   @column()
   declare gender: string

@@ -27,7 +27,7 @@ export default class AnnouncementByAdmin extends BaseModel {
   declare date: Date
 
   @column()
-  declare target_roles: string
+  declare targetRoles: string
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime

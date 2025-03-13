@@ -7,10 +7,10 @@ export const AnnouncementByAdminFactory = factory
     return {
       title: faker.lorem.sentence(),
       content: faker.lorem.paragraph(),
-      admin_id: faker.helpers.arrayElement([1, 2]),
+      adminId: faker.helpers.arrayElement([1, 2]),
       date: faker.date.past(),
       files: faker.image.urlPicsumPhotos({ width: 400, height: 240 }),
-      target_roles: faker.helpers.arrayElement(['student', 'teacher']),
+      targetRoles: faker.helpers.arrayElement(['student', 'teacher']),
       category: faker.helpers.arrayElement([
         'Akademik',
         'Administrasi',

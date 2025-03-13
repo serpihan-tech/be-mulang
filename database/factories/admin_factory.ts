@@ -16,7 +16,7 @@ export const AdminFactory = factory
 
     return {
       name: `${firstName} ${lastName}`,
-      user_id: user.id,
+      userId: user.id,
     }
   })
   .build()

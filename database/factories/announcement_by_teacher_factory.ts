@@ -11,8 +11,8 @@ export const AnnouncementByTeacherFactory = factory
     const scheduleIds = (await Schedule.all()).map((s) => s.id)
 
     return {
-      teacher_id: faker.helpers.arrayElement(teacherIds),
-      schedule_id: faker.helpers.arrayElement(scheduleIds),
+      teacherId: faker.helpers.arrayElement(teacherIds),
+      scheduleId: faker.helpers.arrayElement(scheduleIds),
       title: faker.lorem.sentence({ min: 3, max: 6 }),
       content: faker.lorem.paragraph(8),
       date: faker.date.past(),

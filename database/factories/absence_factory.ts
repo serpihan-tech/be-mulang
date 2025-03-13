@@ -27,8 +27,8 @@ export const AbsenceFactory = factory
     const date = DateTime.now().minus({ days: randomDays })
 
     return {
-      class_student_id: faker.helpers.arrayElement(csIds),
-      schedule_id: faker.helpers.arrayElement(scheduleIds),
+      classStudentId: faker.helpers.arrayElement(csIds),
+      scheduleId: faker.helpers.arrayElement(scheduleIds),
       status: status,
       reason: reason,
       date: date,

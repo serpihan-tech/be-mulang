@@ -14,10 +14,10 @@ export const TeacherAbsenceFactory = factory
     const CheckOut: DateTime = CheckIn.plus({ hours: randomDuration })
 
     return {
-      teacher_id: faker.helpers.arrayElement(teacherIds),
+      teacherId: faker.helpers.arrayElement(teacherIds),
       date: faker.date.past(),
-      check_in_time: CheckIn.toFormat('HH:mm:ss'),
-      check_out_time: CheckOut.toFormat('HH:mm:ss'),
+      checkInTime: CheckIn.toFormat('HH:mm:ss'),
+      checkOutTime: CheckOut.toFormat('HH:mm:ss'),
     }
   })
   .build()
