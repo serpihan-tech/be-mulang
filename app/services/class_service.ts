@@ -2,12 +2,12 @@ import Class from '#models/class'
 import db from '@adonisjs/lucid/services/db'
 
 export class ClassService {
-  async getAll(page: number, limit?: number) {
-    const theClass = await Class.query()
+  async getAll(params: any, page?: number, limit?: number) {
+    const theClass = await Class.filter(params)
       .select('id', 'name', 'teacher_id')
       .withCount('classStudent', (cs) => cs.as('total_student'))
       .preload('teacher', (t) => t.select('id', 'name'))
-      .paginate(page, limit)
+      .paginate(page || 1, limit)
 
     const formattedData = theClass.all().map((item) => ({
       id: item.id,

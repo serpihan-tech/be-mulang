@@ -1,12 +1,11 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import { inject } from '@adonisjs/core'
 import ModuleService from '#services/module_service'
-import { createModuleValidator, filterModuleValidator, updateModuleValidator } from '#validators/module'
+import { createModuleValidator, updateModuleValidator } from '#validators/module'
 
 @inject()
 export default class ModulesController {
-  constructor(private moduleService: ModuleService) { }
-
+  constructor(private moduleService: ModuleService) {}
   /**
    * Display a list of resource
    */
@@ -38,7 +37,7 @@ export default class ModulesController {
 
       return response.created({
         message: 'Modul Berhasil Dibuat',
-        module
+        module,
       })
     } catch (error) {
       return response.send({ error })

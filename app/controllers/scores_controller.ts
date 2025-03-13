@@ -3,7 +3,6 @@ import { inject } from '@adonisjs/core'
 import ScoreService from '#services/score_service'
 import { createScoreValidator, updateScoreValidator } from '#validators/score'
 import Score from '#models/score'
-import { accessSync } from 'node:fs'
 
 @inject()
 export default class ScoresController {
