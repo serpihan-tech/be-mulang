@@ -59,7 +59,7 @@ export default class AnnouncementByAdminsController {
       //     },
       //   })
       // }
-
+      console.log(ann.target_roles)
       transmit.broadcast(`notifications/${ann.target_roles}`, {
         message: {
           id: ann.id,

@@ -62,20 +62,20 @@ router.group(() => {
         router.group(() => {
             router.post('/promote', [StudentsController, 'promoteClass'])
             router.get('/presence/:studentId', [StudentsController, 'getPresence'])
-            router.get('/schedule/:studentId', [StudentsController, 'getSchedule'])
+            router.get('/schedule/:studentId', [StudentsController, 'getSchedule'])    
         }).prefix('/students')     
     })
-
-    //untuk teachers
-    router.group(() => {     
-        router.resource('/teachers', TeacherController)
-            .use(['store', 'destroy'], middleware.role(['admin']))
-            .use('update', middleware.role(['teacher', 'admin']))
-        router.group(() => {
-            // TODO : Implementasi Fitur Teacher
-        }).prefix('/teachers')
-    })
-
+    
+    //untuk teachers   
+    router.resource('/teachers', TeacherController)
+        .use(['store', 'destroy'], middleware.role(['admin']))
+        .use('update', middleware.role(['teacher', 'admin']))
+    
+    router.group(() => {
+        // TODO : Implementasi Fitur Teacher
+        router.get('/id-name', [TeacherController, 'getIdName'])
+    }).prefix('/teacher')
+        
     // Schedule / Jadwal
     router.group(() => {
         router.resource('/schedules', SchedulesController)
