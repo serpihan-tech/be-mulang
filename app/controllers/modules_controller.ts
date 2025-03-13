@@ -40,7 +40,7 @@ export default class ModulesController {
         module,
       })
     } catch (error) {
-      return response.send({ error })
+      return response.status(error.status).send({ error })
     }
   }
 
@@ -56,7 +56,7 @@ export default class ModulesController {
         module,
       })
     } catch (error) {
-      return response.send({ error })
+      return response.status(error.status).send({ error })
     }
   }
 
@@ -72,7 +72,7 @@ export default class ModulesController {
         module,
       })
     } catch (error) {
-      return response.send({ error })
+      return response.status(error.status).send({ error })
     }
   }
 

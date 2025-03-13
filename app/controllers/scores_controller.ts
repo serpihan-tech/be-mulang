@@ -12,13 +12,17 @@ export default class ScoresController {
    */
   async index({ response, request }: HttpContext) {
     try {
-      const scores = await this.scroreService.getAll(request.all())
+      const scores = await this.scroreService.getAll(
+        request.all(),
+        request.input('page'),
+        request.input('limit')
+      )
       return response.ok({
         message: 'Score Ditemukan',
         scores,
       })
     } catch (error) {
-      return response.send({ error })
+      return response.status(error.status).send({ error })
     }
   }
 
@@ -43,7 +47,7 @@ export default class ScoresController {
         score,
       })
     } catch (error) {
-      return response.send({ error })
+      return response.status(error.status).send({ error })
     }
   }
 
@@ -59,7 +63,7 @@ export default class ScoresController {
         score,
       })
     } catch (error) {
-      return response.send({ error })
+      return response.status(error.status).send({ error })
     }
   }
 
@@ -85,7 +89,7 @@ export default class ScoresController {
         data,
       })
     } catch (error) {
-      return response.send({ error })
+      return response.status(error.status).send({ error })
     }
   }
 
@@ -111,7 +115,7 @@ export default class ScoresController {
         data,
       })
     } catch (error) {
-      return response.send({ error })
+      return response.status(error.status).send({ error })
     }
   }
 
@@ -127,7 +131,7 @@ export default class ScoresController {
         messages: 'Data Behasil Dihapus',
       })
     } catch (error) {
-      return response.send({ error })
+      return response.status(error.status).send({ error })
     }
   }
 
@@ -137,7 +141,7 @@ export default class ScoresController {
       const score = await Score.filter(request.all())
       return response.ok(score)
     } catch (error) {
-      return response.send({ error })
+      return response.status(error.status).send({ error })
     }
   }
 }

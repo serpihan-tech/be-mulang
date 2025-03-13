@@ -101,11 +101,9 @@ router.group(() => {
     })
     
     // Modules
-    router.get('/modules/filter', [ModulesController, 'getByFilter'])
     router.resource('/modules', ModulesController)
 
     // Scores
-    router.get('/scores/filter', [ScoreController, 'getByFilter'])
     router.patch('/scores/updates', [ScoreController, 'massUpdate'])
     router.resource('/scores', ScoreController)
 
