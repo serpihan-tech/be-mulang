@@ -2,12 +2,23 @@ import Teacher from '#models/teacher'
 import db from '@adonisjs/lucid/services/db'
 import UserContract from '../contracts/user_contract.js'
 import User from '#models/user'
+import ModelFilter from '../utils/filter_query.js'
 
 export default class TeacherService implements UserContract {
-  async index(data: any, page?: number, limit?: number): Promise<any> {
-    const teachers = await Teacher.filter(data)
+  async index(params: any, page?: number, limit?: number): Promise<any> {
+    const whiteList: any[] = ['phone']
+    const blackList: any[] = ['email']
+    let query = Teacher.query()
       .preload('user')
-      .paginate(page || 1, limit)
+      .whereHas('user', (userQuery) => {
+        userQuery.where('email', 'LIKE', `%${params.email}%`)
+      })
+    console.log(params.phone)
+
+    // Terapkan ModelFilter.apply() ke query yang sudah difilter
+    query = ModelFilter.apply(query, params, whiteList, blackList)
+
+    const teachers = await query.paginate(page || 1, limit)
     return teachers
   }
 

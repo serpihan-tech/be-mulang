@@ -1,5 +1,5 @@
 import type { BaseModel } from '@adonisjs/lucid/orm'
-import type { ModelQueryBuilderContract } from '@adonisjs/lucid/types/model'
+import type { ExtractScopes, ModelQueryBuilderContract } from '@adonisjs/lucid/types/model'
 
 export default class ModelFilter {
   /**
@@ -15,12 +15,13 @@ export default class ModelFilter {
    * @returns {ModelQueryBuilderContract<T>}
    */
   public static apply<T extends typeof BaseModel>(
-    model: T,
+    // model: T,
+    query: ModelQueryBuilderContract<T, InstanceType<T>>,
     queryParams: Record<string, any>,
     likeFields: string[] = [],
     blackList: string[] = ['page', 'limit'] // query param yang tidak diolah oleh filter
-  ): ModelQueryBuilderContract<T> {
-    let query = model.query()
+  ): ModelQueryBuilderContract<T, any> {
+    // let query = model.query()
 
     let sortBy = 'id' // Default sorting column
     let sortOrder: 'asc' | 'desc' = 'asc' // Default sorting order
@@ -43,7 +44,7 @@ export default class ModelFilter {
           break
 
         case typeof value === 'string' && likeFields.includes(key):
-          query.where(key, 'LIKE', `%${value}%`)
+          query.where(key, 'LIKE', `%${value.replace(/['+(']/g, '').trim()}%`) // + symbol trim
           break
 
         case typeof value === 'string' && value.startsWith('>='):
