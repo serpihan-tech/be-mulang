@@ -27,7 +27,7 @@ const AnnouncementByAdminsController = () => import('#controllers/announcement_b
 
 import { middleware } from '#start/kernel'
 import transmit from '@adonisjs/transmit/services/main'
-import app from '@adonisjs/core/services/app'
+// import app from '@adonisjs/core/services/app' 
 
 transmit.registerRoutes()
 
@@ -43,12 +43,13 @@ router.group(() => {
 
 router.post('/check-role', [AuthController, 'checkRole']).as('auth.check-role')
 
-// cek return gambar
-router.get('/:url', async ({ params, response }) => {
-    const filePath = app.makePath('storage/uploads/announcement-admins', params.url)
+// ! This shit cause error on url '/' no matter what the prefixs are, be careful
+// // cek return gambar
+// router.get('/:url', async ({ params, response }) => { 
+//     const filePath = app.makePath('storage/uploads/announcement-admins', params.url)
 
-    return response.download(filePath) // {{ ngrok }}/namaFile ... e.g : localhost:3333/test.jpg
-})
+//     return response.download(filePath) // {{ ngrok }}/namaFile ... e.g : localhost:3333/test.jpg
+// })
 
 router.group(() => {
     
@@ -91,6 +92,7 @@ router.group(() => {
         router.patch('/:id', [SchedulesController, 'update'])
         router.delete('/:id', [SchedulesController, 'destroy'])
     }).prefix('schedules')
+
     // Absensi
     router.group(() => {
         router.group(() => {
