@@ -77,4 +77,13 @@ export default class TeachersController {
       return response.notFound({ error: { message: 'ID Guru Tidak Ditemukan' } })
     }
   }
+
+  async getIdName({ response }: HttpContext) {
+    try {
+      const tc = await this.teacherService.getIdName()
+      return response.ok({ message: 'Data Guru Berhasil Didapatkan', teachers: tc })
+    } catch (error) {
+      return response.status(error.code).send({ error })
+    }
+  }
 }

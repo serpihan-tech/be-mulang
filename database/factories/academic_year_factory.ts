@@ -56,8 +56,8 @@ export const AcademicYearFactory = factory
       name,
       status,
       semester,
-      date_start: dateStart,
-      date_end: dateEnd,
+      dateStart: dateStart,
+      dateEnd: dateEnd,
     }
   })
   .build()

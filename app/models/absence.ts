@@ -22,10 +22,10 @@ export default class Absence extends BaseModel {
   declare date: DateTime
 
   @column()
-  declare class_student_id: number
+  declare classStudentId: number
 
   @column()
-  declare schedule_id: number
+  declare scheduleId: number
 
   @column()
   declare status: Status
@@ -36,9 +36,9 @@ export default class Absence extends BaseModel {
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 
-  @belongsTo(() => ClassStudent, { foreignKey: 'class_student_id' })
+  @belongsTo(() => ClassStudent, { foreignKey: 'classStudentId' })
   declare classStudent: BelongsTo<typeof ClassStudent>
 
-  @belongsTo(() => Schedule, { foreignKey: 'schedule_id' })
+  @belongsTo(() => Schedule, { foreignKey: 'scheduleId' })
   declare schedule: BelongsTo<typeof Schedule>
 }

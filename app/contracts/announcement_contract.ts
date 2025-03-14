@@ -14,7 +14,7 @@ export interface AnnouncementByAdminContract {
    * @param data
    * @return pengumuman baru
    */
-  create(data: any): Promise<Object>
+  create(data: any, adminId: number): Promise<Object>
 
   /**
    * @param id

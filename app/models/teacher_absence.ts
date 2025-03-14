@@ -8,16 +8,16 @@ export default class TeacherAbsence extends BaseModel {
   declare id: number
 
   @column()
-  declare teacher_id: number
+  declare teacherId: number
 
   @column()
   declare date: Date
 
   @column({ serializeAs: null })
-  declare check_in_time: string
+  declare checkInTime: string
 
   @column({ serializeAs: null })
-  declare check_out_time: string
+  declare checkOutTime: string
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -25,6 +25,6 @@ export default class TeacherAbsence extends BaseModel {
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 
-  @belongsTo(() => Teacher, { foreignKey: 'teacher_id' })
+  @belongsTo(() => Teacher, { foreignKey: 'teacherId' })
   declare teacher: BelongsTo<typeof Teacher>
 }

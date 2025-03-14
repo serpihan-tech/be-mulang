@@ -6,6 +6,7 @@ export default class UsersController {
   async index({}: HttpContext) {
     return 'hello'
   }
+
   async create({ request, response }: HttpContext) {
     const user = new User()
     user.username = request.input('username')

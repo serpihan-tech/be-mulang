@@ -82,7 +82,7 @@ export default class StudentDashboardService {
       })
     }
 
-    const schedule = await this.getSchedule(classStudent.class_id)
+    const schedule = await this.getSchedule(classStudent.classId)
     const presence = await this.getPresence(student.id)
 
     return response.ok({

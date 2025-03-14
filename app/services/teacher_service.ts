@@ -22,6 +22,12 @@ export default class TeacherService implements UserContract {
     return teachers
   }
 
+  async getIdName(): Promise<any> {
+    const teachers = await Teacher.query().select('id', 'name')
+    console.log('teachers : ', teachers)
+    return teachers
+  }
+
   async show(id: number): Promise<any> {
     const teacher = await Teacher.query().where('id', id).preload('user').firstOrFail()
     return teacher
@@ -74,11 +80,11 @@ export default class TeacherService implements UserContract {
         nip: data.teacher?.nip ?? teacher.nip,
         phone: data.teacher?.phone ?? teacher.phone,
         religion: data.teacher?.religion ?? teacher.religion,
-        birth_date: data.teacher?.birth_date ?? teacher.birth_date,
-        birth_place: data.teacher?.birth_place ?? teacher.birth_place,
+        birthDate: data.teacher?.birth_date ?? teacher.birthDate,
+        birthPlace: data.teacher?.birth_place ?? teacher.birthPlace,
         gender: data.teacher?.gender ?? teacher.gender,
         address: data.teacher?.address ?? teacher.address,
-        profile_picture: data.teacher?.profile_picture ?? teacher.profile_picture,
+        profilePicture: data.teacher?.profile_picture ?? teacher.profilePicture,
       })
       await teacher.save()
 

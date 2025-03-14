@@ -25,13 +25,13 @@ export default class Module extends BaseModel {
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 
-  @belongsTo(() => Teacher, { foreignKey: 'teacher_id' })
+  @belongsTo(() => Teacher, { foreignKey: 'teacherId' })
   declare teacher: BelongsTo<typeof Teacher>
 
-  @belongsTo(() => AcademicYear, { foreignKey: 'academic_year_id' })
+  @belongsTo(() => AcademicYear, { foreignKey: 'academicYearId' })
   declare academicYear: BelongsTo<typeof AcademicYear>
 
-  @hasMany(() => Score, { foreignKey: 'module_id' })
+  @hasMany(() => Score, { foreignKey: 'moduleId' })
   declare scores: HasMany<typeof Score>
 
   public static filter(queryParams: Record<string, any>) {

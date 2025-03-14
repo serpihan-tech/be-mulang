@@ -30,10 +30,10 @@ export default class AcademicYear extends BaseModel {
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 
-  @hasMany(() => Module, { foreignKey: 'academic_year_id' })
+  @hasMany(() => Module, { foreignKey: 'academicYearId' })
   declare modules: HasMany<typeof Module>
 
-  @hasMany(() => ClassStudent, { foreignKey: 'academic_year_id' })
+  @hasMany(() => ClassStudent, { foreignKey: 'academicYearId' })
   declare classStudents: HasMany<typeof ClassStudent>
 
   /**

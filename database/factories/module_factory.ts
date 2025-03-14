@@ -47,8 +47,8 @@ export const ModuleFactory = factory
 
     return {
       name: moduleName,
-      academic_year_id: faker.helpers.arrayElement(academicYears).id,
-      teacher_id: faker.helpers.arrayElement(teachers).id,
+      academicYearId: faker.helpers.arrayElement(academicYears).id,
+      teacherId: faker.helpers.arrayElement(teachers).id,
     }
   })
   .build()

@@ -11,13 +11,13 @@ export default class Student extends BaseModel {
   declare id: number
 
   @column()
-  declare user_id: number
+  declare userId: number
 
   @column()
   declare name: string
 
   @column()
-  declare is_graduate: boolean
+  declare isGraduate: boolean
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -25,13 +25,13 @@ export default class Student extends BaseModel {
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 
-  @belongsTo(() => User, { foreignKey: 'user_id' })
+  @belongsTo(() => User, { foreignKey: 'userId' })
   declare user: BelongsTo<typeof User>
 
-  @hasOne(() => StudentDetail, { foreignKey: 'student_id' })
+  @hasOne(() => StudentDetail, { foreignKey: 'studentId' })
   declare studentDetail: HasOne<typeof StudentDetail>
 
-  @hasMany(() => ClassStudent, { foreignKey: 'student_id' })
+  @hasMany(() => ClassStudent, { foreignKey: 'studentId' })
   declare classStudent: HasMany<typeof ClassStudent>
 
   // @beforeFind()
