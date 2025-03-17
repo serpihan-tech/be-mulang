@@ -13,7 +13,7 @@ export default class TeacherService implements UserContract {
 
   async getIdName(): Promise<any> {
     const teachers = await Teacher.query().select('id', 'name')
-    console.log('teachers : ', teachers)
+    // console.log('teachers : ', teachers)
     return teachers
   }
 

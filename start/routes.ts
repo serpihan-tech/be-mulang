@@ -75,13 +75,13 @@ router.group(() => {
 
     // Untuk teachers   
     router.group(() => {
+        router.get('/id-name', [TeacherController, 'getIdName'])
         router.get('/', [TeacherController, 'index'])
         router.post('/', [TeacherController, 'store']).use(middleware.role(['admin']))
         router.get('/:id', [TeacherController, 'show'])
         router.patch('/:id', [TeacherController, 'update']).use(middleware.role(['teacher', 'admin']))
         router.delete('/:id', [TeacherController, 'destroy']).use(middleware.role(['admin']))
 
-        router.get('/id-name', [TeacherController, 'getIdName'])
     }).prefix('/teachers')
 
     // Schedule / Jadwal
@@ -95,9 +95,7 @@ router.group(() => {
 
     // Absensi
     router.group(() => {
-        router.group(() => {
-            router.get('/mine', [AbsenceController, 'getMyAbsences']) // * untuk data/fitur untuk siswa yang sedang login
-        }).prefix('/')
+        router.get('/mine', [AbsenceController, 'getMyAbsences']) // * untuk data/fitur untuk siswa yang sedang login
         
         router.get('/', [AbsenceController, 'index'])
         // router.post('/', [AbsenceController, 'store']) // TODO : Implementasi Absensi
