@@ -7,6 +7,7 @@ import Module from './module.js'
 import AnnouncementByTeacher from './announcement_by_teacher.js'
 import TeacherAbsence from './teacher_absence.js'
 import ModelFilter from '../utils/filter_query.js'
+import { ModelQueryBuilderContract } from '@adonisjs/lucid/types/model'
 
 export default class Teacher extends BaseModel {
   @column({ isPrimary: true })
@@ -66,7 +67,10 @@ export default class Teacher extends BaseModel {
   public static whiteList: string[] = []
   public static blackList: string[] = ['page', 'limit']
 
-  public static filter(queryParams: Record<string, any>) {
-    return ModelFilter.apply(this, queryParams, this.whiteList, this.blackList)
+  public static filter(
+    result: ModelQueryBuilderContract<typeof Teacher, Teacher>,
+    queryParams: Record<string, any>
+  ): ModelQueryBuilderContract<typeof Teacher, Teacher> {
+    return ModelFilter.apply(result, queryParams, this.whiteList, this.blackList)
   }
 }
