@@ -11,17 +11,31 @@ export class AbsenceService implements AbsenceContract {
   }
 
   async getByStudentId(studentId: number): Promise<any> {
-    console.log(studentId)
+    console.log('Student ID:', studentId)
+
     const student = await Database.from('students')
       .where('id', studentId)
       .select('id')
       .firstOrFail()
 
+    // console.log(
+    //   await Database.from('absences')
+    //     .innerJoin('class_students', 'class_students.id', 'absences.class_student_id')
+    //     .where('class_students.student_id', studentId) // Pastikan hanya studentId terkait
+    //     .groupBy('date')
+    //     .select('absences.date')
+    // )
+
     const absences = await Database.from('absences')
       .innerJoin('class_students', 'class_students.id', 'absences.class_student_id')
-      .where('class_students.student_id', studentId)
-      .select('absences.date')
+      .where('class_students.student_id', studentId) // Pastikan hanya studentId terkait
       .groupBy('absences.date')
+      .select('absences.date')
+      .select(
+        Database.raw(`
+          GROUP_CONCAT(DISTINCT absences.status ORDER BY FIELD(absences.status, 'alfa', 'sakit', 'izin', 'hadir') SEPARATOR ', ') as status_list
+        `)
+      )
       .select(
         Database.raw(`
         CASE 
@@ -34,7 +48,10 @@ export class AbsenceService implements AbsenceContract {
       )
       .select(
         Database.raw(`
-        SUBSTRING_INDEX(GROUP_CONCAT(absences.reason ORDER BY FIELD(absences.status, 'izin', 'sakit', 'alfa', 'hadir') SEPARATOR '|'), '|', 1) as reason
+        SUBSTRING_INDEX(
+          GROUP_CONCAT(DISTINCT absences.reason ORDER BY FIELD(absences.status, 'izin', 'sakit', 'alfa', 'hadir') SEPARATOR '|'), 
+          '|', 1
+        ) as reason
       `)
       )
       .count('* as totalAbsenceInTheSameDay')
@@ -63,7 +80,7 @@ export class AbsenceService implements AbsenceContract {
       .orderBy('date_start', 'desc')
       .firstOrFail()
 
-    if (!date) {
+    if (date) {
       date = new Date()
       date.setHours(date.getHours() + 7)
     }
@@ -71,7 +88,7 @@ export class AbsenceService implements AbsenceContract {
     console.log(date)
 
     const absences = await Absence.query()
-      .where('date', date)
+      .if(date, (query) => query.where('date', '=', date))
       .select(['id', 'class_student_id', 'schedule_id', 'status', 'reason', 'date'])
       .preload('schedule', (s) => {
         s.select(['id', 'class_id', 'days', 'start_time', 'end_time'])
