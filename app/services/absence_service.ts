@@ -60,12 +60,6 @@ export class AbsenceService implements AbsenceContract {
   }
 
   // TODO
-
-  /**
-   * Mendapatkan semua absensi dari tahun ajar yang aktif
-   * @param page buat pagination
-   * @param date buat filter
-   */
   async getAll(date: Date, page: number): Promise<any> {
     const limit = 10
 
