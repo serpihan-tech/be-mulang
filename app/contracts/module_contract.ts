@@ -1,5 +1,17 @@
 export default interface ModuleContract {
-  get(columns?: string[], id?: number): Promise<any>
+  /**
+   * Mengambiil semua Mata Pelajaran
+   * - @coloumnFilters Nama mapel, nama guru, tahun ajar (semester tahun ajar e.g. Genap 2024/2025), status, Id mapel,
+   * @typeFilters sort asc | desc, dropdown (semua kecuali ID mapel), search by input text (Nama mapel, Nama guru)
+   * @info sort asc | desc berlaku untuk semua kolom
+   */
+  getAll(params: any): Promise<any>
+
+  /**
+   * - Get detail mapel
+   * @param id
+   */
+  getOne(id: number): Promise<any>
 
   create(data: any): Promise<any>
 

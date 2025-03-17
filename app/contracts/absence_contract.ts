@@ -2,9 +2,12 @@ import type { HttpContext } from '@adonisjs/core/http'
 
 export default interface AbsenceContract {
   /**
-   * Mendapatkan semua absensi
+   * Mendapatkan semua absensi untuk admin
+   * - @coloumnFilters tanggal absensi(date), NIS, Nama siswa, nama kelas, status kehadiran, keterangan (reason)
+   * @typeFilter sort asc |desc, search by input text (Nama siswa, nama kelas, NIS), pilih date dengan kalender / tanggal pasti
+   * @info sort asc | desc berlaku untuk semua kolom
    */
-  getAll(date: Date, page: number): Promise<any>
+  getAll(params: any): Promise<any>
 
   /**
    * Edit dan update absensi

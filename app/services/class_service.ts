@@ -2,8 +2,8 @@ import Class from '#models/class'
 import db from '@adonisjs/lucid/services/db'
 
 export class ClassService {
-  async getAll(params: any, page?: number, limit?: number) {
-    const theClass = await Class.filter(params)
+  async getAll(params?: any, page?: number, limit?: number) {
+    const theClass = await Class.query()
       .select('id', 'name', 'teacher_id')
       .withCount('classStudent', (cs) => cs.as('total_student'))
       .preload('teacher', (t) => t.select('id', 'name'))

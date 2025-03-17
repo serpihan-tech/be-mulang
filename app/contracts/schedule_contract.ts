@@ -1,8 +1,12 @@
 export default interface ScheduleContract {
   /**
-   * Get semua jadwal
+   * Mengambil semua Jadwal
+   * - @coloumnFilters Id jadwal, Nama Hari, Nama kelas, Nama mapel, Nama guru, Nama ruangan, Jam mulai, Jam selesai
+   * @typeFilter sort asc | desc, dropdown (semua kecuali id jadwal, jam mulai, jam selesai), search by input text(Nama kelas, mapel, guru, ruangan)
+   * @info sort asc | desc berlaku untuk semua kolom
+   *
    */
-  getAll(data: any, page?: number, limit?: number): Promise<any>
+  getAll(params: any): Promise<any>
 
   /**
    * Mengambil jadwal berdasarkan id
