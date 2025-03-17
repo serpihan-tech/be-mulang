@@ -13,19 +13,108 @@ import { cuid } from '@adonisjs/core/helpers'
 import app from '@adonisjs/core/services/app'
 
 export default class StudentsService implements StudentContract, UserContract {
-  async index(page: number): Promise<any> {
+  private async getActiveSemester() {
+    const now = new Date()
+
+    const activeAcademicYear = await AcademicYear.query()
+      .where('status', 1)
+      .where('date_start', '<', now)
+      .where('date_end', '>', now)
+      .firstOrFail()
+
+    return activeAcademicYear
+  }
+
+  async index(page: number, params?: any): Promise<any> {
     const pages = page
     const limit = 10
 
+    const sortBy = params.sortBy
+    const sortOrder = params.sortOrder
+    console.log(params)
+
+    const activeAcademicYear = await this.getActiveSemester()
+    console.log(activeAcademicYear.id, activeAcademicYear.name)
+
     const students = await Student.query()
-      .where('is_graduate', false)
+      .select('students.*')
+      .where('is_graduate', params.status || 0)
+      // *                    SORTING FILTER                     */
+      .if(sortBy === 'kelas', (query) => {
+        query
+          .leftJoin('class_students', 'students.id', 'class_students.student_id')
+          .leftJoin('classes', 'class_students.class_id', 'classes.id')
+          .orderBy('classes.name', sortOrder || 'asc')
+      }) // NAMA KELAS
+      .if(sortBy === 'email', (q) => {
+        q.leftJoin('users', 'students.user_id', 'users.id').orderBy(
+          'users.email',
+          sortOrder || 'asc'
+        )
+      }) // EMAIL
+      .if(sortBy === 'nama', (query) => query.orderBy('name', sortOrder || 'asc')) // NAMA STUDENT
+      .if(
+        sortBy === 'nis',
+        (query) =>
+          query
+            .leftJoin('student_details', 'students.id', 'student_details.student_id')
+            .orderBy('nis', sortOrder || 'asc') // NIS
+      )
+      .if(
+        sortBy === 'jenisKelamin',
+        (query) =>
+          query
+            .leftJoin('student_details', 'students.id', 'student_details.student_id')
+            .orderBy('gender', sortOrder || 'asc') // NIS
+      )
+      .if(
+        sortBy === 'nisn',
+        (query) =>
+          query
+            .leftJoin('student_details', 'students.id', 'student_details.student_id')
+            .orderBy('nisn', sortOrder || 'asc') // NISN
+      )
+      .if(sortBy === 'tahunAjar', (query) => {
+        query.whereHas('classStudent', (cs) => {
+          cs.whereHas('academicYear', (ay) => {
+            ay.where('id', activeAcademicYear.id).orderBy('name', sortOrder || 'asc')
+          })
+        })
+      }) // TAHUN AJAR BY NAMANYA
+      // *                    SORTING FILTER                     */
+
+      .if(params.jenisKelamin, (query) =>
+        query.whereHas('studentDetail', (sd) => sd.where('gender', params.jenisKelamin))
+      ) // JENIS KELAMIN
+      .if(params.kelas, (query) => {
+        query.whereHas('classStudent', (cs) => {
+          cs.whereHas('class', (c) => {
+            c.where('name', params.kelas)
+          })
+        })
+      }) // NAMA KELAS
+      .if(params.tahunAjar, (query) => {
+        query.whereHas('classStudent', (cs) => {
+          cs.whereHas('academicYear', (ay) => {
+            ay.where('name', params.tahunAjar).where('id', activeAcademicYear.id)
+          })
+        })
+      }) // TAHUN AJAR BY NAMANYA
+      .whereHas('classStudent', (cs) => {
+        cs.whereHas('academicYear', (ay) => {
+          ay.where('status', 1).where('id', activeAcademicYear.id)
+        })
+        cs.preload('class')
+      }) // CARI YANG AKTIF
       .preload('user')
       .preload('studentDetail')
       .preload('classStudent', (cs) => {
-        cs.preload('class')
-        cs.preload('academicYear')
+        cs.whereHas('academicYear', (ay) => {
+          ay.where('id', activeAcademicYear.id)
+        })
+        // cs.preload('academicYear')
+        // cs.preload('class')
       })
-      .has('classStudent')
       .paginate(pages, limit)
 
     return students
@@ -194,7 +283,6 @@ export default class StudentsService implements StudentContract, UserContract {
       )
       .preload('room')
   }
-
   /**
    * Mengambil data presensi siswa berdasarkan student_id.
    * Presensi yang diambil hanya dari tahun ajar yang aktif.
@@ -202,13 +290,15 @@ export default class StudentsService implements StudentContract, UserContract {
   async getPresence(studentId: number) {
     const student = await Student.query().where('id', studentId).firstOrFail()
 
-    const now = new Date()
-
-    const activeAcademicYear = await AcademicYear.query()
-      .where('status', 1)
-      .where('date_start', '<', now)
-      .where('date_end', '>', now)
-      .firstOrFail()
+    const activeAcademicYear = await this.getActiveSemester()
+    console.log(
+      await Absence.query()
+        .join('class_students', 'absences.class_student_id', '=', 'class_students.id')
+        .join('students', 'class_students.student_id', '=', 'students.id')
+        .join('academic_years', 'class_students.academic_year_id', '=', 'academic_years.id')
+        .where('class_students.student_id', studentId)
+        .where('class_students.academic_year_id', activeAcademicYear.id)
+    )
 
     const result = await Absence.query()
       .join('class_students', 'absences.class_student_id', '=', 'class_students.id')
@@ -218,11 +308,20 @@ export default class StudentsService implements StudentContract, UserContract {
       .where('class_students.academic_year_id', activeAcademicYear.id)
       .select(
         'students.name as student_name',
-        db.raw(`COUNT(*) as total`),
-        db.raw(`COUNT(CASE WHEN absences.status = 'Hadir' THEN 1 END) as hadir`),
-        db.raw(
-          `COUNT(CASE WHEN absences.status IN ('Sakit', 'Izin', 'Alfa') THEN 1 END) as tidak_hadir`
-        )
+        db.raw(`COUNT(DISTINCT absences.date) as total`),
+        db.raw(`
+        COUNT(DISTINCT CASE 
+          WHEN absences.status = 'Hadir' AND 
+          absences.date NOT IN (
+            SELECT date FROM absences WHERE class_student_id = class_students.id AND status IN ('Sakit', 'Izin', 'Alfa')
+          ) 
+        THEN absences.date END) as hadir
+      `),
+        db.raw(`
+        COUNT(DISTINCT CASE 
+          WHEN absences.status IN ('Sakit', 'Izin', 'Alfa') 
+        THEN absences.date END) as tidak_hadir
+      `)
       )
       .groupBy('students.name')
       .first()

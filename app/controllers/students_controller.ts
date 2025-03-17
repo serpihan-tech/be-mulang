@@ -18,15 +18,15 @@ export default class StudentsController {
    * */
   constructor(private studentsService: StudentsService) {}
 
-  async index(ctx: HttpContext) {
+  async index({ request, response }: HttpContext) {
     try {
-      const students = await this.studentsService.index(ctx.request.input('page', 1))
-      return ctx.response.ok({
+      const students = await this.studentsService.index(request.input('page', 1), request.all())
+      return response.ok({
         messsage: 'Berhasil Mendapatkan Data Semua Murid',
         students,
       })
     } catch (error) {
-      return ctx.response.badRequest({ error: { message: error.message } })
+      return response.badRequest({ error: { message: error.message } })
     }
   }
 
