@@ -2,6 +2,7 @@ import type { HttpContext } from '@adonisjs/core/http'
 import { inject } from '@adonisjs/core'
 import { AnnouncementByAdminService } from '#services/announcement_by_admin_service'
 import User from '#models/user'
+import { createAnnouncementAdmin, updateAnnouncementAdmin } from '#validators/announcement_admin'
 
 @inject()
 export default class AnnouncementByAdminsController {
@@ -51,7 +52,7 @@ export default class AnnouncementByAdminsController {
 
       if (files) data.files = files
 
-      //             TODO : IMPLEMENT VALIDATOR                //
+      await createAnnouncementAdmin.validate(data)
 
       const announcement = await this.announcementByAdmin.create(data, adminId)
       return response.created({ message: 'Pengumuman Berhasil Dibuat!', announcement })
@@ -69,7 +70,8 @@ export default class AnnouncementByAdminsController {
 
       if (files) data.files = files
 
-      //             TODO : IMPLEMENT VALIDATOR                //
+      await updateAnnouncementAdmin.validate(data)
+
       const announcement = await this.announcementByAdmin.update(params.id, data)
       return response.ok({ message: 'Data Pengumuman Berhasil Diubah!', announcement })
     } catch (error) {
