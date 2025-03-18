@@ -13,10 +13,13 @@ export default class TeacherAbsence extends BaseModel {
   @column()
   declare date: Date
 
-  @column({ serializeAs: null })
+  @column()
+  declare status: string
+
+  @column()
   declare checkInTime: string
 
-  @column({ serializeAs: null })
+  @column()
   declare checkOutTime: string
 
   @column.dateTime({ autoCreate: true })

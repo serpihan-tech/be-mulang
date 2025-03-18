@@ -23,7 +23,7 @@ const ModulesController = () => import('#controllers/modules_controller')
 const AnnouncementByAdmins = () => import('#controllers/announcement_by_admins_controller')
 const AnnouncementByTeachers = () => import('#controllers/announcement_by_teachers_controller')
 const ScoreController = () => import('#controllers/scores_controller')
-const AnnouncementByAdminsController = () => import('#controllers/announcement_by_admins_controller')
+const TeacherAbsenceController = () => import('#controllers/teacher_absences_controller')
 
 import { middleware } from '#start/kernel'
 import transmit from '@adonisjs/transmit/services/main'
@@ -33,13 +33,14 @@ import { throttle } from './limiter.js'
 transmit.registerRoutes((route) => {
     // Ensure you are authenticated to register your client
     if (route.getPattern() === '__transmit/events') {
-      route.middleware(middleware.auth())
-      return
+        route.middleware(middleware.auth())
+        return
     }
-  
+
     // Add a throttle middleware to other transmit routes
     route.use(throttle)
-  })
+})
+
 router.post('/user/create', [UserController, 'create']).as('user.create') // TODO: Tambah Middleware Auth
 router.post('/login', [AuthController, 'login']).as('auth.login')
 
@@ -135,9 +136,9 @@ router.group(() => {
 
     // Announcements By Admin
     router.group(() => {
-        router.get('/', [AnnouncementByAdminsController, 'index'])
+        router.get('/', [AnnouncementByAdmins, 'index'])
         router.get('/:id', [AnnouncementByAdmins, 'show'])
-        router.post('/', [AnnouncementByAdminsController, 'store']).use(middleware.role(['admin']))
+        router.post('/', [AnnouncementByAdmins, 'store']).use(middleware.role(['admin']))
         router.patch('/:id', [AnnouncementByAdmins, 'update']).use(middleware.role(['admin']))
         router.delete('/:id', [AnnouncementByAdmins, 'destroy']).use(middleware.role(['admin']))
     }).prefix('/announcements/admins')
@@ -165,6 +166,15 @@ router.group(() => {
         router.patch('/:id', [ScoreController, 'update'])
         router.delete('/:id', [ScoreController, 'destroy'])
     }).prefix('/scores')
+
+    // Teacher Absences
+    router.group(() => {
+        router.get('/', [TeacherAbsenceController, 'index'])
+        router.post('/', [TeacherAbsenceController, 'store'])
+        router.get('/:id', [TeacherAbsenceController, 'show'])
+        router.patch('/:id', [TeacherAbsenceController, 'update'])
+        router.delete('/:id', [TeacherAbsenceController, 'destroy'])
+    }).prefix('/teacher-absences')
 
 }).use(middleware.auth())
 

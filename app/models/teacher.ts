@@ -64,6 +64,9 @@ export default class Teacher extends BaseModel {
   @hasMany(() => TeacherAbsence, { foreignKey: 'teacherId' })
   declare absences: HasMany<typeof TeacherAbsence>
 
+  @hasOne(() => TeacherAbsence, { foreignKey: 'teacherId' })
+  declare latestAbsence: HasOne<typeof TeacherAbsence>
+
   public static whiteList: string[] = []
   public static blackList: string[] = ['page', 'limit']
 
