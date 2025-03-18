@@ -5,7 +5,7 @@ export const createAnnouncementAdmin = vine.compile(
   vine.object({
     title: vine.string().minLength(4),
     content: vine.string().maxLength(1000),
-    date: vine.date(),
+    // date: vine.date(),
     files: vine
       .file({
         size: '3mb',
@@ -22,7 +22,7 @@ export const createAnnouncementAdmin = vine.compile(
         'Prestasi',
       ])
       .optional(),
-    targetRoles: vine.enum(['student', 'teacher']),
+    target_roles: vine.enum(['student', 'teacher']),
   })
 )
 

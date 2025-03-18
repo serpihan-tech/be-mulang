@@ -27,10 +27,19 @@ const AnnouncementByAdminsController = () => import('#controllers/announcement_b
 
 import { middleware } from '#start/kernel'
 import transmit from '@adonisjs/transmit/services/main'
+import { throttle } from './limiter.js'
 // import app from '@adonisjs/core/services/app' 
 
-transmit.registerRoutes()
-
+transmit.registerRoutes((route) => {
+    // Ensure you are authenticated to register your client
+    if (route.getPattern() === '__transmit/events') {
+      route.middleware(middleware.auth())
+      return
+    }
+  
+    // Add a throttle middleware to other transmit routes
+    route.use(throttle)
+  })
 router.post('/user/create', [UserController, 'create']).as('user.create') // TODO: Tambah Middleware Auth
 router.post('/login', [AuthController, 'login']).as('auth.login')
 
