@@ -34,7 +34,10 @@ export default class Module extends BaseModel {
   @hasMany(() => Score, { foreignKey: 'moduleId' })
   declare scores: HasMany<typeof Score>
 
+  public static whiteList: string[] = ['name']
+  public static blackList: string[] = ['limit', 'page', 'nip', 'tahunAjar']
+
   public static filter(queryParams: Record<string, any>) {
-    return ModelFilter.apply(this, queryParams)
+    return ModelFilter.apply(this, queryParams, this.whiteList, this.blackList)
   }
 }

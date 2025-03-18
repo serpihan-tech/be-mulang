@@ -6,19 +6,12 @@ import ModelFilter from '../utils/filter_query.js'
 
 export default class TeacherService implements UserContract {
   async index(params: any, page?: number, limit?: number): Promise<any> {
-    const whiteList: any[] = ['phone']
-    const blackList: any[] = ['email']
-    let query = Teacher.query()
+    const teachers = await Teacher.filter(params)
       .preload('user')
       .whereHas('user', (userQuery) => {
         userQuery.where('email', 'LIKE', `%${params.email}%`)
       })
-    console.log(params.phone)
-
-    // Terapkan ModelFilter.apply() ke query yang sudah difilter
-    query = ModelFilter.apply(query, params, whiteList, blackList)
-
-    const teachers = await query.paginate(page || 1, limit)
+      .paginate(page || 1, limit)
     return teachers
   }
 

@@ -4,12 +4,13 @@ import ScheduleContract from '../contracts/schedule_contract.js'
 // import db from '@adonisjs/lucid/services/db'
 
 export class ScheduleService implements ScheduleContract {
-  async getAll(data: any, page?: number, limit?: number): Promise<any> {
-    return await Schedule.filter(data)
+  async getAll(params: any): Promise<any> {
+    const schedule = Schedule.filter(params)
       .preload('module', (m) => m.preload('academicYear'))
       .preload('class', (c) => c.preload('teacher', (t) => t.select('id', 'name')))
       .preload('room')
-      .paginate(page || 1, limit)
+      .paginate(params.page || 1, params.limit || 10)
+    return schedule
   }
 
   async getOne(id: number): Promise<any> {

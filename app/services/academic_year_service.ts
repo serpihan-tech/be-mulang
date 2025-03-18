@@ -22,13 +22,13 @@ export default class AcademicYearService implements AcademicYearContract {
     return student
   }
 
-  async get(academicYearId?: number, request?: any, page?: number, limit?: number): Promise<any> {
-    if (academicYearId) {
-      const academicYear = await db.from('academic_years').where('id', academicYearId)
-      return academicYear
-    }
+  async getAll(params: any): Promise<any> {
+    const academicYear = await AcademicYear.filter(params).paginate(1, 10)
+    return academicYear
+  }
 
-    const academicYear = await AcademicYear.filter(request).paginate(page || 1, limit)
+  async getOne(academicYearId: number): Promise<any> {
+    const academicYear = await AcademicYear.query().where('id', academicYearId).firstOrFail()
     return academicYear
   }
 

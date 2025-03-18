@@ -1,13 +1,15 @@
 import Class from '#models/class'
 import db from '@adonisjs/lucid/services/db'
+import ClassContract from '../contracts/class_contract.js'
+import ModelFilter from '../utils/filter_query.js'
 
-export class ClassService {
-  async getAll(params?: any, page?: number, limit?: number) {
-    const theClass = await Class.query()
+export class ClassService implements ClassContract {
+  async getAll(params?: any) {
+    const theClass = await Class.filter(params)
       .select('id', 'name', 'teacher_id')
       .withCount('classStudent', (cs) => cs.as('total_student'))
       .preload('teacher', (t) => t.select('id', 'name'))
-      .paginate(page || 1, limit)
+      .paginate(params.page || 1, params.limit || 10)
 
     const formattedData = theClass.all().map((item) => ({
       id: item.id,

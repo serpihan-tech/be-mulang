@@ -67,13 +67,12 @@ export default class Teacher extends BaseModel {
   @hasOne(() => TeacherAbsence, { foreignKey: 'teacherId' })
   declare latestAbsence: HasOne<typeof TeacherAbsence>
 
-  public static whiteList: string[] = []
-  public static blackList: string[] = ['page', 'limit']
+  public static whiteList: string[] = ['phone']
+  public static blackList: string[] = ['page', 'limit', 'email']
 
   public static filter(
-    result: ModelQueryBuilderContract<typeof Teacher, Teacher>,
     queryParams: Record<string, any>
   ): ModelQueryBuilderContract<typeof Teacher, Teacher> {
-    return ModelFilter.apply(result, queryParams, this.whiteList, this.blackList)
+    return ModelFilter.apply(this, queryParams, this.whiteList, this.blackList)
   }
 }

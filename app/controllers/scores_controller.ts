@@ -12,11 +12,7 @@ export default class ScoresController {
    */
   async index({ response, request }: HttpContext) {
     try {
-      const scores = await this.scroreService.getAll(
-        request.all(),
-        request.input('page'),
-        request.input('limit')
-      )
+      const scores = await this.scroreService.getAll(request.all())
       return response.ok({
         message: 'Score Ditemukan',
         scores,

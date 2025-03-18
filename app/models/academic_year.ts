@@ -41,6 +41,8 @@ export default class AcademicYear extends BaseModel {
    */
   public static whiteList = ['name']
 
+  public static blackList = ['page', 'limit']
+
   /**
    * Metode untuk apply filter langsung di model
    *
@@ -51,7 +53,12 @@ export default class AcademicYear extends BaseModel {
    * @param queryParams - Parameter yang masuk di request
    * @returns AcademicYear
    */
-  public static filter(queryParams: Record<string, any>) {
-    return ModelFilter.apply(this, queryParams)
+  public static filter<T extends typeof BaseModel>(
+    // model: T,
+    // query: ModelQueryBuilderContract<T, InstanceType<T>>,
+    // query: typeof BaseModel,
+    queryParams: Record<string, any>
+  ): any {
+    return ModelFilter.apply(this, queryParams, this.whiteList, this.blackList)
   }
 }
