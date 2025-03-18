@@ -3,11 +3,14 @@ import AcademicYear from '#models/academic_year'
 import Student from '#models/student'
 import AbsenceContract from '../contracts/absence_contract.js'
 import Database from '@adonisjs/lucid/services/db'
+import { DateTime } from 'luxon'
+import ModelFilter from '../utils/filter_query.js'
 
 export class AbsenceService implements AbsenceContract {
   // TODO : Implement
   getById(absenceId: number): Promise<any> {
-    throw new Error('Method not implemented.')
+    const absence = Absence.query().where('id', absenceId).firstOrFail()
+    return absence
   }
 
   async getByStudentId(studentId: number): Promise<any> {
@@ -59,16 +62,7 @@ export class AbsenceService implements AbsenceContract {
     return { student, absences }
   }
 
-  // TODO
-
-  /**
-   * Mendapatkan semua absensi dari tahun ajar yang aktif
-   * @param page buat pagination
-   * @param date buat filter
-   */
-  async getAll(date: Date, page: number): Promise<any> {
-    const limit = 10
-
+  async getAll(params?: any): Promise<any> {
     const firstSemester = await AcademicYear.query()
       .where('status', true)
       .orderBy('date_start', 'asc')
@@ -80,35 +74,32 @@ export class AbsenceService implements AbsenceContract {
       .orderBy('date_start', 'desc')
       .firstOrFail()
 
-    if (date) {
-      date = new Date()
-      date.setHours(date.getHours() + 7)
-    }
-
-    console.log(date)
-
-    const absences = await Absence.query()
-      .if(date, (query) => query.where('date', '=', date))
+    // console.log(params.date)
+    const absences = await Absence.filter(params)
       .select(['id', 'class_student_id', 'schedule_id', 'status', 'reason', 'date'])
-      .preload('schedule', (s) => {
+      .if(params.nis, (query: any) => {
+        query.whereIn('class_student_id', (subquery: any) => {
+          subquery
+            .from('class_students')
+            .innerJoin('students', 'students.id', 'class_students.student_id')
+            .innerJoin('student_details', 'student_details.student_id', 'students.id')
+            .select('class_students.id')
+            .where('student_details.nis', params.nis)
+        })
+      })
+      .preload('schedule', (s: any) => {
         s.select(['id', 'class_id', 'days', 'start_time', 'end_time'])
       })
-      .preload('classStudent', (cs) => {
+      .preload('classStudent', (cs: any) => {
         cs.select(['id', 'class_id', 'student_id', 'academic_year_id'])
-        cs.preload('academicYear', (ay) => {
-          ay.select(['id', 'semester'])
-        })
-        cs.preload('class', (c) => {
-          c.select(['name'])
-        })
-        cs.preload('student', (s) => {
+        cs.preload('academicYear', (ay: any) => ay.select(['id', 'semester']))
+        cs.preload('class', (c: any) => c.select(['name']))
+        cs.preload('student', (s: any) => {
           s.select(['id', 'name'])
-          s.preload('studentDetail', (sd) => {
-            sd.select(['nisn', 'nis'])
-          })
+          s.preload('studentDetail', (sd: any) => sd.select(['nis', 'nisn']))
         })
       })
-      .paginate(page, limit)
+      .paginate(params.page || 1, params.limit)
 
     return {
       firstSemester,

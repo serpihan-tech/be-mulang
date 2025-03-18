@@ -9,11 +9,7 @@ export default class AbsencesController {
 
   async index({ request, response }: HttpContext) {
     try {
-      console.log(request.input('date'))
-      const absences = await this.absenceService.getAll(
-        request.input('date'),
-        request.input('page', 1)
-      )
+      const absences = await this.absenceService.getAll(request.all())
 
       return response.ok({
         message: 'Berhasil Mendapatkan Data Absensi',

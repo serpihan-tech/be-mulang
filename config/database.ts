@@ -12,7 +12,7 @@ const dbConfig = defineConfig({
         user: env.get('DB_USER'),
         password: env.get('DB_PASSWORD'),
         database: env.get('DB_DATABASE'),
-        timezone: '+07:00',
+        timezone: 'local',
       },
       migrations: {
         naturalSort: true,

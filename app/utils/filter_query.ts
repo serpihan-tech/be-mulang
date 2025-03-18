@@ -15,13 +15,14 @@ export default class ModelFilter {
    * @returns {ModelQueryBuilderContract<T>}
    */
   public static apply<T extends typeof BaseModel>(
-    // model: T,
-    query: ModelQueryBuilderContract<T, InstanceType<T>>,
+    model: T,
+    // query: ModelQueryBuilderContract<T, InstanceType<T>>,
+    // query: typeof BaseModel,
     queryParams: Record<string, any>,
     likeFields: string[] = [],
     blackList: string[] = ['page', 'limit'] // query param yang tidak diolah oleh filter
-  ): ModelQueryBuilderContract<T, any> {
-    // let query = model.query()
+  ): ModelQueryBuilderContract<T, InstanceType<T>> {
+    let query = model.query()
 
     let sortBy = 'id' // Default sorting column
     let sortOrder: 'asc' | 'desc' = 'asc' // Default sorting order
