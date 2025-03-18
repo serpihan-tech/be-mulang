@@ -11,12 +11,7 @@ export default class AcademicYearsController {
    */
   async index({ request, response }: HttpContext) {
     try {
-      const academicYears = await this.academicYearService.get(
-        undefined,
-        request.all(),
-        request.input('page'),
-        request.input('limit')
-      )
+      const academicYears = await this.academicYearService.getAll(request.all())
 
       return response.ok({
         message: 'Berhasil Mendapatkan Data Tahun Ajaran',
@@ -55,7 +50,7 @@ export default class AcademicYearsController {
   async show({ params, response }: HttpContext) {
     const id: number = params.id
     try {
-      const academicYears = await this.academicYearService.get(id)
+      const academicYears = await this.academicYearService.getOne(id)
       return response.ok({
         message: 'Berhasil Mendapatkan Data Tahun Ajaran',
         academicYears,
