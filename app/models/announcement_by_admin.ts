@@ -39,8 +39,9 @@ export default class AnnouncementByAdmin extends BaseModel {
   declare admin: BelongsTo<typeof Admin>
 
   public static whiteList: string[] = ['description']
+  public static blackList: string[] = []
 
   public static filter(queryParams: Record<string, any>) {
-    return ModelFilter.apply(this, queryParams, this.whiteList)
+    return ModelFilter.apply(this, queryParams, this.whiteList, this.blackList)
   }
 }
