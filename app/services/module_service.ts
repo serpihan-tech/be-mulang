@@ -1,9 +1,10 @@
 import db from '@adonisjs/lucid/services/db'
 import Module from '#models/module'
+import ModuleContract from '../contracts/module_contract.js'
 
-export default class ModuleService {
-  async getAll(params: any, page?: number, limit?: number): Promise<any> {
-    const dataModule = await Module.filter(params).paginate(page || 1, limit || 1)
+export default class ModuleService implements ModuleContract {
+  async getAll(params: any): Promise<any> {
+    const dataModule = await Module.filter(params).paginate(params.page || 1, params.limit || 10)
 
     return dataModule
   }
