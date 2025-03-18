@@ -10,14 +10,22 @@ export class TeacherAbsenceService implements TeacherAbsenceContract {
     // console.log(now)
 
     const teacherAbsence = await Teacher.query()
-      .if(params.name, (query) => query.where('name', 'like', `%${params.name}%`))
+      .if(params.search, (query) =>
+        query
+          .where('name', 'like', `%${params.search}%`)
+          .orWhere('nip', 'like', `%${params.search}%`)
+      )
+      .whereHas('latestAbsence', (la) => {
+        la.where('date', params.date ?? now)
+          .if(params.status, (q) => q.where('status', params.status))
+          .if(params.sortBy, (q) => q.orderBy(params.sortBy, params.sortOrder || 'asc'))
+      })
       .if(params.nip && params.nip !== '', (query) => query.where('nip', 'like', `%${params.nip}%`))
       .if(params.sortBy, (query) => query.orderBy(params.sortBy, params.sortOrder || 'asc'))
       .preload('latestAbsence', (ab) => {
         ab.where('date', params.date ?? now)
           .if(params.status, (query) => query.where('status', params.status))
           .if(params.sortBy, (query) => query.orderBy(params.sortBy, params.sortOrder || 'asc'))
-          .orderBy('date', 'desc')
       })
       .paginate(params.page || 1, params.limit || 10)
 

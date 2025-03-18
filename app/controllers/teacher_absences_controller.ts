@@ -17,7 +17,7 @@ export default class TeacherAbsencesController {
 
       return response.ok({ message: 'Data Absensi Guru Berhasil Ditemukan!', teachers })
     } catch (error) {
-      return response.status(error.status).send({ error })
+      return response.internalServerError({ error: { message: error.message } })
     }
   }
 
