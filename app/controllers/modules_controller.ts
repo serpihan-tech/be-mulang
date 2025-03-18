@@ -18,7 +18,7 @@ export default class ModulesController {
         modules,
       })
     } catch (error) {
-      throw response.send({ error })
+      throw response.status(error.status).send({ error })
     }
   }
 

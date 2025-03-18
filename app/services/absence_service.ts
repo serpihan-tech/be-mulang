@@ -1,10 +1,7 @@
 import Absence from '#models/absence'
 import AcademicYear from '#models/academic_year'
-import Student from '#models/student'
 import AbsenceContract from '../contracts/absence_contract.js'
 import Database from '@adonisjs/lucid/services/db'
-import { DateTime } from 'luxon'
-import ModelFilter from '../utils/filter_query.js'
 
 export class AbsenceService implements AbsenceContract {
   // TODO : Implement
