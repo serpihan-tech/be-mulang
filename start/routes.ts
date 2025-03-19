@@ -149,6 +149,7 @@ router.group(() => {
 
     // Scores
     router.group(() => {
+        router.get('/mine', [ScoreController, 'getOwnScores']).middleware(middleware.role(['student']))
         router.patch('/updates', [ScoreController, 'massUpdate']) // fitur naik kelas langsung beberapa murid
         router.get('/', [ScoreController, 'index'])
         router.post('/', [ScoreController, 'store'])
