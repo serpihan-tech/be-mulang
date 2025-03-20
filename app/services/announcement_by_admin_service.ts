@@ -37,7 +37,7 @@ export class AnnouncementByAdminService implements AnnouncementByAdminContract {
 
   async create(data: any, adminId: number): Promise<Object> {
     const file = data.files
-    console.log(file)
+    // console.log(file)
     let filePath = ''
 
     if (file) {
@@ -77,7 +77,7 @@ export class AnnouncementByAdminService implements AnnouncementByAdminContract {
     // }
     console.log(ann.targetRoles)
 
-    transmit.broadcast(`notifications/${ann.targetRoles}`, {
+    const t = await transmit.broadcast(`notifications/${ann.targetRoles}`, {
       message: {
         id: ann.id,
         title: ann.title,
@@ -87,6 +87,7 @@ export class AnnouncementByAdminService implements AnnouncementByAdminContract {
       },
     })
 
+    console.log(t)
     return ann
   }
 

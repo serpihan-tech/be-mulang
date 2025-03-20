@@ -28,18 +28,9 @@ const TeacherAbsenceController = () => import('#controllers/teacher_absences_con
 import { middleware } from '#start/kernel'
 import transmit from '@adonisjs/transmit/services/main'
 import { throttle } from './limiter.js'
-// import app from '@adonisjs/core/services/app' 
+import app from '@adonisjs/core/services/app' 
 
-transmit.registerRoutes((route) => {
-    // Ensure you are authenticated to register your client
-    if (route.getPattern() === '__transmit/events') {
-        route.middleware(middleware.auth())
-        return
-    }
-
-    // Add a throttle middleware to other transmit routes
-    route.use(throttle)
-})
+transmit.registerRoutes()
 
 router.post('/user/create', [UserController, 'create']).as('user.create') // TODO: Tambah Middleware Auth
 router.post('/login', [AuthController, 'login']).as('auth.login')
@@ -54,12 +45,12 @@ router.group(() => {
 router.post('/check-role', [AuthController, 'checkRole']).as('auth.check-role')
 
 // ! This shit cause error on url '/' no matter what the prefixs are, be careful
-// // cek return gambar
-// router.get('/:url', async ({ params, response }) => { 
-//     const filePath = app.makePath('storage/uploads/announcement-admins', params.url)
+// cek return gambar
+router.get('student-profile/:url', async ({ params, response }) => { 
+    const filePath = app.makePath('storage/uploads/students-profile', params.url)
 
-//     return response.download(filePath) // {{ ngrok }}/namaFile ... e.g : localhost:3333/test.jpg
-// })
+    return response.download(filePath) // {{ ngrok }}/namaFile ... e.g : localhost:3333/test.jpg
+})
 
 router.group(() => {
     
