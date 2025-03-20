@@ -4,6 +4,7 @@ import Role from '#models/role'
 import AcademicYear from '#models/academic_year'
 import { errors as authErrors } from '@adonisjs/auth'
 import { errors as lucidErrors } from '@adonisjs/lucid'
+import limiter from '@adonisjs/limiter/services/main'
 
 export default class AuthController {
   async checkRole({ request, response }: HttpContext) {
@@ -25,12 +26,38 @@ export default class AuthController {
     try {
       const { email, password, username } = request.only(['email', 'password', 'username'])
 
-      if (!username) {
-        const user = await User.verifyCredentials(email, password)
-        const token = await User.accessTokens.create(user)
+      const loginLimiter = limiter.use({
+        requests: 5,
+        duration: '1 min',
+        blockDuration: '20 mins',
+      })
 
-        const role = await User.getRole(user)
-        const data = await this.getProfile(role, user)
+      /**
+       * Gunakan kombinasi alamat IP + email. Ini memastikan bahwa jika seorang penyerang menyalahgunakan email,
+       * kita tidak memblokir pengguna asli dari login dan hanya memberikan penalti pada alamat IP penyerang.
+       */
+      const key = `login_${request.ip()}_${email}`
+
+      if (!username) {
+        const [error, user] = await loginLimiter.penalize(key, () => {
+          return User.verifyCredentials(email, password)
+        })
+
+        if (error) {
+          return response.tooManyRequests({
+            error: {
+              message: `Terlalu Banyak Permintaan Login, Ulangi Lagi dalam ${Math.ceil(error.response.availableIn / 60)} menit`,
+              code: 'E_TOO_MANY_REQUESTS',
+              status: 429,
+              availableIn: error.response.availableIn,
+            },
+          })
+        }
+
+        const token = await User.accessTokens.create(user!)
+
+        const role = await User.getRole(user!)
+        const data = await this.getProfile(role, user!)
 
         return {
           message: 'Login Berhasil',
@@ -40,11 +67,24 @@ export default class AuthController {
         }
       }
       if (!email) {
-        const user = await User.verifyCredentials(username, password)
-        const token = await User.accessTokens.create(user)
+        const [error, user] = await loginLimiter.penalize(key, () => {
+          return User.verifyCredentials(username, password)
+        })
 
-        const role = await User.getRole(user)
-        const data = await this.getProfile(role, user)
+        if (error) {
+          return response.tooManyRequests({
+            error: {
+              message: `Terlalu Banyak Permintaan Login, Ulangi Lagi dalam ${error.response.availableIn / 60} menit`,
+              code: 'E_TOO_MANY_REQUESTS',
+              status: 429,
+            },
+          })
+        }
+
+        const token = await User.accessTokens.create(user!)
+
+        const role = await User.getRole(user!)
+        const data = await this.getProfile(role, user!)
 
         return {
           message: 'Login Berhasil',

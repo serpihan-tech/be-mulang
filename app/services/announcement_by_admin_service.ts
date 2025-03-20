@@ -16,7 +16,7 @@ export class AnnouncementByAdminService implements AnnouncementByAdminContract {
       adminId = user.admin.id
     }
 
-    const query = AnnouncementByAdmin.filter(data)
+    const query = AnnouncementByAdmin.query() // TODO : Add filtering
 
     if (adminId !== undefined) {
       query.where('admin_id', adminId)

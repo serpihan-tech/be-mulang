@@ -12,10 +12,12 @@ export const TeacherAbsenceFactory = factory
     const CheckIn: DateTime = DateTime.now().set({ hour: 6, minute: randomMinutes, second: 0 }) // Nilai awal
     const randomDuration = faker.number.int({ min: 5, max: 9 })
     const CheckOut: DateTime = CheckIn.plus({ hours: randomDuration })
+    const status = faker.helpers.arrayElement(['Hadir', 'Izin', 'Sakit', 'Alfa'])
 
     return {
       teacherId: faker.helpers.arrayElement(teacherIds),
       date: faker.date.past(),
+      status: status,
       checkInTime: CheckIn.toFormat('HH:mm:ss'),
       checkOutTime: CheckOut.toFormat('HH:mm:ss'),
     }
