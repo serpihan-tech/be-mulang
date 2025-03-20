@@ -1,6 +1,5 @@
 import db from '@adonisjs/lucid/services/db'
 import Score from '#models/score'
-import ModelFilter from '../utils/filter_query.js'
 import Student from '#models/student'
 import ClassStudent from '#models/class_student'
 import Module from '#models/module'

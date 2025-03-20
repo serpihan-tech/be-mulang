@@ -2,11 +2,6 @@ import type { HttpContext } from '@adonisjs/core/http'
 import { inject } from '@adonisjs/core'
 import ScoreService from '#services/score_service'
 import { createScoreValidator, updateScoreValidator } from '#validators/score'
-import Score from '#models/score'
-import ClassStudent from '#models/class_student'
-import User from '#models/user'
-import Student from '#models/student'
-import { format } from 'node:path'
 
 @inject()
 export default class ScoresController {
