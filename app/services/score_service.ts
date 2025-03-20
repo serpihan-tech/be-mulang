@@ -37,7 +37,7 @@ export default class ScoreService {
         module
       ): {
         module: { id: number; name: string }
-        score: {
+        scores: {
           taskList: number[]
           task: number
           uts: number
@@ -45,7 +45,7 @@ export default class ScoreService {
         }
       } => ({
         module: { id: module.id, name: module.name },
-        score: {
+        scores: {
           taskList: [],
           task: 0,
           uts: 0,
@@ -59,18 +59,18 @@ export default class ScoreService {
         const index = result.findIndex((item) => item.module.id === score.moduleId)
         if (index !== -1) {
           if (score.scoreTypeId === 1) {
-            result[index].score.taskList.push(score.score)
+            result[index].scores.taskList.push(score.score)
           } else if (score.scoreTypeId === 2) {
-            result[index].score.uts = score.score
+            result[index].scores.uts = score.score
           } else if (score.scoreTypeId === 3) {
-            result[index].score.uas = score.score
+            result[index].scores.uas = score.score
           }
         }
       }
 
       for (const element of result) {
-        element.score.task =
-          element.score.taskList.reduce((a, b) => a + b, 0) / element.score.taskList.length
+        element.scores.task =
+          element.scores.taskList.reduce((a, b) => a + b, 0) / element.scores.taskList.length
       }
     }
     return result
