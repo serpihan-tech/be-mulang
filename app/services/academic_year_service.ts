@@ -1,25 +1,44 @@
 import AcademicYear from '#models/academic_year'
 import db from '@adonisjs/lucid/services/db'
-export default class AcademicYearService {
-  async get(column: string[], academicYearId?: number) {
-    if (academicYearId) {
-      const academicYear = await db
-        .from('academic_years')
-        .where('id', academicYearId)
-        .select(column)
-      return academicYear
-    }
-    const academicYear = await db.from('academic_years').select(column)
+import AcademicYearContract from '../contracts/academicyear_contract.js'
+import Student from '#models/student'
+
+export default class AcademicYearService implements AcademicYearContract {
+  async getMyAcademicYear(studentId: number): Promise<any> {
+    // console.log('service student id', studentId)
+    const student = await Student.query()
+      .where('id', studentId)
+      .preload('classStudent', (query) => {
+        query
+          .select('academic_year_id')
+          .groupBy('academic_year_id')
+          .distinct()
+          .preload('academicYear', (ay) =>
+            ay.select('name', 'semester', 'date_start', 'date_end', 'status')
+          )
+      })
+      .firstOrFail()
+
+    return student
+  }
+
+  async getAll(params: any): Promise<any> {
+    const academicYear = await AcademicYear.filter(params).paginate(1, 10)
+    return academicYear
+  }
+
+  async getOne(academicYearId: number): Promise<any> {
+    const academicYear = await AcademicYear.query().where('id', academicYearId).firstOrFail()
     return academicYear
   }
 
   async create(data: any) {
     const trx = await db.transaction()
     try {
-      const academic_year = await AcademicYear.create(data, { client: trx })
+      const academicYear = await AcademicYear.create(data, { client: trx })
       await trx.commit()
 
-      return academic_year
+      return academicYear
     } catch (error) {
       await trx.rollback()
       throw error
@@ -41,7 +60,7 @@ export default class AcademicYearService {
   }
 
   async delete(id: number) {
-    const academic_year = await AcademicYear.query().where('id', id).firstOrFail()
-    return await academic_year.delete()
+    const academicYear = await AcademicYear.query().where('id', id).firstOrFail()
+    return await academicYear.delete()
   }
 }

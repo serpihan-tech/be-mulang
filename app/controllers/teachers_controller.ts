@@ -10,7 +10,11 @@ export default class TeachersController {
 
   async index({ request, response }: HttpContext) {
     try {
-      const teachers = await this.teacherService.index(request.input('page', 1))
+      const teachers = await this.teacherService.index(
+        request.all(),
+        request.input('page', 1),
+        request.input('limit')
+      )
       return response.ok({
         messsage: 'Berhasil Mendapatkan Data Semua Guru',
         teachers,
@@ -71,6 +75,15 @@ export default class TeachersController {
       })
     } catch (error) {
       return response.notFound({ error: { message: 'ID Guru Tidak Ditemukan' } })
+    }
+  }
+
+  async getIdName({ response }: HttpContext) {
+    try {
+      const tc = await this.teacherService.getIdName()
+      return response.ok({ message: 'Data Guru Berhasil Didapatkan', teachers: tc })
+    } catch (error) {
+      return response.status(error.code).send({ error })
     }
   }
 }

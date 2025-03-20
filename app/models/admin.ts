@@ -12,7 +12,7 @@ export default class Admin extends BaseModel {
   declare name: string
 
   @column()
-  declare user_id: number
+  declare userId: number
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -20,9 +20,9 @@ export default class Admin extends BaseModel {
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 
-  @belongsTo(() => User, { foreignKey: 'user_id' })
+  @belongsTo(() => User, { foreignKey: 'userId' })
   declare user: BelongsTo<typeof User>
 
-  @hasMany(() => AnnouncementByAdmin, { foreignKey: 'admin_id' })
+  @hasMany(() => AnnouncementByAdmin, { foreignKey: 'adminId' })
   declare announcements: HasMany<typeof AnnouncementByAdmin>
 }

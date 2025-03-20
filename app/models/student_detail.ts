@@ -8,7 +8,7 @@ export default class StudentDetail extends BaseModel {
   declare id: number
 
   @column()
-  declare student_id: number
+  declare studentId: number
 
   @column()
   declare religion: string
@@ -20,16 +20,16 @@ export default class StudentDetail extends BaseModel {
   declare address: string | null
 
   @column()
-  declare parents_name: string | null
+  declare parentsName: string | null
 
   @column()
-  declare parents_phone: string | null
+  declare parentsPhone: string | null
 
   @column()
-  declare parents_job: string | null
+  declare parentsJob: string | null
 
   @column()
-  declare students_phone: string | null
+  declare studentsPhone: string | null
 
   @column()
   declare nis: string
@@ -38,16 +38,16 @@ export default class StudentDetail extends BaseModel {
   declare nisn: string
 
   @column()
-  declare birth_date: Date
+  declare birthDate: Date
 
   @column()
-  declare birth_place: string
+  declare birthPlace: string
 
   @column()
-  declare enrollment_year: Date
+  declare enrollmentYear: Date
 
   @column()
-  declare profile_picture: string
+  declare profilePicture: string
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -55,6 +55,6 @@ export default class StudentDetail extends BaseModel {
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 
-  @belongsTo(() => Student, { foreignKey: 'student_id' })
+  @belongsTo(() => Student, { foreignKey: 'studentId' })
   declare student: BelongsTo<typeof Student>
 }

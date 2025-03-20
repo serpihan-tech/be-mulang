@@ -18,15 +18,17 @@ export const AbsenceFactory = factory
       Status.HADIR,
       Status.IZIN,
       Status.SAKIT,
-      Status.LAINNYA,
+      Status.ALFA,
     ])
-    const reason = status === Status.LAINNYA ? faker.lorem.sentence() : ''
+    const reason = status === Status.IZIN ? faker.lorem.sentence() : ''
 
-    const date = DateTime.now().set({ month: 2, year: 2025 })
+    // Generate tanggal acak dalam 1 tahun terakhir hingga hari ini
+    const randomDays = faker.number.int({ min: 0, max: 365 })
+    const date = DateTime.now().minus({ days: randomDays })
 
     return {
-      class_student_id: faker.helpers.arrayElement(csIds),
-      schedule_id: faker.helpers.arrayElement(scheduleIds),
+      classStudentId: faker.helpers.arrayElement(csIds),
+      scheduleId: faker.helpers.arrayElement(scheduleIds),
       status: status,
       reason: reason,
       date: date,

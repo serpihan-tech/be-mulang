@@ -4,6 +4,7 @@ import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import Module from './module.js'
 import ClassStudent from './class_student.js'
 import ScoreType from './score_type.js'
+import ModelFilter from '../utils/filter_query.js'
 
 export default class Score extends BaseModel {
   @column({ isPrimary: true })
@@ -13,13 +14,13 @@ export default class Score extends BaseModel {
   declare score: number
 
   @column()
-  declare class_student_id: number
+  declare classStudentId: number
 
   @column()
-  declare module_id: number
+  declare moduleId: number
 
   @column()
-  declare score_type_id: number
+  declare scoreTypeId: number
 
   @column()
   declare description: string
@@ -30,12 +31,20 @@ export default class Score extends BaseModel {
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 
-  @belongsTo(() => ClassStudent, { foreignKey: 'class_student_id' })
+  @belongsTo(() => ClassStudent, { foreignKey: 'classStudentId' })
   declare classStudent: BelongsTo<typeof ClassStudent>
 
-  @belongsTo(() => Module, { foreignKey: 'module_id' })
+  @belongsTo(() => Module, { foreignKey: 'moduleId' })
   declare module: BelongsTo<typeof Module>
 
-  @belongsTo(() => ScoreType, { foreignKey: 'score_type_id' })
+  @belongsTo(() => ScoreType, { foreignKey: 'scoreTypeId' })
   declare scoreType: BelongsTo<typeof ScoreType>
+
+  public static whiteList: string[] = ['description']
+
+  public static blackList: string[] = ['limit', 'page']
+
+  public static filter(queryParams: Record<string, any>) {
+    return ModelFilter.apply(this, queryParams, this.whiteList, this.blackList)
+  }
 }

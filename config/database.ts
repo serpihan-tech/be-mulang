@@ -12,6 +12,7 @@ const dbConfig = defineConfig({
         user: env.get('DB_USER'),
         password: env.get('DB_PASSWORD'),
         database: env.get('DB_DATABASE'),
+        timezone: 'Asia/Jakarta', // ! Menimbulkan warning MySQL akan tidak support di versi mendatang, figure it out!
       },
       migrations: {
         naturalSort: true,

@@ -7,11 +7,11 @@ export default class extends BaseSeeder {
     await Admin.createMany([
       {
         name: 'Admin Semarang (Gunungpati)',
-        user_id: 1,
+        userId: 1,
       },
       {
         name: 'Admin Semarang',
-        user_id: 2,
+        userId: 2,
       },
     ])
   }

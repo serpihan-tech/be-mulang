@@ -2,11 +2,22 @@ import Teacher from '#models/teacher'
 import db from '@adonisjs/lucid/services/db'
 import UserContract from '../contracts/user_contract.js'
 import User from '#models/user'
+import ModelFilter from '../utils/filter_query.js'
 
 export default class TeacherService implements UserContract {
-  async index(page: number): Promise<any> {
-    const limit = 10
-    const teachers = await Teacher.query().preload('user').paginate(page, limit)
+  async index(params: any, page?: number, limit?: number): Promise<any> {
+    const teachers = await Teacher.filter(params)
+      .preload('user')
+      .whereHas('user', (userQuery) => {
+        userQuery.where('email', 'LIKE', `%${params.email}%`)
+      })
+      .paginate(page || 1, limit)
+    return teachers
+  }
+
+  async getIdName(): Promise<any> {
+    const teachers = await Teacher.query().select('id', 'name')
+    // console.log('teachers : ', teachers)
     return teachers
   }
 
@@ -62,11 +73,11 @@ export default class TeacherService implements UserContract {
         nip: data.teacher?.nip ?? teacher.nip,
         phone: data.teacher?.phone ?? teacher.phone,
         religion: data.teacher?.religion ?? teacher.religion,
-        birth_date: data.teacher?.birth_date ?? teacher.birth_date,
-        birth_place: data.teacher?.birth_place ?? teacher.birth_place,
+        birthDate: data.teacher?.birth_date ?? teacher.birthDate,
+        birthPlace: data.teacher?.birth_place ?? teacher.birthPlace,
         gender: data.teacher?.gender ?? teacher.gender,
         address: data.teacher?.address ?? teacher.address,
-        profile_picture: data.teacher?.profile_picture ?? teacher.profile_picture,
+        profilePicture: data.teacher?.profile_picture ?? teacher.profilePicture,
       })
       await teacher.save()
 

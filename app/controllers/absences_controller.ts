@@ -9,10 +9,7 @@ export default class AbsencesController {
 
   async index({ request, response }: HttpContext) {
     try {
-      const absences = await this.absenceService.getAll(
-        request.input('date'),
-        request.input('page', 1)
-      )
+      const absences = await this.absenceService.getAll(request.all())
 
       return response.ok({
         message: 'Berhasil Mendapatkan Data Absensi',
@@ -39,6 +36,24 @@ export default class AbsencesController {
       return response.ok({ message: 'Absensi Berhasil Dihapus' })
     } catch (error) {
       return response.notFound({ error: { message: 'ID Absensi Tidak Ditemukan' } })
+    }
+  }
+
+  async getMyAbsences({ auth, response }: HttpContext) {
+    try {
+      const user = auth.getUserOrFail()
+      await user.load('student')
+
+      console.log(user)
+
+      if (!user.student) {
+        return response.badRequest({ error: { message: 'Data Siswa Tidak Ditemukan' } })
+      }
+      console.log('user.student.id :::: ', user.student.id)
+      const st = await this.absenceService.getByStudentId(user.student.id)
+      return response.ok({ message: 'Rekap Absensi Berhasil Ditemukan', studentsPresence: st })
+    } catch (error) {
+      return response.status(error.code).send({ error })
     }
   }
 }

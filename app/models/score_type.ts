@@ -19,6 +19,6 @@ export default class ScoreType extends BaseModel {
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 
-  @hasMany(() => Score, { foreignKey: 'score_type_id' })
+  @hasMany(() => Score, { foreignKey: 'scoreTypeId' })
   declare scores: HasMany<typeof Score>
 }

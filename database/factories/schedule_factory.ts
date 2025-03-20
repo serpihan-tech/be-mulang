@@ -61,12 +61,12 @@ export const ScheduleFactory = factory
     }
 
     return {
-      class_id: classId,
+      classId: classId,
       days: day,
-      start_time: startTime.toFormat('HH:mm:ss'),
-      end_time: endTime.toFormat('HH:mm:ss'),
-      room_id: faker.helpers.arrayElement(roomIds),
-      module_id: faker.helpers.arrayElement(moduleIds),
+      startTime: startTime.toFormat('HH:mm:ss'),
+      endTime: endTime.toFormat('HH:mm:ss'),
+      roomId: faker.helpers.arrayElement(roomIds),
+      moduleId: faker.helpers.arrayElement(moduleIds),
     }
   })
   .build()

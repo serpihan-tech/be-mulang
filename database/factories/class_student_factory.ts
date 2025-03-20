@@ -14,9 +14,9 @@ export const ClassStudentFactory = factory
     const academicYear = (await AcademicYear.query()).map((academic_year) => academic_year.id)
 
     return {
-      class_id: faker.helpers.arrayElement(kelas),
-      student_id: faker.helpers.arrayElement(student),
-      academic_year_id: faker.helpers.arrayElement(academicYear),
+      classId: faker.helpers.arrayElement(kelas),
+      studentId: faker.helpers.arrayElement(student),
+      academicYearId: faker.helpers.arrayElement(academicYear),
     }
   })
   .build()

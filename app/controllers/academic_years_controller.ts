@@ -9,10 +9,9 @@ export default class AcademicYearsController {
   /**
    * Display a list of resources
    */
-  async index({ response }: HttpContext) {
+  async index({ request, response }: HttpContext) {
     try {
-      const column = ['id', 'name', 'date_start', 'date_end', 'semester', 'status']
-      const academicYears = await this.academicYearService.get(column)
+      const academicYears = await this.academicYearService.getAll(request.all())
 
       return response.ok({
         message: 'Berhasil Mendapatkan Data Tahun Ajaran',
@@ -51,8 +50,7 @@ export default class AcademicYearsController {
   async show({ params, response }: HttpContext) {
     const id: number = params.id
     try {
-      const column = ['id', 'name', 'date_start', 'date_end', 'semester', 'status']
-      const academicYears = await this.academicYearService.get(column, id)
+      const academicYears = await this.academicYearService.getOne(id)
       return response.ok({
         message: 'Berhasil Mendapatkan Data Tahun Ajaran',
         academicYears,
@@ -95,6 +93,25 @@ export default class AcademicYearsController {
       return response.ok({
         message: 'Kelas Berhasil Dihapus',
       })
+    } catch (error) {
+      return response.badRequest({ error })
+    }
+  }
+
+  async myAcademicYear({ auth, response }: HttpContext) {
+    try {
+      const user = auth.getUserOrFail()
+      await user.load('student')
+
+      // console.log(user)
+      // console.log('student id: ', user.student?.id)
+
+      if (!user.student) {
+        return response.badRequest({ error: { message: 'Data Siswa Tidak Ditemukan' } })
+      }
+
+      const student = await this.academicYearService.getMyAcademicYear(user.student.id)
+      return response.ok({ message: 'Tahun Ajaran Berhasil Ditemukan', student })
     } catch (error) {
       return response.badRequest({ error })
     }

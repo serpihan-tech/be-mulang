@@ -3,12 +3,14 @@ import { BaseModel, belongsTo, column } from '@adonisjs/lucid/orm'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import ClassStudent from './class_student.js'
 import Schedule from './schedule.js'
+import { ModelQueryBuilderContract } from '@adonisjs/lucid/types/model'
+import ModelFilter from '../utils/filter_query.js'
 
 export enum Status {
   HADIR = 'Hadir',
   IZIN = 'Izin',
   SAKIT = 'Sakit',
-  LAINNYA = 'Alfa',
+  ALFA = 'Alfa',
 }
 
 export default class Absence extends BaseModel {
@@ -22,10 +24,10 @@ export default class Absence extends BaseModel {
   declare date: DateTime
 
   @column()
-  declare class_student_id: number
+  declare classStudentId: number
 
   @column()
-  declare schedule_id: number
+  declare scheduleId: number
 
   @column()
   declare status: Status
@@ -36,9 +38,21 @@ export default class Absence extends BaseModel {
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 
-  @belongsTo(() => ClassStudent, { foreignKey: 'class_student_id' })
+  @belongsTo(() => ClassStudent, { foreignKey: 'classStudentId' })
   declare classStudent: BelongsTo<typeof ClassStudent>
 
-  @belongsTo(() => Schedule, { foreignKey: 'schedule_id' })
+  @belongsTo(() => Schedule, { foreignKey: 'scheduleId' })
   declare schedule: BelongsTo<typeof Schedule>
+
+  public static blackList: string[] = ['nis', 'page', 'limit']
+  public static whiteList: string[] = []
+
+  public static filter<T extends typeof BaseModel>(
+    // model: T,
+    // query: ModelQueryBuilderContract<T, InstanceType<T>>,
+    // query: typeof BaseModel,
+    queryParams: Record<string, any>
+  ): any {
+    return ModelFilter.apply(this, queryParams, this.whiteList, this.blackList)
+  }
 }
