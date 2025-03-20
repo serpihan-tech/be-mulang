@@ -3,6 +3,8 @@ import Score from '#models/score'
 import Student from '#models/student'
 import ClassStudent from '#models/class_student'
 import Module from '#models/module'
+import Schedule from '#models/schedule'
+import AcademicYear from '#models/academic_year'
 
 export default class ScoreService {
   async getAll(params: any): Promise<any> {
@@ -18,38 +20,46 @@ export default class ScoreService {
   }
 
   async getOwnScores(user: any): Promise<any> {
+    const now = new Date()
     const student = await Student.query().where('user_id', user.id).firstOrFail()
-    const classStudent = await ClassStudent.query().where('student_id', student.id).firstOrFail()
-    const scores = await Score.query().where('class_student_id', classStudent.id)
-    const numbersModule = await Score.query()
-      .distinct('module_id')
-      .where('class_student_id', classStudent.id)
-    const modules = await Module.query()
+    const activeSemester = await AcademicYear.query()
+      .where('status', 1)
+      .where('date_start', '<', now)
+      .where('date_end', '>', now)
+      .firstOrFail()
+    const classStudent = await ClassStudent.query()
+      .where('student_id', student.id)
+      .where('academic_year_id', activeSemester.id)
+      .firstOrFail()
+    const schedule = await Schedule.query().where('class_id', classStudent.classId)
+    const moduleList = await Module.query()
       .where(
         'id',
         'in',
-        numbersModule.map((item) => item.moduleId)
+        schedule.map((item) => item.moduleId)
       )
       .select('id', 'name')
 
-    const result = modules.map(
+    const scores = await Score.query().where('class_student_id', classStudent.id)
+
+    const result = moduleList.map(
       (
         module
       ): {
         module: { id: number; name: string }
         scores: {
           taskList: number[]
-          task: number
-          uts: number
-          uas: number
+          task: number | null
+          uts: number | null
+          uas: number | null
         }
       } => ({
         module: { id: module.id, name: module.name },
         scores: {
           taskList: [],
-          task: 0,
-          uts: 0,
-          uas: 0,
+          task: null,
+          uts: null,
+          uas: null,
         },
       })
     )
