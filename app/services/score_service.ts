@@ -83,6 +83,7 @@ export default class ScoreService {
           element.scores.taskList.reduce((a, b) => a + b, 0) / element.scores.taskList.length
       }
     }
+
     return result
   }
 

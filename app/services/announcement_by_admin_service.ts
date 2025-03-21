@@ -5,6 +5,7 @@ import AnnouncementByAdmin from '#models/announcement_by_admin'
 import { AnnouncementByAdminContract } from '../contracts/announcement_contract.js'
 import User from '#models/user'
 import { cuid } from '@adonisjs/core/helpers'
+import Admin from '#models/admin'
 
 export class AnnouncementByAdminService implements AnnouncementByAdminContract {
   async getAll(page: number, limit?: number, role?: string, data?: any, user?: User): Promise<any> {
@@ -37,7 +38,7 @@ export class AnnouncementByAdminService implements AnnouncementByAdminContract {
 
   async create(data: any, adminId: number): Promise<Object> {
     const file = data.files
-    console.log(file)
+    // console.log(file)
     let filePath = ''
 
     if (file) {
@@ -77,16 +78,23 @@ export class AnnouncementByAdminService implements AnnouncementByAdminContract {
     // }
     console.log(ann.targetRoles)
 
-    transmit.broadcast(`notifications/${ann.targetRoles}`, {
+    const admin = await Admin.query().where('id', adminId).firstOrFail()
+    const role = await User.getRole(await admin.related('user').query().firstOrFail())
+
+    const t = transmit.broadcast(`notifications/${ann.targetRoles}`, {
       message: {
         id: ann.id,
         title: ann.title,
+        from: admin.name,
+        role: role?.role,
+        // file: ann.files,
         content: ann.content,
         category: ann.category,
         date: ann.date.toISOString(),
       },
     })
 
+    console.log(t)
     return ann
   }
 

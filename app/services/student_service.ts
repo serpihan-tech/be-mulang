@@ -39,12 +39,43 @@ export default class StudentsService implements StudentContract, UserContract {
     const students = await Student.query()
       .select('students.*')
       .where('is_graduate', params.status || 0)
+      .whereHas('classStudent', (cs) => {
+        cs.whereHas('academicYear', (ay) => {
+          ay.where('status', 1).where('id', activeAcademicYear.id)
+        })
+
+        cs.preload('class')
+
+        if (params.kelas) {
+          cs.whereHas('class', (c) => {
+            c.where('name', params.kelas)
+          })
+        }
+
+        if (params.search) {
+          cs.where((subquery) => {
+            subquery
+              .whereHas('student', (query) => {
+                query
+                  .where('name', 'like', `%${params.search}%`)
+                  .orWhereHas('user', (u) => u.where('email', 'like', `%${params.search}%`))
+                  .orWhereHas('studentDetail', (sd) =>
+                    sd
+                      .where('nis', 'like', `%${params.search}%`)
+                      .orWhere('nisn', 'like', `%${params.search}%`)
+                      .orWhere('students_phone', 'like', `%${params.search}%`)
+                  )
+              })
+              .orWhereHas('class', (c) => c.where('name', 'like', `%${params.search}%`)) // Pindahkan ke dalam classStudent
+          })
+        }
+      })
+
       // *                    SORTING FILTER                     */
       .if(sortBy === 'kelas', (query) => {
-        query
-          .leftJoin('class_students', 'students.id', 'class_students.student_id')
-          .leftJoin('classes', 'class_students.class_id', 'classes.id')
-          .orderBy('classes.name', sortOrder || 'asc')
+        query.whereHas('classStudent', (c) =>
+          c.whereHas('class', (q) => q.orderBy('name', sortOrder || 'asc'))
+        )
       }) // NAMA KELAS
       .if(sortBy === 'email', (q) => {
         q.leftJoin('users', 'students.user_id', 'users.id').orderBy(
@@ -86,13 +117,7 @@ export default class StudentsService implements StudentContract, UserContract {
       .if(params.jenisKelamin, (query) =>
         query.whereHas('studentDetail', (sd) => sd.where('gender', params.jenisKelamin))
       ) // JENIS KELAMIN
-      .if(params.kelas, (query) => {
-        query.whereHas('classStudent', (cs) => {
-          cs.whereHas('class', (c) => {
-            c.where('name', params.kelas)
-          })
-        })
-      }) // NAMA KELAS
+
       .if(params.tahunAjar, (query) => {
         query.whereHas('classStudent', (cs) => {
           cs.whereHas('academicYear', (ay) => {
@@ -100,22 +125,16 @@ export default class StudentsService implements StudentContract, UserContract {
           })
         })
       }) // TAHUN AJAR BY NAMANYA
-      .whereHas('classStudent', (cs) => {
-        cs.whereHas('academicYear', (ay) => {
-          ay.where('status', 1).where('id', activeAcademicYear.id)
-        })
-        cs.preload('class')
-      }) // CARI YANG AKTIF
       .preload('user')
       .preload('studentDetail')
       .preload('classStudent', (cs) => {
         cs.whereHas('academicYear', (ay) => {
           ay.where('id', activeAcademicYear.id)
         })
-        // cs.preload('academicYear')
-        // cs.preload('class')
+        cs.preload('academicYear')
+        cs.preload('class')
       })
-      .paginate(pages, limit)
+      .paginate(pages, params.limit || limit)
 
     return students
   }
@@ -224,7 +243,7 @@ export default class StudentsService implements StudentContract, UserContract {
           })
 
           // Simpan path file ke dalam database
-          student.studentDetail.profilePicture = `${fileName}`
+          student.studentDetail.profilePicture = `${process.env.APP_DOMAIN}/student-profile/${fileName}`
         }
 
         await student.studentDetail.save()
