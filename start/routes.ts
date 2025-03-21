@@ -53,7 +53,9 @@ router.get('student-profile/:url', async ({ params, response }) => {
 })
 
 router.group(() => {
-    
+    // Ganti password user
+    router.post('change-password', [UserController, 'changePassword'])
+
     router.post('/logout', [AuthController, 'logout']).as('auth.logout')
     router.get('/dashboard', [DashboardController, 'index'])
     
