@@ -20,6 +20,16 @@ export default class extends BaseSchema {
         .onDelete('CASCADE')
       table.string('title').notNullable()
       table.text('content').notNullable()
+      table
+        .enum('category', [
+          'Akademik',
+          'Administrasi',
+          'Kegiatan Sekolah',
+          'Fasilitas',
+          'Prestasi',
+          'Informasi Umum',
+        ])
+        .defaultTo('Akademik')
       table.date('date').notNullable()
       table.text('files').notNullable()
       table.timestamp('created_at')

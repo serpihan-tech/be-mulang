@@ -14,6 +14,7 @@ export const AnnouncementByTeacherFactory = factory
       teacherId: faker.helpers.arrayElement(teacherIds),
       scheduleId: faker.helpers.arrayElement(scheduleIds),
       title: faker.lorem.sentence({ min: 3, max: 6 }),
+      category: 'Akademik',
       content: faker.lorem.paragraph(8),
       date: faker.date.past(),
       files: faker.image.urlPicsumPhotos({ width: 400, height: 240 }),

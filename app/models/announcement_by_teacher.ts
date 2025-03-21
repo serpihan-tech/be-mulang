@@ -19,6 +19,9 @@ export default class AnnouncementByTeacher extends BaseModel {
   declare title: string
 
   @column()
+  declare category: string
+
+  @column()
   declare content: string
 
   @column()

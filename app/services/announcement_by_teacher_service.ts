@@ -19,7 +19,18 @@ export class AnnouncementByTeacherService implements AnnouncementByTeacherContra
 
   async create(data: any): Promise<any> {
     const trx = await db.transaction()
-    const result = await AnnouncementByTeacher.create(data, { client: trx })
+    const result = await AnnouncementByTeacher.create(
+      {
+        teacherId: data.teacher_id,
+        scheduleId: data.schedule_id,
+        title: data.title,
+        content: data.content,
+        category: 'Akademik',
+        date: data.date,
+        files: data.files,
+      },
+      { client: trx }
+    )
     await trx.commit()
     return result
   }
