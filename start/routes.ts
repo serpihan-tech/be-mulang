@@ -133,6 +133,15 @@ router.group(() => {
         router.patch('/:id', [AnnouncementByAdmins, 'update']).use(middleware.role(['admin']))
         router.delete('/:id', [AnnouncementByAdmins, 'destroy']).use(middleware.role(['admin']))
     }).prefix('/announcements/admins')
+    
+    // Announcements By Teachers
+    router.group(() => {
+        router.get('/', [AnnouncementByTeachers, 'index'])
+        router.get('/:id', [AnnouncementByTeachers, 'show'])
+        router.post('/', [AnnouncementByTeachers, 'store']).use(middleware.role(['admin']))
+        router.patch('/:id', [AnnouncementByTeachers, 'update']).use(middleware.role(['admin']))
+        router.delete('/:id', [AnnouncementByTeachers, 'destroy']).use(middleware.role(['admin']))
+    }).prefix('/announcements/teachers')
 
     // Announcements By Teachers
     router.group(() => {

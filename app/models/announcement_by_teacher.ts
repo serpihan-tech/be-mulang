@@ -39,6 +39,17 @@ export default class AnnouncementByTeacher extends BaseModel {
   @belongsTo(() => Schedule, { foreignKey: 'scheduleId' })
   declare schedule: BelongsTo<typeof Schedule>
 
+  public static whiteList: string[] = ['title', 'content', 'date']
+  public static blackList: string[] = [
+    'limit',
+    'page',
+    'sortBy',
+    'sortOrder',
+    'search',
+    'namaPengirim',
+    'namaKelas',
+  ]
+
   public static filter(queryParams: Record<string, any>) {
     return ModelFilter.apply(this, queryParams)
   }
