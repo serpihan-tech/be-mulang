@@ -36,6 +36,8 @@ export default class StudentsService implements StudentContract, UserContract {
     const activeAcademicYear = await this.getActiveSemester()
     console.log(activeAcademicYear.id, activeAcademicYear.name)
 
+    const kelas = Array.isArray(params.kelas) ? params.kelas : [params.kelas]
+
     const students = await Student.query()
       .select('students.*')
       .where('is_graduate', params.status || 0)
@@ -48,7 +50,7 @@ export default class StudentsService implements StudentContract, UserContract {
 
         if (params.kelas) {
           cs.whereHas('class', (c) => {
-            c.where('name', params.kelas)
+            c.whereIn('name', kelas)
           })
         }
 

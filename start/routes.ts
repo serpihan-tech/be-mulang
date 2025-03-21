@@ -127,6 +127,9 @@ router.group(() => {
         router.delete('/:id', [AcademicYearsController, 'destroy'])
     }).prefix('/academic-years')
 
+    // Announcement get Both Admin and Teacher
+    router.get('/announcements', [AnnouncementByAdmins, 'getBoth']).use(middleware.role(['admin']))
+
     // Announcements By Admin
     router.group(() => {
         router.get('/', [AnnouncementByAdmins, 'index'])

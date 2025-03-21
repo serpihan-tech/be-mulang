@@ -2,12 +2,114 @@
 import app from '@adonisjs/core/services/app'
 import transmit from '@adonisjs/transmit/services/main'
 import AnnouncementByAdmin from '#models/announcement_by_admin'
-import { AnnouncementByAdminContract } from '../contracts/announcement_contract.js'
+import {
+  AnnouncementByAdminContract,
+  AnnouncementContract,
+} from '../contracts/announcement_contract.js'
 import User from '#models/user'
 import { cuid } from '@adonisjs/core/helpers'
 import Admin from '#models/admin'
+import AnnouncementByTeacher from '#models/announcement_by_teacher'
+import { DateTime } from 'luxon'
 
-export class AnnouncementByAdminService implements AnnouncementByAdminContract {
+type AnnouncementQueryParams = {
+  page?: number
+  limit?: number
+  search?: string
+  sort?: 'asc' | 'desc'
+}
+
+type AnnouncementWithMadeBy = {
+  id: number
+  title: string
+  content: string
+  date: string
+  category: string
+  files: string
+  madeBy: 'Admin' | 'Teacher'
+  [key: string]: any
+}
+
+export class AnnouncementByAdminService
+  implements AnnouncementByAdminContract, AnnouncementContract
+{
+  async getBothAll(params: AnnouncementQueryParams): Promise<{
+    meta: {
+      page: number
+      limit: number
+      total: number
+      lastPage: number
+    }
+    data: AnnouncementWithMadeBy[]
+  }> {
+    const { page = 1, limit = 10, search = '', sort = 'desc' } = params
+
+    // Query Admin
+    const adminQuery = AnnouncementByAdmin.query()
+    if (search) {
+      adminQuery.where((query) => {
+        query
+          .whereILike('title', `%${search}%`)
+          .orWhereILike('content', `%${search}%`)
+          .orWhereILike('category', `%${search}%`)
+      })
+    }
+
+    const annAdminRaw = await adminQuery.orderBy('date', sort)
+    const annAdmin = annAdminRaw.map(
+      (ann) =>
+        ({
+          ...ann.toJSON(),
+          madeBy: 'Admin',
+        }) as AnnouncementWithMadeBy
+    )
+
+    // Query Teacher
+    const teacherQuery = AnnouncementByTeacher.query()
+    if (search) {
+      teacherQuery.where((query) => {
+        query
+          .whereILike('title', `%${search}%`)
+          .orWhereILike('content', `%${search}%`)
+          .orWhereILike('category', `%${search}%`)
+      })
+    }
+
+    const annTeacherRaw = await teacherQuery.orderBy('date', sort)
+    const annTeacher = annTeacherRaw.map(
+      (ann) =>
+        ({
+          ...ann.toJSON(),
+          madeBy: 'Teacher',
+        }) as AnnouncementWithMadeBy
+    )
+
+    // Gabungkan & sortir ulang
+    const allAnnouncements = [...annAdmin, ...annTeacher]
+
+    const sorted = allAnnouncements.sort((a, b) => {
+      const dateA = DateTime.fromISO(a.date)
+      const dateB = DateTime.fromISO(b.date)
+      return sort === 'asc'
+        ? dateA.toMillis() - dateB.toMillis()
+        : dateB.toMillis() - dateA.toMillis()
+    })
+
+    // Pagination manual
+    const startIndex = (page - 1) * limit
+    const paginated = sorted.slice(startIndex, startIndex + limit)
+
+    return {
+      meta: {
+        page,
+        limit,
+        total: sorted.length,
+        lastPage: Math.ceil(sorted.length / limit),
+      },
+      data: paginated,
+    }
+  }
+
   async getAll(page: number, limit?: number, role?: string, data?: any, user?: User): Promise<any> {
     const perPage: number = limit || 10
 
