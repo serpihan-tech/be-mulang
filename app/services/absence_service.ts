@@ -65,17 +65,15 @@ export class AbsenceService implements AbsenceContract {
       .orderBy('date_start', 'asc')
       .firstOrFail()
 
-    // Ambil semester kedua (status true yang paling akhir)
     const secondSemester = await AcademicYear.query()
       .where('status', true)
       .orderBy('date_start', 'desc')
       .firstOrFail()
 
-    // console.log(params.date)
-    const absences = await Absence.filter(params)
+    const absencesQuery = Absence.query()
       .select(['id', 'class_student_id', 'schedule_id', 'status', 'reason', 'date'])
-      .if(params.nis, (query: any) => {
-        query.whereIn('class_student_id', (subquery: any) => {
+      .if(params.nis, (query) => {
+        query.whereIn('class_student_id', (subquery) => {
           subquery
             .from('class_students')
             .innerJoin('students', 'students.id', 'class_students.student_id')
@@ -84,19 +82,59 @@ export class AbsenceService implements AbsenceContract {
             .where('student_details.nis', params.nis)
         })
       })
-      .preload('schedule', (s: any) => {
+      .preload('schedule', (s) => {
         s.select(['id', 'class_id', 'days', 'start_time', 'end_time'])
       })
-      .preload('classStudent', (cs: any) => {
+      .preload('classStudent', (cs) => {
         cs.select(['id', 'class_id', 'student_id', 'academic_year_id'])
-        cs.preload('academicYear', (ay: any) => ay.select(['id', 'semester']))
-        cs.preload('class', (c: any) => c.select(['name']))
-        cs.preload('student', (s: any) => {
+        cs.preload('academicYear', (ay) => ay.select(['id', 'semester']))
+        cs.preload('class', (c) => c.select(['name']))
+        cs.preload('student', (s) => {
           s.select(['id', 'name'])
-          s.preload('studentDetail', (sd: any) => sd.select(['nis', 'nisn']))
+          s.preload('studentDetail', (sd) => sd.select(['nis', 'nisn']))
         })
       })
-      .paginate(params.page || 1, params.limit)
+
+    // Sorting
+    if (params.sortBy && params.sortOrder) {
+      const validColumns = [
+        'date',
+        'status',
+        'reason',
+        'classStudent.student_id',
+        'classStudent.class_id',
+      ]
+      if (validColumns.includes(params.sortBy)) {
+        absencesQuery.orderBy(params.sortBy, params.sortOrder)
+      }
+    }
+
+    // Searching
+    if (params.search) {
+      absencesQuery.where((query) => {
+        query
+          .orWhereHas('classStudent', (q) => {
+            q.whereHas('student', (sq) => {
+              sq.where('name', 'like', `%${params.search}%`)
+            })
+          })
+          .orWhereHas('classStudent', (q) => {
+            q.whereHas('student', (s) => {
+              s.whereHas('studentDetail', (sq) => {
+                sq.where('nis', 'like', `%${params.search}%`)
+              })
+            })
+          })
+          .orWhereHas('classStudent', (q) => {
+            q.whereHas('class', (sq) => {
+              sq.where('name', 'like', `%${params.search}%`)
+            })
+          })
+          .orWhere('reason', 'like', `%${params.search}%`)
+      })
+    }
+
+    const absences = await absencesQuery.paginate(params.page || 1, params.limit || 10)
 
     return {
       firstSemester,
