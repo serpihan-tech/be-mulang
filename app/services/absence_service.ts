@@ -71,75 +71,81 @@ export class AbsenceService implements AbsenceContract {
       .firstOrFail()
 
     const absencesQuery = Absence.query()
-      .select(['id', 'class_student_id', 'schedule_id', 'status', 'reason', 'date'])
+      .select([
+        'absences.id',
+        'absences.class_student_id',
+        'absences.schedule_id',
+        'absences.status',
+        'absences.reason',
+        'absences.date',
+        'students.name as student_name',
+        'student_details.nisn as nisn',
+        'student_details.nis as nis',
+        'classes.name as class_name',
+      ])
+      .join('class_students', 'absences.class_student_id', 'class_students.id')
+      .join('students', 'class_students.student_id', 'students.id')
+      .join('student_details', 'students.id', 'student_details.student_id')
+      .join('classes', 'class_students.class_id', 'classes.id')
+      // .join('schedules', 'absences.schedule_id', 'schedules.id')
+      // .join('academic_years', 'class_students.academic_year_id', 'academic_years.id')
       .if(params.nis, (query) => {
-        query.whereIn('class_student_id', (subquery) => {
+        query.where('student_details.nis', params.nis)
+      })
+      .if(params.search, (query) => {
+        query.where((subquery) => {
           subquery
-            .from('class_students')
-            .innerJoin('students', 'students.id', 'class_students.student_id')
-            .innerJoin('student_details', 'student_details.student_id', 'students.id')
-            .select('class_students.id')
-            .where('student_details.nis', params.nis)
+            .where('students.name', 'like', `%${params.search}%`)
+            .orWhere('student_details.nis', 'like', `%${params.search}%`)
+            .orWhere('classes.name', 'like', `%${params.search}%`)
+            .orWhere('absences.status', 'like', `%${params.search}%`)
+            .orWhere('absences.reason', 'like', `%${params.search}%`)
         })
       })
+      .if(params.kelas, (query) => {
+        query.whereIn('classes.name', params.kelas)
+      })
+
+    // Sorting
+    if (params.sortBy === 'kelas') {
+      absencesQuery.orderBy('classes.name', params.sortOrder || 'asc')
+    }
+    if (params.sortBy === 'nis') {
+      absencesQuery.orderBy('student_details.nis', params.sortOrder || 'asc')
+    }
+    if (params.sortBy === 'namaSiswa') {
+      absencesQuery.orderBy('students.name', params.sortOrder || 'asc')
+    }
+    if (params.sortBy === 'tanggal') {
+      absencesQuery.orderBy('absences.date', params.sortOrder || 'asc')
+    }
+    if (params.sortBy === 'status') {
+      absencesQuery.orderBy('absences.status', params.sortOrder || 'asc')
+    }
+    if (params.sortBy === 'alasan') {
+      absencesQuery.orderBy('absences.reason', params.sortOrder || 'asc')
+    }
+
+    absencesQuery
       .preload('schedule', (s) => {
         s.select(['id', 'class_id', 'days', 'start_time', 'end_time'])
       })
       .preload('classStudent', (cs) => {
         cs.select(['id', 'class_id', 'student_id', 'academic_year_id'])
         cs.preload('academicYear', (ay) => ay.select(['id', 'semester']))
-        cs.preload('class', (c) => c.select(['name']))
+        cs.preload('class', (c) => c.select(['id', 'name']))
         cs.preload('student', (s) => {
           s.select(['id', 'name'])
           s.preload('studentDetail', (sd) => sd.select(['nis', 'nisn']))
         })
       })
 
-    // Sorting
-    if (params.sortBy && params.sortOrder) {
-      const validColumns = [
-        'date',
-        'status',
-        'reason',
-        'classStudent.student_id',
-        'classStudent.class_id',
-      ]
-      if (validColumns.includes(params.sortBy)) {
-        absencesQuery.orderBy(params.sortBy, params.sortOrder)
-      }
-    }
-
-    // Searching
-    if (params.search) {
-      absencesQuery.where((query) => {
-        query
-          .orWhereHas('classStudent', (q) => {
-            q.whereHas('student', (sq) => {
-              sq.where('name', 'like', `%${params.search}%`)
-            })
-          })
-          .orWhereHas('classStudent', (q) => {
-            q.whereHas('student', (s) => {
-              s.whereHas('studentDetail', (sq) => {
-                sq.where('nis', 'like', `%${params.search}%`)
-              })
-            })
-          })
-          .orWhereHas('classStudent', (q) => {
-            q.whereHas('class', (sq) => {
-              sq.where('name', 'like', `%${params.search}%`)
-            })
-          })
-          .orWhere('reason', 'like', `%${params.search}%`)
-      })
-    }
-
     const absences = await absencesQuery.paginate(params.page || 1, params.limit || 10)
-
+    console.log(absences)
     return {
       firstSemester,
       secondSemester,
-      absences,
+      absences: absences.toJSON(),
     }
   }
 
