@@ -10,7 +10,18 @@ export default class AnnouncementByAdminsController {
 
   async getBoth({ request, response }: HttpContext) {
     try {
-      const ann = await this.announcementByAdmin.getBothAll(request.all())
+      const params = {
+        page: request.input('page', 1),
+        limit: request.input('limit', 10),
+        search: request.input('search', ''),
+        sortOrder: request.input('sortOrder', 'desc'),
+        sortBy: request.input('sortBy', 'date'),
+        madeBy: request.qs().madeBy ? [].concat(request.qs().madeBy) : [],
+        category: request.qs().kategori ? [].concat(request.qs().kategori) : [],
+        date: request.input('tanggal', ''),
+      }
+
+      const ann = await this.announcementByAdmin.getBothAll(params)
       return response.ok({
         message: 'Pengumuman Admin dan Guru Berhasil Dimuat!',
         announcements: ann,
