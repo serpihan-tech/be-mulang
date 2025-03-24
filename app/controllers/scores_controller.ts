@@ -132,6 +132,7 @@ export default class ScoresController {
 
   async getOwnScores({ auth }: HttpContext) {
     const user = auth.user
+    console.log(user)
     try {
       if (user) {
         const result = await this.scroreService.getOwnScores(user)
