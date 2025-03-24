@@ -19,7 +19,6 @@ type ResultProps = {
     total: any
   }
 }
-
 export default class ScoreService {
   async getAll(params: any): Promise<any> {
     const scores = await Score.filter(params).paginate(params.page || 1, params.limit || 10)
