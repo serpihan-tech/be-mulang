@@ -17,6 +17,18 @@ export const AdminFactory = factory
     return {
       name: `${firstName} ${lastName}`,
       userId: user.id,
+      phone: faker.phone.number(),
+      profilePicture: faker.image.avatar(),
+      address:
+        faker.location.buildingNumber() +
+        ', ' +
+        faker.location.streetAddress({ useFullAddress: true }) +
+        ', ' +
+        faker.location.city() +
+        ', ' +
+        faker.location.state() +
+        ', ' +
+        faker.location.zipCode({ format: '#####' }),
     }
   })
   .build()
