@@ -1,7 +1,7 @@
 import vine, { SimpleMessagesProvider } from '@vinejs/vine'
 import { messages } from '../utils/validation_message.js'
 
-export const createAnnouncementAdmin = vine.compile(
+export const createAnnouncementTeacher = vine.compile(
   vine.object({
     title: vine.string().minLength(4),
     content: vine.string().maxLength(1000),
@@ -20,12 +20,13 @@ export const createAnnouncementAdmin = vine.compile(
       'Fasilitas',
       'Prestasi',
     ]),
-    // .optional(),
-    target_roles: vine.enum(['student', 'teacher']),
+    //   .optional(),
+    schedule_id: vine.number().exists({ table: 'schedules', column: 'id' }),
+    teacher_id: vine.number().exists({ table: 'teachers', column: 'id' }),
   })
 )
 
-export const updateAnnouncementAdmin = vine.compile(
+export const updateAnnouncementTeacher = vine.compile(
   vine.object({
     title: vine.string().minLength(4).optional(),
     content: vine.string().maxLength(1000).optional(),
@@ -46,7 +47,8 @@ export const updateAnnouncementAdmin = vine.compile(
         'Prestasi',
       ])
       .optional(),
-    targetRoles: vine.enum(['student', 'teacher']).optional(),
+    schedule_id: vine.number().exists({ table: 'schedules', column: 'id' }).optional(),
+    teacher_id: vine.number().exists({ table: 'teachers', column: 'id' }).optional(),
   })
 )
 
@@ -56,8 +58,9 @@ const fields = {
   date: 'Tanggal',
   files: 'File',
   category: 'Kategori',
-  targetRoles: 'Target',
+  schedule_id: 'ID Jadwal',
+  teacher_id: 'ID Guru',
 }
 
-createAnnouncementAdmin.messagesProvider = new SimpleMessagesProvider(messages, fields)
-updateAnnouncementAdmin.messagesProvider = new SimpleMessagesProvider(messages, fields)
+createAnnouncementTeacher.messagesProvider = new SimpleMessagesProvider(messages, fields)
+updateAnnouncementTeacher.messagesProvider = new SimpleMessagesProvider(messages, fields)
