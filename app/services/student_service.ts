@@ -181,6 +181,21 @@ export default class StudentsService implements StudentContract, UserContract {
         { client: trx }
       )
 
+      if (data.student_detail.profile_picture) {
+        const profilePicture = data.student_detail.profile_picture
+        const fileName = `${cuid()}.${profilePicture.extname}`
+
+        // Pindahkan file hanya jika `profile_picture` ada dan valid
+        await profilePicture.move(app.makePath('storage/uploads/students-profile'), {
+          name: fileName,
+        })
+
+        // Simpan path file ke dalam database
+        student.studentDetail.profilePicture = `students-profile/${fileName}`
+      }
+
+      await student.studentDetail.save()
+
       await student.useTransaction(trx).load('user')
       await student.useTransaction(trx).load('studentDetail')
 
@@ -248,7 +263,7 @@ export default class StudentsService implements StudentContract, UserContract {
           })
 
           // Simpan path file ke dalam database
-          student.studentDetail.profilePicture = `${process.env.APP_DOMAIN}/student-profile/${fileName}`
+          student.studentDetail.profilePicture = `students-profile/${fileName}`
         }
 
         await student.studentDetail.save()
