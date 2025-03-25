@@ -89,6 +89,7 @@ router.group(() => {
 
     // Schedule / Jadwal
     router.group(() => {
+        router.get('/teacher/mine', [SchedulesController, 'teachersSchedule']).use(middleware.role(['teacher']))
         router.get('/', [SchedulesController, 'index'])
         router.post('/', [SchedulesController, 'store'])
         router.get('/:id', [SchedulesController, 'show'])

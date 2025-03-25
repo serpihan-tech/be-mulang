@@ -42,4 +42,27 @@ export class ScheduleService implements ScheduleContract {
     const schedule = await Schedule.query().where('id', id).firstOrFail()
     return await schedule.delete()
   }
+
+  async TeachersSchedule(teacherId: number): Promise<any[]> {
+    const classes = await Schedule.query()
+      .select('id', 'days', 'class_id', 'module_id', 'room_id', 'start_time', 'end_time')
+      .whereHas('class', (query) => {
+        query.where('teacher_id', teacherId)
+      })
+      .preload('class', (c) => {
+        c.withCount('classStudent', (cs) => cs.as('total_students'))
+      })
+      .preload('module', (m) => {
+        m.select('id', 'name', 'academic_year_id')
+        m.preload('academicYear', (ay) =>
+          ay.select('id', 'name', 'semester', 'date_start', 'date_end', 'status')
+        )
+      })
+      .preload('room', (r) => r.select('id', 'name'))
+
+    return classes.map((item) => ({
+      ...item.serialize(),
+      total_students: item.$extras.total_students,
+    }))
+  }
 }

@@ -85,8 +85,8 @@ export class ClassService implements ClassContract {
     return await theClass.delete()
   }
 
-  async countAllStudents(classId: number) {
-    const theClass = await Class.query().where('id', classId).firstOrFail()
+  async myClass(teacherId: number) {
+    const theClass = await Class.query().where('teacher_id', teacherId).firstOrFail()
     return theClass
   }
 }

@@ -69,4 +69,20 @@ export default class SchedulesController {
       return response.notFound({ error: { message: 'ID Jadwal Tidak Ditemukan' } })
     }
   }
+
+  async teachersSchedule({ auth, response }: HttpContext) {
+    try {
+      const user = auth.getUserOrFail()
+      await user.load('teacher')
+
+      if (!user.teacher) {
+        return response.badRequest({ error: { message: 'Data Guru Tidak Ditemukan' } })
+      }
+
+      const teachers = await this.scheduleService.TeachersSchedule(user.teacher.id)
+      return response.ok({ message: 'Jadwal Berhasil Ditemukan', teachers })
+    } catch (error) {
+      return response.badRequest({ error: { message: error.message } })
+    }
+  }
 }
