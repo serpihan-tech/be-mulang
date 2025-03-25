@@ -45,12 +45,12 @@ router.group(() => {
 router.post('/check-role', [AuthController, 'checkRole']).as('auth.check-role')
 
 // ! This shit cause error on url '/' no matter what the prefixs are, be careful
-// cek return gambar
-router.get('student-profile/:url', async ({ params, response }) => { 
-    const filePath = app.makePath('storage/uploads/students-profile', params.url)
+router.get('image/:folder/:filename', async ({ params, response }) => { 
+    const filePath = app.makePath(`storage/uploads/${params.folder}`, params.filename)
 
-    return response.download(filePath) // {{ ngrok }}/namaFile ... e.g : localhost:3333/test.jpg
+    return response.download(filePath)
 })
+
 
 router.group(() => {
     // Ganti password user
