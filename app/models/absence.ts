@@ -3,7 +3,6 @@ import { BaseModel, belongsTo, column } from '@adonisjs/lucid/orm'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import ClassStudent from './class_student.js'
 import Schedule from './schedule.js'
-import { ModelQueryBuilderContract } from '@adonisjs/lucid/types/model'
 import ModelFilter from '../utils/filter_query.js'
 
 export enum Status {
@@ -44,8 +43,8 @@ export default class Absence extends BaseModel {
   @belongsTo(() => Schedule, { foreignKey: 'scheduleId' })
   declare schedule: BelongsTo<typeof Schedule>
 
-  public static blackList: string[] = ['nis', 'page', 'limit']
-  public static whiteList: string[] = []
+  public static blackList: string[] = ['nis', 'page', 'limit', 'search', 'sortBy', 'sortOrder']
+  public static whiteList: string[] = ['date']
 
   public static filter<T extends typeof BaseModel>(
     // model: T,

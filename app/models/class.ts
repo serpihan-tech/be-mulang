@@ -46,7 +46,10 @@ export default class Class extends BaseModel {
   //   query.preload('teacher')
   // }
 
+  public static whiteList: string[] = ['name', 'teacherId']
+  public static blackList: string[] = ['limit', 'page', 'nip', 'tahunAjar', 'sortBy', 'sortOrder']
+
   public static filter(queryParams: Record<string, any>) {
-    return ModelFilter.apply(this, queryParams)
+    return ModelFilter.apply(this, queryParams, this.whiteList, this.blackList)
   }
 }
