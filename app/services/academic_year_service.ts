@@ -23,7 +23,10 @@ export default class AcademicYearService implements AcademicYearContract {
   }
 
   async getAll(params: any): Promise<any> {
-    const academicYear = await AcademicYear.filter(params).paginate(1, 10)
+    const academicYear = await AcademicYear.filter(params).paginate(
+      Number(params.page) || 1,
+      Number(params.limit) || 10
+    )
     return academicYear
   }
 

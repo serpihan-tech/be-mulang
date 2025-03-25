@@ -11,18 +11,20 @@ import AcademicYear from '#models/academic_year'
 import Class from '#models/class'
 import { cuid } from '@adonisjs/core/helpers'
 import app from '@adonisjs/core/services/app'
+import { DateTime } from 'luxon'
 
 export default class StudentsService implements StudentContract, UserContract {
   private async getActiveSemester() {
-    const now = new Date()
+    const now =
+      DateTime.now().setZone('Asia/Jakarta').toSQL() ??
+      new Date().toISOString().slice(0, 19).replace('T', ' ')
+    console.log(now)
 
-    const activeAcademicYear = await AcademicYear.query()
+    return await AcademicYear.query()
       .where('status', 1)
       .where('date_start', '<', now)
       .where('date_end', '>', now)
       .firstOrFail()
-
-    return activeAcademicYear
   }
 
   async index(page: number, params?: any): Promise<any> {
@@ -32,6 +34,7 @@ export default class StudentsService implements StudentContract, UserContract {
     const sortBy = params.sortBy
     const sortOrder = params.sortOrder
     console.log(params)
+    console.log(Number(params.limit))
 
     const activeAcademicYear = await this.getActiveSemester()
     console.log(activeAcademicYear.id, activeAcademicYear.name)
@@ -136,7 +139,7 @@ export default class StudentsService implements StudentContract, UserContract {
         cs.preload('academicYear')
         cs.preload('class')
       })
-      .paginate(pages, params.limit || limit)
+      .paginate(pages, Number(params.limit) || limit)
 
     return students
   }

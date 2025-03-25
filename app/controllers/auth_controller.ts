@@ -5,6 +5,7 @@ import AcademicYear from '#models/academic_year'
 import { errors as authErrors } from '@adonisjs/auth'
 import { errors as lucidErrors } from '@adonisjs/lucid'
 import limiter from '@adonisjs/limiter/services/main'
+import { DateTime } from 'luxon'
 
 export default class AuthController {
   async checkRole({ request, response }: HttpContext) {
@@ -116,21 +117,24 @@ export default class AuthController {
   }
 
   async activeSemester() {
-    const now = new Date()
+    const now =
+      DateTime.now().setZone('Asia/Jakarta').toSQL() ??
+      new Date().toISOString().slice(0, 19).replace('T', ' ')
+    console.log(now)
 
-    const activeSemester = await AcademicYear.query()
+    return await AcademicYear.query()
       .where('status', 1)
       .where('date_start', '<', now)
       .where('date_end', '>', now)
       .firstOrFail()
-
-    return activeSemester.id
   }
 
   async getProfile(role: Role, user: User) {
     let profile
     let details
     let classStudent
+
+    const activeSemester = await this.activeSemester()
 
     switch (role?.role) {
       case 'admin':
@@ -145,7 +149,7 @@ export default class AuthController {
         classStudent = await profile
           ?.related('classStudent')
           .query()
-          .where('academic_year_id', await this.activeSemester())
+          .where('academic_year_id', activeSemester.id)
           .preload('class', (c) => c.select('id', 'name'))
           .firstOrFail()
         break
@@ -157,6 +161,7 @@ export default class AuthController {
         ...profile?.serialize(),
         details: { ...details?.serialize(), classStudent },
       },
+      activeSemester,
     }
   }
 
