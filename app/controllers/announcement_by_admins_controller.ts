@@ -8,6 +8,29 @@ import { createAnnouncementAdmin, updateAnnouncementAdmin } from '#validators/an
 export default class AnnouncementByAdminsController {
   constructor(private announcementByAdmin: AnnouncementByAdminService) {}
 
+  async getBoth({ request, response }: HttpContext) {
+    try {
+      const params = {
+        page: request.input('page', 1),
+        limit: request.input('limit', 10),
+        search: request.input('search', ''),
+        sortOrder: request.input('sortOrder', 'desc'),
+        sortBy: request.input('sortBy', 'date'),
+        madeBy: request.qs().madeBy ? [].concat(request.qs().madeBy) : [],
+        category: request.qs().kategori ? [].concat(request.qs().kategori) : [],
+        date: request.input('tanggal', ''),
+      }
+
+      const ann = await this.announcementByAdmin.getBothAll(params)
+      return response.ok({
+        message: 'Pengumuman Admin dan Guru Berhasil Dimuat!',
+        announcements: ann,
+      })
+    } catch (error) {
+      return response.badRequest({ error })
+    }
+  }
+
   async index({ auth, request, response }: HttpContext) {
     const user: User = auth.getUserOrFail()
     const role = await User.getRole(user)

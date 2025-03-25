@@ -52,9 +52,22 @@ export class ClassService implements ClassContract {
     const theClass = await Class.query()
       .where('id', id)
       .select('id', 'name', 'teacher_id')
+      .withCount('classStudent', (cs) => cs.as('total_student'))
       .preload('teacher', (t) => t.select('id', 'name'))
       .firstOrFail()
-    return theClass
+
+    const formattedData = {
+      id: theClass.id,
+      name: theClass.name,
+      teacherId: theClass.teacherId,
+      teacher: {
+        id: theClass.teacher.id,
+        name: theClass.teacher.name,
+      },
+      totalStudents: theClass.$extras.total_student,
+    }
+
+    return formattedData
   }
 
   async create(data: any): Promise<any> {

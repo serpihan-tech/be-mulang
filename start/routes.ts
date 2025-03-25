@@ -53,7 +53,9 @@ router.get('student-profile/:url', async ({ params, response }) => {
 })
 
 router.group(() => {
-    
+    // Ganti password user
+    router.post('change-password', [UserController, 'changePassword'])
+
     router.post('/logout', [AuthController, 'logout']).as('auth.logout')
     router.get('/dashboard', [DashboardController, 'index'])
     
@@ -124,6 +126,9 @@ router.group(() => {
         router.patch('/:id', [AcademicYearsController, 'update'])
         router.delete('/:id', [AcademicYearsController, 'destroy'])
     }).prefix('/academic-years')
+
+    // Announcement get Both Admin and Teacher
+    router.get('/announcements', [AnnouncementByAdmins, 'getBoth']).use(middleware.role(['admin']))
 
     // Announcements By Admin
     router.group(() => {

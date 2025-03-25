@@ -3,8 +3,8 @@ import Score from '#models/score'
 import Student from '#models/student'
 import ClassStudent from '#models/class_student'
 import Module from '#models/module'
-import Schedule from '#models/schedule'
 import AcademicYear from '#models/academic_year'
+import Schedule from '#models/schedule'
 import ScoreType from '#models/score_type'
 
 type ResultProps = {
@@ -34,9 +34,14 @@ export default class ScoreService {
 
   async getOwnScores(user: any): Promise<any> {
     const student = await Student.query().where('user_id', user.id).firstOrFail()
-    const academicYear = await AcademicYear.query()
-    const classStudent = await ClassStudent.query().where('student_id', student.id).firstOrFail()
-    const schedule = await Schedule.query().where('class_id', classStudent.classId)
+    const classStudentList = await ClassStudent.query().where('student_id', student.id)
+    const academicYearIds = classStudentList.map((cs) => cs.academicYearId)
+
+    const academicYear = await AcademicYear.query().whereIn('id', academicYearIds)
+    const schedule = await Schedule.query().whereIn(
+      'class_id',
+      classStudentList.map((cs) => cs.classId)
+    )
     const roundToInteger = (num: number | null): number | null => {
       if (num === null) return null
       return Math.round(num)
@@ -48,10 +53,13 @@ export default class ScoreService {
       )
       .select('id', 'name', 'academic_year_id')
 
-    const scores = await Score.query().where('class_student_id', classStudent.id)
+    const scores = await Score.query().whereIn(
+      'class_student_id',
+      classStudentList.map((cs) => cs.id)
+    )
     const scoreType = await ScoreType.query()
 
-    // Mengelompokkan berdasarkan tahun akademik
+    // Mengelompokkan berdasarkan tahun akademik yang pernah dilalui oleh siswa
     const result = academicYear.map(
       (
         ac

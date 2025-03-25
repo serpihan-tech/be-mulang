@@ -68,10 +68,10 @@ export interface AnnouncementByTeacherContract {
 }
 
 // ! Sementara disable / tidak dipakai
-// export default interface AnnouncementContract {
-//   /**
-//    * Mengambil semua pengumuman yang dibuat oleh dua role (admin dan guru)
-//    * - @coloumnFilters Judul, Deskripsi, Kategori, Tanggal, Dibuat oleh, Status
-//    */
-//   getBothAll(params: any): Promise<any>
-// }
+export interface AnnouncementContract {
+  /**
+   * Mengambil semua pengumuman yang dibuat oleh dua role (admin dan guru)
+   * - @coloumnFilters Judul, Deskripsi, Kategori, Tanggal, Dibuat oleh, Status
+   */
+  getBothAll(params: any): Promise<any>
+}

@@ -23,6 +23,14 @@ export const updateUserValidator = vine.compile(
   })
 )
 
+export const updatePasswordValidator = vine.compile(
+  vine.object({
+    oldPassword: vine.string().minLength(8),
+    newPassword: vine.string().minLength(8).notSameAs('oldPassword'),
+    newPasswordConfirmation: vine.string().minLength(8).sameAs('newPassword'),
+  })
+)
+
 const fields = {
   username: 'username',
   email: 'email',
@@ -30,3 +38,5 @@ const fields = {
 }
 // createUserValidator.messagesProvider = new CustomMessagesProvider()
 passwordValidator.messagesProvider = new SimpleMessagesProvider(messages, fields)
+updateUserValidator.messagesProvider = new SimpleMessagesProvider(messages, fields)
+updatePasswordValidator.messagesProvider = new SimpleMessagesProvider(messages, fields)
