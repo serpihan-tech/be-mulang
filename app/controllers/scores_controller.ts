@@ -130,16 +130,22 @@ export default class ScoresController {
     }
   }
 
-  async getOwnScores({ auth }: HttpContext) {
+  async getOwnScores({ auth, response, request }: HttpContext) {
     const user = auth.user
     console.log(user)
     try {
+      const data = request.all()
       if (user) {
-        const result = await this.scroreService.getOwnScores(user)
-        return { result }
+        const result = await this.scroreService.getOwnScores(user, data)
+        return response.ok({
+          message: 'Data rekap nilai siswa berhasil ditemukan',
+          result,
+        })
+      } else {
+        return response.unauthorized({ error: { message: 'Harap Login Terlebih Dahulu' } })
       }
     } catch (error) {
-      return error
+      return response.badRequest({ error: { message: error.message } })
     }
   }
 }

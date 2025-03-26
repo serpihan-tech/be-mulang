@@ -75,139 +75,108 @@ export default class ScoreService {
     return scores
   }
 
-  async getOwnScores(user: any): Promise<any> {
+  async getOwnScores(user: any, params?: any): Promise<any> {
     const student = await Student.query().where('user_id', user.id).firstOrFail()
-    const classStudentIds = (await ClassStudent.query().where('student_id', student.id)).map(
-      (cs) => cs.id
-    )
-    const academicYearIds = (await ClassStudent.query().whereIn('id', classStudentIds)).map(
-      (cs) => cs.academicYearId
-    )
+    const classStudents = await ClassStudent.query()
+      .where('student_id', student.id)
+      .orderBy('academic_year_id', 'desc')
 
-    const academicYears = await AcademicYear.query().whereIn('id', academicYearIds)
-    const schedules = await Schedule.query().whereIn(
-      'class_id',
-      (await ClassStudent.query().whereIn('id', classStudentIds)).map((cs) => cs.classId)
-    )
+    const classStudentIds = classStudents.map((cs) => cs.id)
+    const academicYearIds = classStudents.map((cs) => cs.academicYearId)
+
+    const academicYearFilter = params?.tahunAjar ? [params.tahunAjar] : academicYearIds
+
+    if (academicYearFilter.length === 0) {
+      throw new Error('Tidak ada tahun ajaran yang valid')
+    }
+
+    const academicYears = await AcademicYear.query()
+      .whereIn('id', academicYearFilter)
+      .orderBy('status', 'desc')
+      .orderBy('id', 'desc')
+
+    const classIds = classStudents.map((cs) => cs.classId)
+    const schedules = await Schedule.query().whereIn('class_id', classIds)
+    const moduleIds = schedules.map((s) => s.moduleId)
     const modules = await Module.query()
-      .whereIn(
-        'id',
-        schedules.map((item) => item.moduleId)
-      )
+      .whereIn('id', moduleIds)
       .select('id', 'name', 'academic_year_id')
 
     const scores = await Score.query().whereIn('class_student_id', classStudentIds)
     const scoreTypes = await ScoreType.query()
 
-    const result = academicYears.map(
-      (
-        academicYear
-      ): {
-        academicYear: {
-          id: number
-          name: string
-          semester: string
-          status: boolean
-        }
-        modules: {
-          id: number
-          name: string
+    return academicYears.map((academicYear) => {
+      const moduleMap = new Map<number, any>()
+
+      for (const module of modules) {
+        if (module.academicYearId !== academicYear.id) continue
+
+        moduleMap.set(module.id, {
+          id: module.id,
+          name: module.name,
           scores: {
-            taskList: number[]
-            task: number | null
-            uts: number | null
-            uas: number | null
-            totalList: Array<{ type: number; score: number }>
-            total: number | null
-          }
-        }[]
-      } => ({
+            taskList: [],
+            task: null,
+            uts: null,
+            uas: null,
+            totalList: [],
+            total: null,
+          },
+        })
+      }
+
+      for (const score of scores) {
+        const moduleData = moduleMap.get(score.moduleId)
+        if (!moduleData) continue
+
+        if (score.scoreTypeId === 1) {
+          moduleData.scores.taskList.push(score.score)
+        } else if (score.scoreTypeId === 2) {
+          moduleData.scores.uts = score.score
+        } else if (score.scoreTypeId === 3) {
+          moduleData.scores.uas = score.score
+        }
+      }
+
+      moduleMap.forEach((module) => {
+        if (module.scores.taskList.length > 0) {
+          module.scores.task = Math.round(
+            module.scores.taskList.reduce((sum: any, val: any) => sum + val, 0) /
+              module.scores.taskList.length
+          )
+        }
+
+        module.scores.totalList = []
+        if (module.scores.task !== null) {
+          const weight = scoreTypes.find((st) => st.id === 1)?.weight || 0
+          module.scores.totalList.push({ type: 1, score: (module.scores.task * weight) / 100 })
+        }
+        if (module.scores.uts !== null) {
+          const weight = scoreTypes.find((st) => st.id === 2)?.weight || 0
+          module.scores.totalList.push({ type: 2, score: (module.scores.uts * weight) / 100 })
+        }
+        if (module.scores.uas !== null) {
+          const weight = scoreTypes.find((st) => st.id === 3)?.weight || 0
+          module.scores.totalList.push({ type: 3, score: (module.scores.uas * weight) / 100 })
+        }
+
+        if (module.scores.totalList.length > 0) {
+          module.scores.total = Math.round(
+            module.scores.totalList.reduce((sum: any, val: { score: any }) => sum + val.score, 0)
+          )
+        }
+      })
+
+      return {
         academicYear: {
           id: academicYear.id,
           name: academicYear.name,
           semester: academicYear.semester,
           status: academicYear.status,
         },
-        modules: [],
-      })
-    )
-
-    for (const element of result) {
-      const moduleMap = new Map<
-        number,
-        {
-          id: number
-          name: string
-          scores: {
-            taskList: number[]
-            task: number | null
-            uts: number | null
-            uas: number | null
-            totalList: Array<{ type: number; score: number }>
-            total: number | null
-          }
-        }
-      >()
-
-      for (const module of modules) {
-        if (module.academicYearId !== element.academicYear.id) continue
-
-        if (!moduleMap.has(module.id)) {
-          moduleMap.set(module.id, {
-            id: module.id,
-            name: module.name,
-            scores: {
-              taskList: [],
-              task: null,
-              uts: null,
-              uas: null,
-              totalList: [],
-              total: null,
-            },
-          })
-        }
-
-        const data = moduleMap.get(module.id)!
-
-        for (const score of scores) {
-          if (score.moduleId === module.id) {
-            let type = null
-            if (score.scoreTypeId === 1) {
-              data.scores.taskList.push(score.score)
-              type = 1
-            } else if (score.scoreTypeId === 2) {
-              data.scores.uts = score.score
-              type = 2
-            } else if (score.scoreTypeId === 3) {
-              data.scores.uas = score.score
-              type = 3
-            }
-
-            if (type) {
-              data.scores.totalList.push({ type, score: score.score })
-            }
-          }
-        }
-
-        if (data.scores.taskList.length > 0) {
-          const taskAvg =
-            data.scores.taskList.reduce((sum, val) => sum + val, 0) / data.scores.taskList.length
-          data.scores.task = Math.round(taskAvg)
-        }
-
-        if (data.scores.totalList.length > 0) {
-          const totalScore = data.scores.totalList.reduce((sum, val) => {
-            const weight = scoreTypes.find((st) => st.id === val.type)?.weight || 0
-            return sum + (val.score * weight) / 100
-          }, 0)
-          data.scores.total = Math.round(totalScore)
-        }
+        modules: Array.from(moduleMap.values()),
       }
-
-      element.modules = Array.from(moduleMap.values())
-    }
-
-    return result
+    })
   }
 
   async create(data: any): Promise<any> {
