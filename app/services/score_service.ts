@@ -6,6 +6,7 @@ import Module from '#models/module'
 import AcademicYear from '#models/academic_year'
 import Schedule from '#models/schedule'
 import ScoreType from '#models/score_type'
+import { messages } from '../utils/validation_message.js'
 
 type ResultProps = {
   id: number
@@ -20,10 +21,52 @@ type ResultProps = {
   }
 }
 export default class ScoreService {
-  async getAll(params: any): Promise<any> {
-    const scores = await Score.filter(params).paginate(params.page || 1, params.limit || 10)
+  async getAll(params?: any): Promise<any> {
+    // get class by classstudent id
+    //filter by status academicyear == 1
+    let scores = Score.filter(params)
+      .preload('classStudent', (cs) =>
+        cs
+          .preload('class', (c) => c.preload('teacher', (t) => t.select('id', 'name')))
+          .preload('academicYear', (ay) =>
+            ay.select('id', 'name', 'dateStart', 'dateEnd', 'semester', 'status')
+          )
+      )
+      .preload('module')
+      .preload('scoreType')
 
-    return scores
+    // Academic Year by ClassStudent.AcademicYear
+    const orderByActiveStatus = (query: any) => {
+      return query
+        .innerJoin('class_students', 'scores.class_student_id', 'class_students.id')
+        .innerJoin('classes', 'class_students.class_id', 'classes.id')
+        .innerJoin('modules', 'scores.module_id', 'modules.id')
+        .innerJoin('academic_years', 'class_students.academic_year_id', 'academic_years.id')
+        .orderBy('academic_years.status', 'desc')
+    }
+
+    // Academic Year by Module.AcademicYear
+    // const orderByModule = (query: any) => {
+    //   return query
+    //     .innerJoin('class_students', 'scores.class_student_id', 'class_students.id')
+    //     .innerJoin('classes', 'class_students.class_id', 'classes.id')
+    //     .innerJoin('modules', 'scores.module_id', 'modules.id')
+    //     .innerJoin('academic_years', 'modules.academic_year_id', 'academic_years.id')
+    //     .orderBy('academic_years.status', 'desc')
+    // }
+
+    switch (params?.sortBy) {
+      case 'kelas':
+        orderByActiveStatus(scores).orderBy('classes.name', params.sortOrder || 'asc')
+        break
+      case 'mapel':
+        orderByActiveStatus(scores).orderBy('modules.name', params.sortOrder || 'asc')
+        break
+      default:
+        orderByActiveStatus(scores)
+    }
+
+    return await scores.paginate(params.page || 1, params.limit || 10)
   }
 
   async getOne(id: number): Promise<any> {
@@ -34,35 +77,31 @@ export default class ScoreService {
 
   async getOwnScores(user: any): Promise<any> {
     const student = await Student.query().where('user_id', user.id).firstOrFail()
-    const classStudentList = await ClassStudent.query().where('student_id', student.id)
-    const academicYearIds = classStudentList.map((cs) => cs.academicYearId)
-
-    const academicYear = await AcademicYear.query().whereIn('id', academicYearIds)
-    const schedule = await Schedule.query().whereIn(
-      'class_id',
-      classStudentList.map((cs) => cs.classId)
+    const classStudentIds = (await ClassStudent.query().where('student_id', student.id)).map(
+      (cs) => cs.id
     )
-    const roundToInteger = (num: number | null): number | null => {
-      if (num === null) return null
-      return Math.round(num)
-    }
-    const moduleList = await Module.query()
+    const academicYearIds = (await ClassStudent.query().whereIn('id', classStudentIds)).map(
+      (cs) => cs.academicYearId
+    )
+
+    const academicYears = await AcademicYear.query().whereIn('id', academicYearIds)
+    const schedules = await Schedule.query().whereIn(
+      'class_id',
+      (await ClassStudent.query().whereIn('id', classStudentIds)).map((cs) => cs.classId)
+    )
+    const modules = await Module.query()
       .whereIn(
         'id',
-        schedule.map((item) => item.moduleId)
+        schedules.map((item) => item.moduleId)
       )
       .select('id', 'name', 'academic_year_id')
 
-    const scores = await Score.query().whereIn(
-      'class_student_id',
-      classStudentList.map((cs) => cs.id)
-    )
-    const scoreType = await ScoreType.query()
+    const scores = await Score.query().whereIn('class_student_id', classStudentIds)
+    const scoreTypes = await ScoreType.query()
 
-    // Mengelompokkan berdasarkan tahun akademik yang pernah dilalui oleh siswa
-    const result = academicYear.map(
+    const result = academicYears.map(
       (
-        ac
+        academicYear
       ): {
         academicYear: {
           id: number
@@ -70,17 +109,47 @@ export default class ScoreService {
           semester: string
           status: boolean
         }
-        modules: ResultProps[]
+        modules: {
+          id: number
+          name: string
+          scores: {
+            taskList: number[]
+            task: number | null
+            uts: number | null
+            uas: number | null
+            totalList: Array<{ type: number; score: number }>
+            total: number | null
+          }
+        }[]
       } => ({
-        academicYear: { id: ac.id, name: ac.name, semester: ac.semester, status: ac.status },
+        academicYear: {
+          id: academicYear.id,
+          name: academicYear.name,
+          semester: academicYear.semester,
+          status: academicYear.status,
+        },
         modules: [],
       })
     )
 
     for (const element of result) {
-      const moduleMap = new Map<number, ResultProps>()
+      const moduleMap = new Map<
+        number,
+        {
+          id: number
+          name: string
+          scores: {
+            taskList: number[]
+            task: number | null
+            uts: number | null
+            uas: number | null
+            totalList: Array<{ type: number; score: number }>
+            total: number | null
+          }
+        }
+      >()
 
-      for (const module of moduleList) {
+      for (const module of modules) {
         if (module.academicYearId !== element.academicYear.id) continue
 
         if (!moduleMap.has(module.id)) {
@@ -107,10 +176,10 @@ export default class ScoreService {
               data.scores.taskList.push(score.score)
               type = 1
             } else if (score.scoreTypeId === 2) {
-              data.scores.uts = roundToInteger(score.score)
+              data.scores.uts = score.score
               type = 2
             } else if (score.scoreTypeId === 3) {
-              data.scores.uas = roundToInteger(score.score)
+              data.scores.uas = score.score
               type = 3
             }
 
@@ -123,15 +192,15 @@ export default class ScoreService {
         if (data.scores.taskList.length > 0) {
           const taskAvg =
             data.scores.taskList.reduce((sum, val) => sum + val, 0) / data.scores.taskList.length
-          data.scores.task = roundToInteger(taskAvg)
+          data.scores.task = Math.round(taskAvg)
         }
 
         if (data.scores.totalList.length > 0) {
           const totalScore = data.scores.totalList.reduce((sum, val) => {
-            const weight = scoreType.find((st) => st.id === val.type)?.weight || 0
+            const weight = scoreTypes.find((st) => st.id === val.type)?.weight || 0
             return sum + (val.score * weight) / 100
           }, 0)
-          data.scores.total = roundToInteger(totalScore)
+          data.scores.total = Math.round(totalScore)
         }
       }
 

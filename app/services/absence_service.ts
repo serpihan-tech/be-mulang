@@ -139,6 +139,27 @@ export class AbsenceService implements AbsenceContract {
           s.preload('studentDetail', (sd) => sd.select(['nis', 'nisn']))
         })
       })
+      // build params.search for nis and date
+      .if(params.search, (query: any) => {
+        query.where((subQuery: any) => {
+          subQuery
+            .where('date', 'like', `%${params.search}%`)
+            .orWhereIn('class_student_id', (sub: any) => {
+              sub
+                .from('class_students as cs')
+                .innerJoin('students as s', 's.id', 'cs.student_id')
+                .innerJoin('student_details as sd', 'sd.student_id', 's.id')
+                .select('cs.id')
+                .where('sd.nis', 'like', `%${params.search}%`)
+            })
+          //sortBy nis if params.sortBy === 'nis'
+          .if (params.sortBy === 'nis') {
+            subQuery.orderBy('sd.nis', params.sortOrder || 'asc')
+          }
+        })
+      })
+      //param
+      .paginate(params.page || 1, params.limit)
 
     const absences = await absencesQuery.paginate(params.page || 1, params.limit || 10)
     console.log(absences)
