@@ -74,7 +74,8 @@ export default class ModelFilter {
       }
     })
 
-    query.orderBy(sortBy, sortOrder) // Apply sorting
+    // OrderBynya jangan disini nanti error kalo ada relasi
+    // query.orderBy(sortBy, sortOrder) // Apply sorting
 
     return query
   }

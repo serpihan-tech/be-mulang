@@ -42,7 +42,7 @@ export default class Score extends BaseModel {
 
   public static whiteList: string[] = ['description']
 
-  public static blackList: string[] = ['limit', 'page']
+  public static blackList: string[] = ['limit', 'page', 'sortBy', 'sortOrder', 'kelas', 'mapel']
 
   public static filter(queryParams: Record<string, any>) {
     return ModelFilter.apply(this, queryParams, this.whiteList, this.blackList)
