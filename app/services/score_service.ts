@@ -21,52 +21,46 @@ type ResultProps = {
   }
 }
 export default class ScoreService {
-  async getAll(params?: any): Promise<any> {
-    // get class by classstudent id
-    //filter by status academicyear == 1
-    let scores = Score.filter(params)
-      .preload('classStudent', (cs) =>
-        cs
-          .preload('class', (c) => c.preload('teacher', (t) => t.select('id', 'name')))
-          .preload('academicYear', (ay) =>
-            ay.select('id', 'name', 'dateStart', 'dateEnd', 'semester', 'status')
+  async getAll(params: any | undefined): Promise<any> {
+    let scoresQuery = Score.query()
+      .preload('classStudent', (query) =>
+        query
+          .preload('class', (classQuery) =>
+            classQuery.preload('teacher', (teacherQuery) => teacherQuery.select('id', 'name'))
+          )
+          .preload('academicYear', (academicYearQuery) =>
+            academicYearQuery.select('id', 'name', 'dateStart', 'dateEnd', 'semester', 'status')
           )
       )
       .preload('module')
       .preload('scoreType')
-
-    // Academic Year by ClassStudent.AcademicYear
-    const orderByActiveStatus = (query: any) => {
-      return query
-        .innerJoin('class_students', 'scores.class_student_id', 'class_students.id')
-        .innerJoin('classes', 'class_students.class_id', 'classes.id')
-        .innerJoin('modules', 'scores.module_id', 'modules.id')
-        .innerJoin('academic_years', 'class_students.academic_year_id', 'academic_years.id')
-        .orderBy('academic_years.status', 'desc')
-    }
-
-    // Academic Year by Module.AcademicYear
-    // const orderByModule = (query: any) => {
-    //   return query
-    //     .innerJoin('class_students', 'scores.class_student_id', 'class_students.id')
-    //     .innerJoin('classes', 'class_students.class_id', 'classes.id')
-    //     .innerJoin('modules', 'scores.module_id', 'modules.id')
-    //     .innerJoin('academic_years', 'modules.academic_year_id', 'academic_years.id')
-    //     .orderBy('academic_years.status', 'desc')
-    // }
+      .innerJoin('class_students', 'scores.class_student_id', 'class_students.id')
+      .innerJoin('classes', 'class_students.class_id', 'classes.id')
+      .innerJoin('modules', 'scores.module_id', 'modules.id')
+      .innerJoin('academic_years', 'class_students.academic_year_id', 'academic_years.id')
+      .if(params?.tahunAjarId, (query) =>
+        query.where('class_students.academic_year_id', params.tahunAjarId)
+      )
 
     switch (params?.sortBy) {
       case 'kelas':
-        orderByActiveStatus(scores).orderBy('classes.name', params.sortOrder || 'asc')
+        scoresQuery
+          .orderBy('academic_years.status', 'desc')
+          .orderBy('classes.name', params.sortOrder || 'asc')
         break
       case 'mapel':
-        orderByActiveStatus(scores).orderBy('modules.name', params.sortOrder || 'asc')
+        scoresQuery
+          .orderBy('academic_years.status', 'desc')
+          .orderBy('modules.name', params.sortOrder || 'asc')
         break
       default:
-        orderByActiveStatus(scores)
+        scoresQuery
+          .orderBy('academic_years.status', 'desc')
+          .orderBy(params.sortBy || 'scores.id', params.sortOrder || 'asc')
+        break
     }
 
-    return await scores.paginate(params.page || 1, params.limit || 10)
+    return await scoresQuery.paginate(params.page || 1, params.limit || 10)
   }
 
   async getOne(id: number): Promise<any> {

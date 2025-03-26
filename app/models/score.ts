@@ -40,11 +40,22 @@ export default class Score extends BaseModel {
   @belongsTo(() => ScoreType, { foreignKey: 'scoreTypeId' })
   declare scoreType: BelongsTo<typeof ScoreType>
 
-  public static whiteList: string[] = ['description']
+  public static whiteList: string[] = ['description', 'name', 'age']
 
-  public static blackList: string[] = ['limit', 'page', 'sortBy', 'sortOrder', 'kelas', 'mapel']
+  public static blackList: string[] = [
+    'limit',
+    'page',
+    'sortBy',
+    'sortOrder',
+    'kelas',
+    'mapel',
+    'tahunAjarId',
+  ]
 
-  public static filter(queryParams: Record<string, any>) {
-    return ModelFilter.apply(this, queryParams, this.whiteList, this.blackList)
+  public static filter(queryParams?: Record<string, any>) {
+    if (queryParams) {
+      return ModelFilter.apply(this, queryParams, this.whiteList, this.blackList)
+    }
+    return this.query()
   }
 }
