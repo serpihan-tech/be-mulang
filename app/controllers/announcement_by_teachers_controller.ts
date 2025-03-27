@@ -5,14 +5,27 @@ import {
   createAnnouncementTeacher,
   updateAnnouncementTeacher,
 } from '#validators/announcement_teacher'
+import User from '#models/user'
 
 @inject()
 export default class AnnouncementByTeachersController {
   constructor(private announcementService: AnnouncementByTeacherService) {}
 
-  public async index({ request, response }: HttpContext) {
+  public async index({ auth, request, response }: HttpContext) {
     try {
-      const announcements = await this.announcementService.getAll(request.all())
+      const user = auth.getUserOrFail()
+
+      const role = await User.getRole(user)
+      // console.log('index, announcement teacher : role = ', role.role)
+
+      let teacher
+      let data = request.all()
+      if (role.role === 'teacher') {
+        teacher = await user.related('teacher').query().firstOrFail()
+        data = { ...data, teacher_id: teacher.id }
+      }
+
+      const announcements = await this.announcementService.getAll(data, role.role)
       return {
         message: 'Pengumuman Berhasil Di Tampilkan',
         announcements,

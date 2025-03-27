@@ -9,14 +9,20 @@ import User from '#models/user'
 import Teacher from '#models/teacher'
 
 export class AnnouncementByTeacherService implements AnnouncementByTeacherContract {
-  async getAll(params: any): Promise<any> {
+  async getAll(params: any, role?: string): Promise<any> {
+    // console.log('params announcement by teacher service (getAll) : ', params)
     const query = AnnouncementByTeacher.query()
+      .if(role === 'teacher', (q) => q.where('teacher_id', params.teacher_id))
       .preload('teacher', (teacher) => teacher.select('id', 'name', 'profilePicture'))
       .preload('schedule', (schedule) =>
         schedule.preload('class', (class_) =>
           class_.preload('teacher', (teacher) => teacher.select('id', 'name'))
         )
       )
+
+    if (params.tanggal) {
+      query.where('date', params.tanggal)
+    }
 
     if (params.search) {
       query.where((q) => {
@@ -48,7 +54,7 @@ export class AnnouncementByTeacherService implements AnnouncementByTeacherContra
         query.orderBy(params.sortBy || 'id', params.sortOrder || 'asc')
     }
 
-    return await query.paginate(params.page, params.limit)
+    return await query.paginate(params.page || 1, params.limit || 10)
   }
 
   async getOne(id: number): Promise<any> {
