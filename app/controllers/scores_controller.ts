@@ -2,7 +2,6 @@ import type { HttpContext } from '@adonisjs/core/http'
 import { inject } from '@adonisjs/core'
 import ScoreService from '#services/score_service'
 import { createScoreValidator, updateScoreValidator } from '#validators/score'
-
 @inject()
 export default class ScoresController {
   constructor(private scroreService: ScoreService) {}
@@ -130,7 +129,7 @@ export default class ScoresController {
     }
   }
 
-  async getOwnScores({ auth }: HttpContext) {
+  async getOwnScores({ auth, response }: HttpContext) {
     const user = auth.user
     console.log(user)
     try {
@@ -139,7 +138,22 @@ export default class ScoresController {
         return { result }
       }
     } catch (error) {
-      return error
+      return response.status(error.status).send({ error })
+    }
+  }
+
+  async getMyScoring({ auth, request, response }: HttpContext) {
+    const user = auth.user
+    try {
+      if (user) {
+        const result = await this.scroreService.getMyScoring(request.all(), user)
+        return {
+          message: 'Score Ditemukan',
+          result,
+        }
+      }
+    } catch (error) {
+      return response.status(error.status).send({ error })
     }
   }
 }

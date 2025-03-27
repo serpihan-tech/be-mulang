@@ -45,12 +45,12 @@ router.group(() => {
 router.post('/check-role', [AuthController, 'checkRole']).as('auth.check-role')
 
 // ! This shit cause error on url '/' no matter what the prefixs are, be careful
-// cek return gambar
-router.get('student-profile/:url', async ({ params, response }) => { 
-    const filePath = app.makePath('storage/uploads/students-profile', params.url)
+router.get('image/:folder/:filename', async ({ params, response }) => { 
+    const filePath = app.makePath(`storage/uploads/${params.folder}`, params.filename)
 
-    return response.download(filePath) // {{ ngrok }}/namaFile ... e.g : localhost:3333/test.jpg
+    return response.download(filePath)
 })
+
 
 router.group(() => {
     // Ganti password user
@@ -89,6 +89,7 @@ router.group(() => {
 
     // Schedule / Jadwal
     router.group(() => {
+        router.get('/teacher/mine', [SchedulesController, 'teachersSchedule']).use(middleware.role(['teacher']))
         router.get('/', [SchedulesController, 'index'])
         router.post('/', [SchedulesController, 'store'])
         router.get('/:id', [SchedulesController, 'show'])
@@ -165,6 +166,7 @@ router.group(() => {
     // Scores
     router.group(() => {
         router.get('/mine', [ScoreController, 'getOwnScores']).middleware(middleware.role(['student']))
+        router.get('/my-scoring', [ScoreController, 'getMyScoring']).middleware(middleware.role(['teacher']))
         router.patch('/updates', [ScoreController, 'massUpdate']) // fitur naik kelas langsung beberapa murid
         router.get('/', [ScoreController, 'index'])
         router.post('/', [ScoreController, 'store'])

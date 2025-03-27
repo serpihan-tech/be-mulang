@@ -7,6 +7,7 @@ import AcademicYear from '#models/academic_year'
 import Schedule from '#models/schedule'
 import ScoreType from '#models/score_type'
 import { messages } from '../utils/validation_message.js'
+import Teacher from '#models/teacher'
 
 type ResultProps = {
   id: number
@@ -202,6 +203,25 @@ export default class ScoreService {
     }
 
     return result
+  }
+
+  async getMyScoring(params: any, user: any) {
+    const teacher = await Teacher.query().where('user_id', user.id).firstOrFail()
+    const modules = await Module.query().where('teacher_id', teacher.id)
+    // TODO: find score by the module id
+    const scores = await Score.query()
+      .preload('scoreType')
+      .preload('classStudent', (cs) => cs.preload('academicYear'))
+      .preload('module')
+      .whereIn(
+        'module_id',
+        modules.map((m) => m.id)
+      )
+      .innerJoin('class_students', 'scores.class_student_id', 'class_students.id')
+      .innerJoin('academic_years', 'class_students.academic_year_id', 'academic_years.id')
+      .orderBy('academic_years.status', 'desc')
+      .paginate(params.page || 1, params.limit || 10)
+    return { scores }
   }
 
   async create(data: any): Promise<any> {
