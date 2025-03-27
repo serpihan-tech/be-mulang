@@ -9,7 +9,21 @@ export const createAnnouncementAdmin = vine.compile(
     files: vine
       .file({
         size: '3mb',
-        extnames: ['jpg', 'png', 'jpeg'],
+        extnames: [
+          'jpg',
+          'png',
+          'jpeg',
+          'pdf',
+          'doc',
+          'docx',
+          'xls',
+          'xlsx',
+          'ppt',
+          'pptx',
+          'txt',
+          'zip',
+          'rar',
+        ],
       })
       .optional(),
     category: vine.enum([
@@ -33,7 +47,21 @@ export const updateAnnouncementAdmin = vine.compile(
     files: vine
       .file({
         size: '3mb',
-        extnames: ['jpg', 'png', 'jpeg'],
+        extnames: [
+          'jpg',
+          'png',
+          'jpeg',
+          'pdf',
+          'doc',
+          'docx',
+          'xls',
+          'xlsx',
+          'ppt',
+          'pptx',
+          'txt',
+          'zip',
+          'rar',
+        ],
       })
       .optional(),
     category: vine
