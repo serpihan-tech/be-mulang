@@ -166,6 +166,10 @@ export class AbsenceService implements AbsenceContract {
     }
   }
 
+  async create(data: any): Promise<any> {
+    const absence = await Absence.create(data)
+    return absence
+  }
   async update(absenceId: number, data: any): Promise<any> {
     const absence = await Absence.query().where('id', absenceId).firstOrFail()
     return await absence.merge(data).save()
