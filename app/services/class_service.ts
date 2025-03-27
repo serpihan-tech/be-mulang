@@ -83,11 +83,17 @@ export class ClassService implements ClassContract {
     }
   }
 
-  async getOne(id: number) {
+  async getOne(id: number, params?: any) {
+    const activeSemester = await this.activeSemester()
+
+    const semesterId = params.tahunAjar ? params.tahunAjar : activeSemester.id
+
     const theClass = await Class.query()
       .where('id', id)
       .select('id', 'name', 'teacher_id')
-      .withCount('classStudent', (cs) => cs.as('total_student'))
+      .withCount('classStudent', (cs) =>
+        cs.as('total_student').where('academic_year_id', semesterId)
+      )
       .preload('teacher', (t) => t.select('id', 'name'))
       .firstOrFail()
 

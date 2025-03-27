@@ -33,10 +33,12 @@ export default class ClassesController {
     }
   }
 
-  async show({ params, response }: HttpContext) {
+  async show({ params, request, response }: HttpContext) {
     const id: number = params.id
+    const data = request?.all()
+
     try {
-      const theClass = await this.classService.getOne(id)
+      const theClass = await this.classService.getOne(id, data!)
       return response.ok({
         messages: 'Kelas Berhasil ditampilkan',
         data: theClass,
