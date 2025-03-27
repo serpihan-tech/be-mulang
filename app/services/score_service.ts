@@ -211,7 +211,11 @@ export default class ScoreService {
     // TODO: find score by the module id
     const scores = await Score.query()
       .preload('scoreType')
-      .preload('classStudent', (cs) => cs.preload('academicYear'))
+      .preload('classStudent', (cs) => {
+        cs.preload('academicYear')
+        cs.preload('class')
+        cs.preload('student')
+      })
       .preload('module')
       .whereIn(
         'module_id',
@@ -219,8 +223,31 @@ export default class ScoreService {
       )
       .innerJoin('class_students', 'scores.class_student_id', 'class_students.id')
       .innerJoin('academic_years', 'class_students.academic_year_id', 'academic_years.id')
+      .innerJoin('classes', 'class_students.class_id', 'classes.id')
+      .innerJoin('modules', 'scores.module_id', 'modules.id')
+      .innerJoin('students', 'class_students.student_id', 'students.id')
+      .if(params.mapel, (query) => {
+        query.where('modules.name', 'like', `%${params.mapel}%`)
+      })
+      .if(params.kelas, (query) => {
+        query.where('classes.name', 'like', `%${params.kelas}%`)
+      })
+      .if(params.search, (query) => {
+        query.where('modules.name', 'like', `%${params.search}%`)
+        query.orWhere('classes.name', 'like', `%${params.search}%`)
+        query.orWhere('students.name', 'like', `%${params.search}%`)
+      })
+      .if(params.sortBy, (query) => {
+        query.if(params.sortBy === 'kelas', (q) =>
+          q.orderBy('classes.name', params.sortOrder || 'asc')
+        )
+        query.if(params.sortBy === 'mapel', (q) =>
+          q.orderBy('modules.name', params.sortOrder || 'asc')
+        )
+      })
       .orderBy('academic_years.status', 'desc')
       .paginate(params.page || 1, params.limit || 10)
+
     return { scores }
   }
 

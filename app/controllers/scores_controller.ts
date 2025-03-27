@@ -142,7 +142,7 @@ export default class ScoresController {
     }
   }
 
-  async getMyScoring({ auth, request, response }: HttpContext) {
+  async getMyScoring({ auth, request, response, params }: HttpContext) {
     const user = auth.user
     try {
       if (user) {
