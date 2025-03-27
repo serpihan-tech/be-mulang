@@ -3,6 +3,8 @@ import db from '@adonisjs/lucid/services/db'
 import UserContract from '../contracts/user_contract.js'
 import User from '#models/user'
 import ModelFilter from '../utils/filter_query.js'
+import { cuid } from '@adonisjs/core/helpers'
+import app from '@adonisjs/core/services/app'
 
 export default class TeacherService implements UserContract {
   async index(params: any, page?: number, limit?: number): Promise<any> {
@@ -40,6 +42,21 @@ export default class TeacherService implements UserContract {
         },
         { client: trx }
       )
+
+      if (data.teacher.profile_picture) {
+        const profilePicture = data.student_detail.profile_picture
+        const fileName = `${cuid()}.${profilePicture.extname}`
+
+        // Pindahkan file hanya jika `profile_picture` ada dan valid
+        await profilePicture.move(app.makePath('storage/uploads/teachers-profile'), {
+          name: fileName,
+        })
+
+        // Simpan path file ke dalam database
+        teacher.profilePicture = `teachers-profile/${fileName}`
+      }
+
+      await teacher.save()
 
       await trx.commit()
       return teacher
@@ -79,6 +96,20 @@ export default class TeacherService implements UserContract {
         address: data.teacher?.address ?? teacher.address,
         profilePicture: data.teacher?.profile_picture ?? teacher.profilePicture,
       })
+
+      if (data.teacher.profile_picture) {
+        const profilePicture = data.student_detail.profile_picture
+        const fileName = `${cuid()}.${profilePicture.extname}`
+
+        // Pindahkan file hanya jika `profile_picture` ada dan valid
+        await profilePicture.move(app.makePath('storage/uploads/teachers-profile'), {
+          name: fileName,
+        })
+
+        // Simpan path file ke dalam database
+        teacher.profilePicture = `teachers-profile/${fileName}`
+      }
+
       await teacher.save()
 
       await trx.commit()

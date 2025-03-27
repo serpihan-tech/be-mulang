@@ -29,23 +29,23 @@ export class ClassService implements ClassContract {
         break
     }
 
-    return await theClass.paginate(params.page || 1, params.limit || 10)
+    const classes = await theClass.paginate(params.page, params.limit)
 
-    // const formattedData = theClass.all().map((item) => ({
-    //   id: item.id,
-    //   name: item.name,
-    //   teacherId: item.teacherId,
-    //   teacher: {
-    //     id: item.teacher.id,
-    //     name: item.teacher.name,
-    //   },
-    //   totalStudents: item.$extras.total_student,
-    // }))
+    const formattedData = classes.map((item) => ({
+      id: item.id,
+      name: item.name,
+      teacherId: item.teacherId,
+      teacher: {
+        id: item.teacher.id,
+        name: item.teacher.name,
+      },
+      totalStudents: item.$extras.total_student,
+    }))
 
-    // return {
-    //   meta: theClass.getMeta(),
-    //   theClass: formattedData,
-    // }
+    return {
+      meta: classes.getMeta(),
+      theClass: formattedData,
+    }
   }
 
   async getOne(id: number) {
@@ -105,8 +105,8 @@ export class ClassService implements ClassContract {
     return await theClass.delete()
   }
 
-  async countAllStudents(classId: number) {
-    const theClass = await Class.query().where('id', classId).firstOrFail()
+  async myClass(teacherId: number) {
+    const theClass = await Class.query().where('teacher_id', teacherId).firstOrFail()
     return theClass
   }
 }

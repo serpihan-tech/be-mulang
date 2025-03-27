@@ -14,6 +14,15 @@ export default class Admin extends BaseModel {
   @column()
   declare userId: number
 
+  @column()
+  declare phone: string
+
+  @column()
+  declare profilePicture: string
+
+  @column()
+  declare address: string
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 

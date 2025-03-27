@@ -1,6 +1,10 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import { inject } from '@adonisjs/core'
 import { AnnouncementByTeacherService } from '#services/announcement_by_teacher_service'
+import {
+  createAnnouncementTeacher,
+  updateAnnouncementTeacher,
+} from '#validators/announcement_teacher'
 
 @inject()
 export default class AnnouncementByTeachersController {
@@ -32,7 +36,11 @@ export default class AnnouncementByTeachersController {
 
   public async store({ request, response }: HttpContext) {
     try {
-      const announcement = await this.announcementService.create(request.all())
+      const data = request.all()
+
+      await createAnnouncementTeacher.validate(data)
+
+      const announcement = await this.announcementService.create(data)
       return {
         message: 'Pengumuman Berhasil Di Tambahkan',
         announcement,
@@ -44,7 +52,11 @@ export default class AnnouncementByTeachersController {
 
   public async update({ params, request, response }: HttpContext) {
     try {
-      const announcement = await this.announcementService.update(request.all(), params.id)
+      const data = request.all()
+
+      await updateAnnouncementTeacher.validate(data)
+
+      const announcement = await this.announcementService.update(data, params.id)
       return {
         message: 'Pengumuman Berhasil Di Ubah',
         announcement,

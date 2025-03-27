@@ -34,4 +34,11 @@ export default interface ScheduleContract {
    * @returns void
    */
   delete(id: number): Promise<void>
+
+  /**
+   * Mengambil semua jadwal guru
+   * @param teacherId
+   * @returns jadwal
+   */
+  TeachersSchedule(teacherId: number): Promise<any[]>
 }
