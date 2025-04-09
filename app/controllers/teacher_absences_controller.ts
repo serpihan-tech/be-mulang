@@ -5,6 +5,7 @@ import {
   createTeacherAbsenceValidator,
   updateTeacherAbsenceValidator,
 } from '#validators/teacher_absence'
+import User from '#models/user'
 
 @inject()
 export default class TeacherAbsencesController {
@@ -82,6 +83,23 @@ export default class TeacherAbsencesController {
     } catch (error) {
       if (error.code === 'E_ROW_NOT_FOUND')
         return response.notFound({ error: { message: 'ID Absensi Guru Tidak Ditemukan' } })
+      return response.internalServerError({ error: { message: error.message } })
+    }
+  }
+
+  async getMineToday({ auth, response }: HttpContext) {
+    try {
+      const user = auth.getUserOrFail()
+      await user.load('teacher')
+
+      if (!user.teacher) {
+        return response.badRequest({ error: { message: 'Data Guru Tidak Ditemukan' } })
+      }
+
+      const teacherAbsence = await this.teacherAbsenceService.presenceToday(user.teacher.id)
+
+      return response.ok({ message: 'Sukses Mendapatkan Data Absensi', teacherAbsence })
+    } catch (error) {
       return response.internalServerError({ error: { message: error.message } })
     }
   }

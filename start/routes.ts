@@ -177,6 +177,7 @@ router.group(() => {
 
     // Teacher Absences
     router.group(() => {
+        router.get('/mine-today', [TeacherAbsenceController, 'getMineToday']).use(middleware.role(['teacher']))
         router.get('/', [TeacherAbsenceController, 'index'])
         router.post('/', [TeacherAbsenceController, 'store'])
         router.get('/:id', [TeacherAbsenceController, 'show'])

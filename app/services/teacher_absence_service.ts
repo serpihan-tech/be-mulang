@@ -61,4 +61,17 @@ export class TeacherAbsenceService implements TeacherAbsenceContract {
 
     await teacherAbsence.delete()
   }
+
+  async presenceToday(teacherId: number) {
+    const now = new Date()
+    now.setHours(7, 0, 0, 0)
+
+    console.log('presenceToday : ', now)
+    const teacherAbsence = await TeacherAbsence.query()
+      .where('teacher_id', teacherId)
+      .where('date', now)
+      .first()
+
+    return teacherAbsence
+  }
 }
