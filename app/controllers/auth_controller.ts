@@ -30,7 +30,7 @@ export default class AuthController {
       const loginLimiter = limiter.use({
         requests: 5,
         duration: '1 min',
-        blockDuration: '20 mins',
+        blockDuration: '30 mins',
       })
 
       /**
