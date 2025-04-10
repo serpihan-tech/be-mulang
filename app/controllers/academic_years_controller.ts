@@ -56,6 +56,8 @@ export default class AcademicYearsController {
         academicYears,
       })
     } catch (error) {
+      if (error.code === 'E_ROW_NOT_FOUND')
+        return response.notFound({ error: { message: 'ID Tahun Ajaran Tidak Ditemukan' } })
       return response.badRequest({ error })
     }
   }
@@ -70,6 +72,7 @@ export default class AcademicYearsController {
    */
   async update({ params, request, response }: HttpContext) {
     const academicYearId: number = params.id
+    // console.log('academic year id : ', academicYearId)
     try {
       await updateAcademicYearValidator.validate(request.all())
       const academicYear = await this.academicYearService.update(request.all(), academicYearId)
@@ -79,6 +82,8 @@ export default class AcademicYearsController {
         academicYear,
       })
     } catch (error) {
+      if (error.code === 'E_ROW_NOT_FOUND')
+        return response.notFound({ error: { message: 'ID Tahun Ajaran Tidak Ditemukan' } })
       return response.badRequest({ error })
     }
   }
@@ -94,6 +99,8 @@ export default class AcademicYearsController {
         message: 'Kelas Berhasil Dihapus',
       })
     } catch (error) {
+      if (error.code === 'E_ROW_NOT_FOUND')
+        return response.notFound({ error: { message: 'ID Tahun Ajaran Tidak Ditemukan' } })
       return response.badRequest({ error })
     }
   }

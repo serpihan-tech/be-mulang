@@ -49,17 +49,11 @@ export default class AcademicYearService implements AcademicYearContract {
   }
 
   async update(data: any, academicYearId: number): Promise<any> {
-    const trx = await db.transaction()
-    try {
-      const academicYear = await AcademicYear.findOrFail(academicYearId)
-      academicYear.merge(data)
-      await academicYear.useTransaction(trx).save()
-      await trx.commit()
-      return academicYear
-    } catch (error) {
-      await trx.rollback()
-      throw error
-    }
+    // console.log('update', data, academicYearId)
+    const academicYear = await AcademicYear.findOrFail(academicYearId)
+    await academicYear.merge(data).save()
+
+    return academicYear
   }
 
   async delete(id: number) {

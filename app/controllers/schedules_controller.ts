@@ -79,6 +79,7 @@ export default class SchedulesController {
         return response.badRequest({ error: { message: 'Data Guru Tidak Ditemukan' } })
       }
 
+      // console.log('tecaher id di teachers schedule : ', user.teacher)
       const teachers = await this.scheduleService.TeachersSchedule(user.teacher.id)
       return response.ok({ message: 'Jadwal Berhasil Ditemukan', teachers })
     } catch (error) {

@@ -15,4 +15,5 @@ export const messages = {
   'database.unique': '{{ field }} tidak bisa digunakan, coba {{ field }} lain',
   'sameAs': '{{ field }} harus sama dengan {{ otherField }}',
   'notSameAs': '{{ field }} harus tidak boleh sama dengan {{ otherField }}',
+  'boolean': '{{ field }} harus berupa boolean ( benar / salah )',
 }
