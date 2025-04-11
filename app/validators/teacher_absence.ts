@@ -13,7 +13,8 @@ export const createTeacherAbsenceValidator = vine.compile(
     check_out_time: vine
       .date({ formats: ['HH:mm:ss'] })
       .optional()
-      .requiredWhen('status', '=', 'Hadir'),
+      // .requiredWhen('status', '=', 'Hadir')
+      .nullable(),
   })
 )
 

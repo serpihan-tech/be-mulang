@@ -24,6 +24,7 @@ const AnnouncementByAdmins = () => import('#controllers/announcement_by_admins_c
 const AnnouncementByTeachers = () => import('#controllers/announcement_by_teachers_controller')
 const ScoreController = () => import('#controllers/scores_controller')
 const TeacherAbsenceController = () => import('#controllers/teacher_absences_controller')
+const SchoolCalendarsController = () => import('#controllers/school_calendars_controller')
 
 import { middleware } from '#start/kernel'
 import transmit from '@adonisjs/transmit/services/main'
@@ -102,8 +103,8 @@ router.group(() => {
         router.get('/mine', [AbsenceController, 'getMyAbsences']) // * untuk data/fitur untuk siswa yang sedang login
         
         router.get('/', [AbsenceController, 'index'])
-        // router.post('/', [AbsenceController, 'store']) // TODO : Implementasi Absensi
-        // router.get('/:id', [AbsenceController, 'show'])
+        router.post('/', [AbsenceController, 'store']) // TODO : Implementasi Absensi
+        router.get('/:id', [AbsenceController, 'show'])
         router.patch('/:id', [AbsenceController, 'update'])
         router.delete('/:id', [AbsenceController, 'destroy'])
     }).prefix('/absences')
@@ -177,12 +178,22 @@ router.group(() => {
 
     // Teacher Absences
     router.group(() => {
+        router.get('/mine-today', [TeacherAbsenceController, 'getMineToday']).use(middleware.role(['teacher']))
         router.get('/', [TeacherAbsenceController, 'index'])
         router.post('/', [TeacherAbsenceController, 'store'])
         router.get('/:id', [TeacherAbsenceController, 'show'])
         router.patch('/:id', [TeacherAbsenceController, 'update'])
         router.delete('/:id', [TeacherAbsenceController, 'destroy'])
     }).prefix('/teacher-absences')
+
+    // School Calendar / Kalender Akademik Sekolah
+    router.group(() => {
+        router.get('/', [SchoolCalendarsController, 'index'])
+        router.post('/', [SchoolCalendarsController, 'store'])
+        router.get('/:id', [SchoolCalendarsController, 'show'])
+        router.patch('/:id', [SchoolCalendarsController, 'update'])
+        router.delete('/:id', [SchoolCalendarsController, 'destroy'])
+    }).prefix('/school-calendars')
 
 }).use(middleware.auth())
 

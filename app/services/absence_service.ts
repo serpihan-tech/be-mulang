@@ -6,7 +6,21 @@ import Database from '@adonisjs/lucid/services/db'
 export class AbsenceService implements AbsenceContract {
   // TODO : Implement
   getById(absenceId: number): Promise<any> {
-    const absence = Absence.query().where('id', absenceId).firstOrFail()
+    const absence = Absence.query()
+      .where('id', absenceId)
+      .preload('schedule', (s) => {
+        s.select(['id', 'class_id', 'days', 'start_time', 'end_time'])
+      })
+      .preload('classStudent', (cs) => {
+        cs.select(['id', 'class_id', 'student_id', 'academic_year_id'])
+        cs.preload('academicYear', (ay) => ay.select(['id', 'semester']))
+        cs.preload('class', (c) => c.select(['id', 'name']))
+        cs.preload('student', (s) => {
+          s.select(['id', 'name'])
+          s.preload('studentDetail', (sd) => sd.select(['nis', 'nisn']))
+        })
+      })
+      .firstOrFail()
     return absence
   }
 
@@ -92,6 +106,9 @@ export class AbsenceService implements AbsenceContract {
       .if(params.nis, (query) => {
         query.where('student_details.nis', params.nis)
       })
+      .if(params.tanggal, (query) => {
+        query.where('absences.date', '=', params.tanggal)
+      })
       .if(params.search, (query) => {
         query.where((subquery) => {
           subquery
@@ -139,30 +156,9 @@ export class AbsenceService implements AbsenceContract {
           s.preload('studentDetail', (sd) => sd.select(['nis', 'nisn']))
         })
       })
-      // build params.search for nis and date
-      .if(params.search, (query: any) => {
-        query.where((subQuery: any) => {
-          subQuery
-            .where('date', 'like', `%${params.search}%`)
-            .orWhereIn('class_student_id', (sub: any) => {
-              sub
-                .from('class_students as cs')
-                .innerJoin('students as s', 's.id', 'cs.student_id')
-                .innerJoin('student_details as sd', 'sd.student_id', 's.id')
-                .select('cs.id')
-                .where('sd.nis', 'like', `%${params.search}%`)
-            })
-          //sortBy nis if params.sortBy === 'nis'
-          .if (params.sortBy === 'nis') {
-            subQuery.orderBy('sd.nis', params.sortOrder || 'asc')
-          }
-        })
-      })
-      //param
-      .paginate(params.page || 1, params.limit)
 
     const absences = await absencesQuery.paginate(params.page || 1, params.limit || 10)
-    console.log(absences)
+    console.log('absences params:', params)
     return {
       firstSemester,
       secondSemester,
@@ -170,6 +166,10 @@ export class AbsenceService implements AbsenceContract {
     }
   }
 
+  async create(data: any): Promise<any> {
+    const absence = await Absence.create(data)
+    return absence
+  }
   async update(absenceId: number, data: any): Promise<any> {
     const absence = await Absence.query().where('id', absenceId).firstOrFail()
     return await absence.merge(data).save()

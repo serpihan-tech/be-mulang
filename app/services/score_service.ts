@@ -71,7 +71,7 @@ export default class ScoreService {
     return scores
   }
 
-  async getOwnScores(user: any): Promise<any> {
+  async getOwnScores(user: any, params?: any): Promise<any> {
     const student = await Student.query().where('user_id', user.id).firstOrFail()
     // to string
     const [...classStudentsIds] = await ClassStudent.query()
@@ -131,7 +131,6 @@ export default class ScoreService {
       .preload('module', (mq) => mq.select('id', 'name', 'academic_year_id'))
       .preload('scoreType')
       .innerJoin('modules', 'scores.module_id', 'modules.id')
-      .innerJoin('class_students', 'scores.class_student_id', 'class_students.id')
       .innerJoin('academic_years', 'modules.academic_year_id', 'academic_years.id')
 
     // Build dynamic where
@@ -349,40 +348,39 @@ export default class ScoreService {
       .firstOrFail()
 
     return { scores }
-  }
+    // return academicYears.map((academicYear) => {
+    //   const moduleMap = new Map<number, any>()
 
-  async create(data: any): Promise<any> {
-    const trx = await db.transaction()
-    const scores = await Score.create(data, { client: trx })
-    await trx.commit()
+    //   for (const module of modules) {
+    //     if (module.academicYearId !== academicYear.id) continue
 
-    return scores
-  }
+    //     moduleMap.set(module.id, {
+    //       id: module.id,
+    //       name: module.name,
+    //       scores: {
+    //         taskList: [],
+    //         task: null,
+    //         uts: null,
+    //         uas: null,
+    //         totalList: [],
+    //         total: null,
+    //       },
+    //     })
+    //   }
 
-  async update(data: any, id: any): Promise<any> {
-    const trx = await db.transaction()
+    //   for (const score of scores) {
+    //     const moduleData = moduleMap.get(score.moduleId)
+    //     if (!moduleData) continue
 
-    const score = await Score.query({ client: trx }).where('id', id).firstOrFail()
-    score.merge(data)
-
-    await score.useTransaction(trx).save()
-    await trx.commit()
-
-    return score
-  }
-
-  async massUpdate(data: any): Promise<any> {
-    await Score.updateOrCreate(
-      {
-        classStudentId: data.class_student_id,
-        moduleId: data.module_id,
-        scoreTypeId: data.score_type_id,
-        description: data.description,
-      }, // Search criteria (harus unik)
-      {
-        score: data.score,
-      } // Data yang akan diupdate
-    )
+    //     if (score.scoreTypeId === 1) {
+    //       moduleData.scores.taskList.push(score.score)
+    //     scoreTypeId: data.score_type_id,
+    //     description: data.description,
+    //   }, // Search criteria (harus unik)
+    //   {
+    //     score: data.score,
+    //   } // Data yang akan diupdate
+    // )
   }
 
   async delete(id: number): Promise<any> {

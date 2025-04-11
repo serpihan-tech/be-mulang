@@ -5,11 +5,11 @@ export default interface SchoolCalendarContract {
    */
   getAll(): Promise<any>
 
-  getOne(): Promise<Object>
+  getOne(id: number): Promise<Object>
 
-  create(): Promise<Object>
+  create(data: any): Promise<Object>
 
-  update(): Promise<Object>
+  update(id: number, data: any): Promise<Object>
 
-  delete(): Promise<void>
+  delete(id: number): Promise<void>
 }
