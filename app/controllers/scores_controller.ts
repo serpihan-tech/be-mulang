@@ -16,7 +16,7 @@ export default class ScoresController {
         scores,
       })
     } catch (error) {
-      return response.status(error.status).send({ error })
+      return response.badRequest({ error: { message: error.message } })
     }
   }
 
@@ -144,7 +144,7 @@ export default class ScoresController {
         return response.unauthorized({ error: { message: 'Harap Login Terlebih Dahulu' } })
       }
     } catch (error) {
-      return response.status(error.status).send({ error })
+      return response.badRequest({ error })
     }
   }
 
@@ -159,7 +159,7 @@ export default class ScoresController {
         }
       }
     } catch (error) {
-      return response.status(error.status).send({ error })
+      return response.badRequest({ error: { message: error.message } })
     }
   }
 }

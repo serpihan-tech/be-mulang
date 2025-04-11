@@ -131,6 +131,7 @@ export default class ScoreService {
       .preload('module', (mq) => mq.select('id', 'name', 'academic_year_id'))
       .preload('scoreType')
       .innerJoin('modules', 'scores.module_id', 'modules.id')
+      .innerJoin('class_students', 'scores.class_student_id', 'class_students.id') // ✅ JOIN ini wajib!
       .innerJoin('academic_years', 'modules.academic_year_id', 'academic_years.id')
 
     // Build dynamic where
@@ -381,6 +382,40 @@ export default class ScoreService {
     //     score: data.score,
     //   } // Data yang akan diupdate
     // )
+  }
+
+  async create(data: any): Promise<any> {
+    const trx = await db.transaction()
+    const scores = await Score.create(data, { client: trx })
+    await trx.commit()
+
+    return scores
+  }
+
+  async update(data: any, id: any): Promise<any> {
+    const trx = await db.transaction()
+
+    const score = await Score.query({ client: trx }).where('id', id).firstOrFail()
+    score.merge(data)
+
+    await score.useTransaction(trx).save()
+    await trx.commit()
+
+    return score
+  }
+
+  async massUpdate(data: any): Promise<any> {
+    await Score.updateOrCreate(
+      {
+        classStudentId: data.class_student_id,
+        moduleId: data.module_id,
+        scoreTypeId: data.score_type_id,
+        description: data.description,
+      }, // Search criteria (harus unik)
+      {
+        score: data.score,
+      } // Data yang akan diupdate
+    )
   }
 
   async delete(id: number): Promise<any> {
