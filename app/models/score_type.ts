@@ -11,6 +11,9 @@ export default class ScoreType extends BaseModel {
   declare name: string
 
   @column()
+  declare taskQuota: number
+
+  @column()
   declare weight: number
 
   @column.dateTime({ autoCreate: true })
