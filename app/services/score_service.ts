@@ -172,6 +172,8 @@ export default class ScoreService {
       }
     })
 
+    const taskScoreType = await ScoreType.query().where('id', 1).firstOrFail()
+
     const groupedResult = result.reduce((acc, item) => {
       const { academicYear, module, scoreType } = item
 
@@ -239,6 +241,17 @@ export default class ScoreService {
             })
             .reduce((sum: number, val: number) => sum + val, 0)
           module.scores.task = totalSum / module.scores.taskList.length
+        }
+        const a = taskScoreType.taskQuota - module.scores.taskList.length
+        //for null value
+        if (taskScoreType.taskQuota !== module.scores.taskList.length) {
+          for (let i = 0; i < a; i++) {
+            module.scores.taskList.push({
+              score: null,
+              description: null,
+              scoreType: null,
+            })
+          }
         }
       })
     })
