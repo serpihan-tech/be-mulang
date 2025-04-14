@@ -295,7 +295,11 @@ export default class StudentsService implements StudentContract, UserContract {
 
   async delete(id: number): Promise<any> {
     const student = await Student.query().where('id', id).firstOrFail()
-    return await student.user.delete()
+    const name = student.name
+
+    await User.query().where('id', student.userId).delete()
+
+    return name
   }
 
   /**

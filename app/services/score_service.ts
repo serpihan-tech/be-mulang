@@ -269,10 +269,7 @@ export default class ScoreService {
     })
 
     // Akhirnya return groupedResult
-    return {
-      meta: scoreResult.serialize().meta,
-      data: groupedResult,
-    }
+    return groupedResult
 
     // return {
     //   meta: scoreResult.serialize().meta,

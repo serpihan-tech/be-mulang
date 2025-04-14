@@ -54,6 +54,16 @@ export default class StudentsController {
       await createClassStudentValidator.validate(request.input('class_student'))
 
       const student = await this.studentsService.create(request.all())
+
+      const data = request.all()
+
+      // Ambil file profile_picture dari request.file() secara terpisah
+      const profilePicture = request.file('student_detail.profile_picture')
+
+      if (profilePicture) {
+        data.student_detail.profile_picture = profilePicture
+      }
+
       return response.created({
         message: 'Murid Berhasil Ditambahkan',
         student,
@@ -102,8 +112,10 @@ export default class StudentsController {
     try {
       const student = await this.studentsService.delete(params.id)
 
-      return response.ok({ message: `Murid atas nama (${student?.name}) Berhasil Dihapus!` })
+      return response.ok({ message: `Murid atas nama (${student}) Berhasil Dihapus!` })
     } catch (error) {
+      if (error.code !== 'E_ROW_NOT_FOUND')
+        return response.badRequest({ error: { message: error.message } })
       return response.notFound({ error: { message: 'ID Murid Tidak Ditemukan' } })
     }
   }
