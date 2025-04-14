@@ -168,7 +168,7 @@ export default class StudentsService implements StudentContract, UserContract {
         {
           userId: user.id,
           name: data.student.name,
-          isGraduate: data.student.is_graduate,
+          isGraduate: data.student.is_graduate || 1,
         },
         { client: trx }
       )
@@ -192,14 +192,26 @@ export default class StudentsService implements StudentContract, UserContract {
 
         // Simpan path file ke dalam database
         student.studentDetail.profilePicture = `students-profile/${fileName}`
+        await student.studentDetail.save()
       }
 
-      await student.studentDetail.save()
+      if (data.class_student) {
+        await ClassStudent.create(
+          {
+            studentId: student.id,
+            classId: data.class_student.class_id,
+            academicYearId: data.class_student.academic_year_id,
+          },
+          { client: trx }
+        )
+      }
 
       await student.useTransaction(trx).load('user')
       await student.useTransaction(trx).load('studentDetail')
+      await student.useTransaction(trx).load('classStudent')
 
       await trx.commit()
+
       return student
     } catch (error) {
       await trx.rollback()

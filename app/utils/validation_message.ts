@@ -12,7 +12,8 @@ export const messages = {
   'database.exists': '{{ field }} tidak ditemukan',
   'file': '{{ field }} harus berupa file dengan ekstensi {{ extensions }}',
   'object': '{{ field }} harus berupa objek',
-  'database.unique': '{{ field }} tidak bisa digunakan, coba {{ field }} lain',
+  'database.unique':
+    '{{ field }} tidak bisa digunakan (duplikasi, atau hal lain), coba {{ field }} lain',
   'sameAs': '{{ field }} harus sama dengan {{ otherField }}',
   'notSameAs': '{{ field }} harus tidak boleh sama dengan {{ otherField }}',
   'boolean': '{{ field }} harus berupa boolean ( benar / salah )',

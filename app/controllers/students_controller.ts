@@ -4,8 +4,10 @@ import { inject } from '@adonisjs/core'
 import Student from '#models/student'
 import { createUserValidator, updateUserValidator } from '#validators/user'
 import {
+  createClassStudentValidator,
   createStudentDetailValidator,
   createStudentValidator,
+  updateClassStudentValidator,
   updateStudentDetailValidator,
   updateStudentValidator,
 } from '#validators/student'
@@ -49,6 +51,7 @@ export default class StudentsController {
       await createUserValidator.validate(request.input('user'))
       await createStudentValidator.validate(request.input('student'))
       await createStudentDetailValidator.validate(request.input('student_detail'))
+      await createClassStudentValidator.validate(request.input('class_student'))
 
       const student = await this.studentsService.create(request.all())
       return response.created({
@@ -56,7 +59,7 @@ export default class StudentsController {
         student,
       })
     } catch (error) {
-      return response.status(error.status).send({ error })
+      return response.badRequest({ error })
     }
   }
 
@@ -76,6 +79,7 @@ export default class StudentsController {
       await updateUserValidator.validate(request.input('user'))
       await updateStudentValidator.validate(request.input('student'))
       await updateStudentDetailValidator.validate(request.input('student_detail'))
+      await updateClassStudentValidator.validate(request.input('class_student'))
 
       const data = request.all()
 

@@ -14,8 +14,8 @@ export const createStudentDetailValidator = vine.compile(
     parents_phone: vine.string().minLength(11).maxLength(13),
     parents_job: vine.string(),
     students_phone: vine.string().minLength(11).maxLength(13),
-    nis: vine.string(),
-    nisn: vine.string(),
+    nis: vine.string().unique({ table: 'student_details', column: 'nis' }),
+    nisn: vine.string().unique({ table: 'student_details', column: 'nisn' }),
     gender: vine.enum(['laki-laki', 'perempuan']),
     religion: vine.enum(['Kristen', 'Katolik', 'Islam', 'Hindu', 'Budha', 'Konghucu']),
     birth_place: vine.string().optional(),
@@ -30,9 +30,24 @@ export const createStudentDetailValidator = vine.compile(
   })
 )
 
+export const createClassStudentValidator = vine.compile(
+  vine.object({
+    class_id: vine.number().exists({ table: 'classes', column: 'id' }),
+    academic_year_id: vine.number().exists({ table: 'academic_years', column: 'id' }),
+  })
+)
+
 export const updateStudentValidator = vine.compile(
   vine.object({
     name: vine.string().optional(),
+  })
+)
+
+export const updateClassStudentValidator = vine.compile(
+  vine.object({
+    student_id: vine.number().exists({ table: 'students', column: 'id' }).optional(),
+    class_id: vine.number().exists({ table: 'classes', column: 'id' }).optional(),
+    academic_year_id: vine.number().exists({ table: 'academic_years', column: 'id' }).optional(),
   })
 )
 
@@ -75,9 +90,13 @@ const fields = {
   nisn: 'NISN',
   address: 'Alamat',
   profile_picture: 'Foto Profil',
+  class_id: 'ID Kelas',
+  academic_year_id: 'ID Tahun Ajar',
 }
 
 createStudentValidator.messagesProvider = new SimpleMessagesProvider(messages, fields)
 createStudentDetailValidator.messagesProvider = new SimpleMessagesProvider(messages, fields)
+createClassStudentValidator.messagesProvider = new SimpleMessagesProvider(messages, fields)
 updateStudentValidator.messagesProvider = new SimpleMessagesProvider(messages, fields)
 updateStudentDetailValidator.messagesProvider = new SimpleMessagesProvider(messages, fields)
+updateClassStudentValidator.messagesProvider = new SimpleMessagesProvider(messages, fields)
