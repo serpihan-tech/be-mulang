@@ -72,8 +72,9 @@ export default class ScoreService {
   }
 
   async getOwnScores(user: any): Promise<any> {
+    // Find the student user
     const student = await Student.query().where('user_id', user.id).firstOrFail()
-    // to string
+    // Find the class student from student result
     const [...classStudentsIds] = await ClassStudent.query()
       .select('id', 'academic_year_id', 'class_id')
       .where('student_id', student.id)
@@ -268,24 +269,74 @@ export default class ScoreService {
       })
     })
 
-    // Akhirnya return groupedResult
     return {
       meta: scoreResult.serialize().meta,
       data: groupedResult,
     }
-
-    // return {
-    //   meta: scoreResult.serialize().meta,
-    //   data: result,
-    // }
-
-    // return score
   }
 
   async getMyScoring(params: any, user: any) {
     const teacher = await Teacher.query().where('user_id', user.id).firstOrFail()
+    const ac = await AcademicYear.query().orderBy('status', 'desc')
+
+    const modules = await Module.query()
+      .where('teacher_id', teacher.id)
+      .whereIn(
+        'academic_year_id',
+        ac.map((ay) => ay.id)
+      )
+
+    const score = await Score.query()
+      .preload('scoreType')
+      .whereIn(
+        'module_id',
+        modules.map((m) => m.id)
+      )
+      .preload('classStudent', (cs) => {
+        cs.preload('student')
+      })
+    const schedule = await Schedule.query()
+      .whereIn(
+        'module_id',
+        modules.map((m) => m.id)
+      )
+      .preload('class')
+
+    const result = ac.map((ay) => {
+      const filteredModules = modules.filter((m) => m.academicYearId === ay.id)
+
+      return {
+        academicYear: ay,
+        modules: filteredModules.map((m) => {
+          const filteredSchedules = schedule.filter((s) => s.moduleId === m.id)
+
+          return {
+            module: m,
+            schedule: filteredSchedules.map((sch) => {
+              const relatedScores = score.filter((sc) => {
+                return sc.moduleId === sch.moduleId && sc.classStudent.classId === sch.classId
+              })
+
+              return {
+                ...sch.serialize(), // schedule fields
+                scores: relatedScores.filter((rSc) =>
+                  rSc.serialize().classStudent.academicYearId === ay.id ? rSc.serialize() : null
+                ), // attach related scores
+              }
+            }),
+          }
+        }),
+      }
+    })
+
+    return {
+      result,
+    }
+  }
+
+  async getRecapScoring(params: any, user: any) {
+    const teacher = await Teacher.query().where('user_id', user.id).firstOrFail()
     const modules = await Module.query().where('teacher_id', teacher.id)
-    // TODO: find score by the module id
     const scores = await Score.query()
       .preload('scoreType')
       .preload('classStudent', (cs) => {
@@ -298,33 +349,10 @@ export default class ScoreService {
         'module_id',
         modules.map((m) => m.id)
       )
-      .innerJoin('class_students', 'scores.class_student_id', 'class_students.id')
-      .innerJoin('academic_years', 'class_students.academic_year_id', 'academic_years.id')
-      .innerJoin('classes', 'class_students.class_id', 'classes.id')
-      .innerJoin('modules', 'scores.module_id', 'modules.id')
-      .innerJoin('students', 'class_students.student_id', 'students.id')
-      .if(params.mapel, (query) => {
-        query.where('modules.name', 'like', `%${params.mapel}%`)
-      })
-      .if(params.kelas, (query) => {
-        query.where('classes.name', 'like', `%${params.kelas}%`)
-      })
-      .if(params.search, (query) => {
-        query.where('modules.name', 'like', `%${params.search}%`)
-        query.orWhere('classes.name', 'like', `%${params.search}%`)
-        query.orWhere('students.name', 'like', `%${params.search}%`)
-      })
-      .if(params.sortBy, (query) => {
-        query.if(params.sortBy === 'kelas', (q) =>
-          q.orderBy('classes.name', params.sortOrder || 'asc')
-        )
-        query.if(params.sortBy === 'mapel', (q) =>
-          q.orderBy('modules.name', params.sortOrder || 'asc')
-        )
-      })
-      .orderBy('academic_years.status', 'desc')
-      .paginate(params.page || 1, params.limit || 10)
-
+      .where('class_student_id', params.class_student_id)
+      .where('module_id', params.module_id)
+      .where('score_type_id', params.score_type_id)
+      .firstOrFail()
     return { scores }
   }
 
