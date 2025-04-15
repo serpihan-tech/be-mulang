@@ -370,19 +370,51 @@ export default class ScoreService {
     const teacher = await Teacher.query().where('user_id', user.id).firstOrFail()
     const classes = await Class.query().where('teacher_id', teacher.id).firstOrFail()
 
-    const schedule = await Schedule.query().where('class_id', classes.id).preload('module')
+    const schedule = await Schedule.query()
+      .where('class_id', classes.id)
+      .preload('module')
+      .select('module_id', 'class_id')
 
     const ac = await AcademicYear.query().orderBy('status', 'desc')
 
-    const scores = await Score.query()
+    const classStudent = await ClassStudent.query().where('class_id', classes.id).preload('student')
+    const score = await Score.query()
       .preload('scoreType')
       .whereIn(
         'module_id',
-        schedule.map((s) => s.moduleId)
+        schedule.map((s) => s.module.id)
       )
-      .preload('classStudent', (cs) => {
-        cs.preload('student')
+
+    const result = ac.map((ay) => {
+      const filteredSchedule = schedule.filter((s) => {
+        return s.module.academicYearId === ay.id
       })
+
+      return {
+        academicYear: ay,
+        modules: filteredSchedule.map((s) => {
+          const filteredClassStudent = classStudent.filter((cs) => {
+            return cs.academicYearId === s.module.academicYearId
+          })
+
+          return {
+            module: s.module,
+            classStudents: filteredClassStudent.map((cs) => {
+              const relatedScores = score.filter((sc) => {
+                return sc.moduleId === s.module.id && sc.classStudentId === cs.id
+              })
+
+              return {
+                ...cs.serialize(), // class student fields
+                scores: relatedScores, // attach related scores
+              }
+            }),
+          }
+        }),
+      }
+    })
+
+    return result
   }
 
   async updateMyScoring(params: any, user: any) {
