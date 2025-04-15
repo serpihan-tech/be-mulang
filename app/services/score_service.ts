@@ -6,64 +6,68 @@ import Module from '#models/module'
 import AcademicYear from '#models/academic_year'
 import Schedule from '#models/schedule'
 import ScoreType from '#models/score_type'
-import { messages } from '../utils/validation_message.js'
 import Teacher from '#models/teacher'
-import { Database } from '@adonisjs/lucid/database'
 import Class from '#models/class'
+import { DateTime } from 'luxon'
 
-type ResultProps = {
-  id: number
-  name: string
-  scores: {
-    taskList: any[]
-    task: any
-    uts: any
-    uas: any
-    totalList: any[]
-    total: any
-  }
-}
 export default class ScoreService {
+  private async getActiveSemester() {
+    const now =
+      DateTime.now().setZone('Asia/Jakarta').toSQL() ??
+      new Date().toISOString().slice(0, 19).replace('T', ' ')
+    console.log(now)
+
+    return await AcademicYear.query()
+      .where('status', 1)
+      .where('date_start', '<', now)
+      .where('date_end', '>', now)
+      .firstOrFail()
+  }
   async getAll(params: any | undefined): Promise<any> {
-    let scoresQuery = Score.query()
-      .preload('classStudent', (query) =>
-        query
-          .preload('class', (classQuery) =>
-            classQuery.preload('teacher', (teacherQuery) => teacherQuery.select('id', 'name'))
-          )
-          .preload('academicYear', (academicYearQuery) =>
-            academicYearQuery.select('id', 'name', 'dateStart', 'dateEnd', 'semester', 'status')
-          )
-      )
-      .preload('module')
-      .preload('scoreType')
-      .innerJoin('class_students', 'scores.class_student_id', 'class_students.id')
-      .innerJoin('classes', 'class_students.class_id', 'classes.id')
-      .innerJoin('modules', 'scores.module_id', 'modules.id')
-      .innerJoin('academic_years', 'class_students.academic_year_id', 'academic_years.id')
-      .if(params?.tahunAjarId, (query) =>
-        query.where('class_students.academic_year_id', params.tahunAjarId)
-      )
+    const semester = params.tahunAjarId
+      ? await AcademicYear.query().where('name', params.tahunAjarId).firstOrFail()
+      : await this.getActiveSemester()
 
-    switch (params?.sortBy) {
-      case 'kelas':
-        scoresQuery
-          .orderBy('academic_years.status', 'desc')
-          .orderBy('classes.name', params.sortOrder || 'asc')
-        break
-      case 'mapel':
-        scoresQuery
-          .orderBy('academic_years.status', 'desc')
-          .orderBy('modules.name', params.sortOrder || 'asc')
-        break
-      default:
-        scoresQuery
-          .orderBy('academic_years.status', 'desc')
-          .orderBy(params.sortBy || 'scores.id', params.sortOrder || 'asc')
-        break
+    const classStudents = await ClassStudent.query()
+      .where('academic_year_id', semester.id)
+      .preload('class')
+      .preload('student')
+      .paginate(params.page || 1, params.limit || 10)
+
+    const schedules = await Schedule.query().preload('module')
+    const scores = await Score.query().preload('scoreType')
+
+    const result = classStudents.reduce((acc: any[], classStudent) => {
+      acc.push({
+        id: classStudent.id,
+        student: classStudent.student,
+        class: classStudent.class,
+        modules: schedules
+          .filter((sch) => {
+            return sch.classId === classStudent.classId
+          })
+          .reduce((prev: any[], current) => {
+            prev.push({
+              module: current.module,
+              scores: scores.filter((score) => {
+                return (
+                  score.classStudentId === classStudent.id && score.moduleId === current.moduleId
+                )
+              }),
+            })
+            return prev
+          }, []),
+      })
+      return acc
+    }, [])
+
+    return {
+      meta: classStudents.getMeta(),
+      data: {
+        semester: semester,
+        classStudents: result,
+      },
     }
-
-    return await scoresQuery.paginate(params.page || 1, params.limit || 10)
   }
 
   async getOne(id: number): Promise<any> {
@@ -76,7 +80,7 @@ export default class ScoreService {
     // Find the student user
     const student = await Student.query().where('user_id', user.id).firstOrFail()
 
-    const scoreType = await ScoreType.query()
+    const scoreTypes = await ScoreType.query()
     // Find the class student from student result
     const [...classStudentsIds] = await ClassStudent.query()
       .select('id', 'academic_year_id', 'class_id')
@@ -275,7 +279,7 @@ export default class ScoreService {
               module.scores.totalList
                 .filter((task: any) => task.sTid === 1)
                 .reduce((sum: number, val: { score: number }) => sum + val.score, 0) || 0,
-            weight: scoreType.filter((item) => item.id === 1)[0].weight,
+            weight: scoreTypes.filter((item) => item.id === 1)[0].weight,
           }
 
           const utsTotalSum: any = {
@@ -283,7 +287,7 @@ export default class ScoreService {
               module.scores.totalList
                 .filter((task: any) => task.sTid === 2)
                 .reduce((sum: number, val: { score: number }) => sum + val.score, 0) || 0,
-            weight: scoreType.filter((item) => item.id === 2)[0].weight,
+            weight: scoreTypes.filter((item) => item.id === 2)[0].weight,
           }
 
           const uasTotalSum: any = {
@@ -291,7 +295,7 @@ export default class ScoreService {
               module.scores.totalList
                 .filter((task: any) => task.sTid === 3)
                 .reduce((sum: number, val: { score: number }) => sum + val.score, 0) || 0,
-            weight: scoreType.filter((item) => item.id === 3)[0].weight,
+            weight: scoreTypes.filter((item) => item.id === 3)[0].weight,
           }
 
           module.scores.total =
