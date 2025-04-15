@@ -9,6 +9,7 @@ import ScoreType from '#models/score_type'
 import { messages } from '../utils/validation_message.js'
 import Teacher from '#models/teacher'
 import { Database } from '@adonisjs/lucid/database'
+import Class from '#models/class'
 
 type ResultProps = {
   id: number
@@ -74,6 +75,8 @@ export default class ScoreService {
   async getOwnScores(user: any): Promise<any> {
     // Find the student user
     const student = await Student.query().where('user_id', user.id).firstOrFail()
+
+    const scoreType = await ScoreType.query()
     // Find the class student from student result
     const [...classStudentsIds] = await ClassStudent.query()
       .select('id', 'academic_year_id', 'class_id')
@@ -226,7 +229,13 @@ export default class ScoreService {
         moduleGroup.scores.uas = scoreData
       }
 
-      moduleGroup.scores.totalList.push(module.score)
+      moduleGroup.scores.totalList.push({
+        score: module.score,
+        sTid: scoreType.id,
+        scoreType: scoreType.name,
+        description: module.description,
+        weight: scoreType.weight,
+      })
 
       return acc
     }, [] as any[])
@@ -260,19 +269,42 @@ export default class ScoreService {
     groupedResult.forEach((yearGroup) => {
       yearGroup.modules.forEach((module: any) => {
         if (module.scores.totalList.length > 0) {
-          const totalSum = module.scores.totalList.reduce(
-            (sum: number, val: number) => sum + val,
-            0
-          )
-          module.scores.total = totalSum / module.scores.totalList.length
+          const taskLength = module.scores.totalList.filter((task: any) => task.sTid === 1).length
+          const taskTotalSum: any = {
+            score:
+              module.scores.totalList
+                .filter((task: any) => task.sTid === 1)
+                .reduce((sum: number, val: { score: number }) => sum + val.score, 0) || 0,
+            weight: scoreType.filter((item) => item.id === 1)[0].weight,
+          }
+
+          const utsTotalSum: any = {
+            score:
+              module.scores.totalList
+                .filter((task: any) => task.sTid === 2)
+                .reduce((sum: number, val: { score: number }) => sum + val.score, 0) || 0,
+            weight: scoreType.filter((item) => item.id === 2)[0].weight,
+          }
+
+          const uasTotalSum: any = {
+            score:
+              module.scores.totalList
+                .filter((task: any) => task.sTid === 3)
+                .reduce((sum: number, val: { score: number }) => sum + val.score, 0) || 0,
+            weight: scoreType.filter((item) => item.id === 3)[0].weight,
+          }
+
+          module.scores.total =
+            (taskTotalSum.score / taskLength) * (taskTotalSum.weight / 100) +
+            (utsTotalSum.score * (utsTotalSum.weight / 100) +
+              uasTotalSum.score * (uasTotalSum.weight / 100))
+
+          module.scores.total = Number(module.scores.total.toFixed(2))
         }
       })
     })
 
-    return {
-      meta: scoreResult.serialize().meta,
-      data: groupedResult,
-    }
+    return groupedResult
   }
 
   async getMyScoring(params: any, user: any) {
@@ -336,24 +368,21 @@ export default class ScoreService {
 
   async getRecapScoring(params: any, user: any) {
     const teacher = await Teacher.query().where('user_id', user.id).firstOrFail()
-    const modules = await Module.query().where('teacher_id', teacher.id)
+    const classes = await Class.query().where('teacher_id', teacher.id).firstOrFail()
+
+    const schedule = await Schedule.query().where('class_id', classes.id).preload('module')
+
+    const ac = await AcademicYear.query().orderBy('status', 'desc')
+
     const scores = await Score.query()
       .preload('scoreType')
-      .preload('classStudent', (cs) => {
-        cs.preload('academicYear')
-        cs.preload('class')
-        cs.preload('student')
-      })
-      .preload('module')
       .whereIn(
         'module_id',
-        modules.map((m) => m.id)
+        schedule.map((s) => s.moduleId)
       )
-      .where('class_student_id', params.class_student_id)
-      .where('module_id', params.module_id)
-      .where('score_type_id', params.score_type_id)
-      .firstOrFail()
-    return { scores }
+      .preload('classStudent', (cs) => {
+        cs.preload('student')
+      })
   }
 
   async updateMyScoring(params: any, user: any) {
