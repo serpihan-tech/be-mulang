@@ -33,8 +33,8 @@ export default class StudentsService implements StudentContract, UserContract {
 
     const sortBy = params.sortBy
     const sortOrder = params.sortOrder
-    console.log(params)
-    console.log(Number(params.limit))
+    // console.log(params)
+    // console.log(Number(params.limit))
 
     const activeAcademicYear = await this.getActiveSemester()
     console.log(activeAcademicYear.id, activeAcademicYear.name)
@@ -77,10 +77,12 @@ export default class StudentsService implements StudentContract, UserContract {
       })
 
       // *                    SORTING FILTER                     */
-      .if(sortBy === 'kelas', (query) => {
-        query.whereHas('classStudent', (c) =>
-          c.whereHas('class', (q) => q.orderBy('name', sortOrder || 'asc'))
-        )
+      .if(sortBy === 'kelas', (k) => {
+        k.join('class_students', 'students.id', 'class_students.student_id')
+          .join('classes', 'class_students.class_id', 'classes.id')
+          .where('class_students.academic_year_id', activeAcademicYear.id)
+          .orderBy('classes.name', sortOrder || 'asc')
+          .select('students.*')
       }) // NAMA KELAS
       .if(sortBy === 'email', (q) => {
         q.leftJoin('users', 'students.user_id', 'users.id').orderBy(
@@ -111,11 +113,12 @@ export default class StudentsService implements StudentContract, UserContract {
             .orderBy('nisn', sortOrder || 'asc') // NISN
       )
       .if(sortBy === 'tahunAjar', (query) => {
-        query.whereHas('classStudent', (cs) => {
-          cs.whereHas('academicYear', (ay) => {
-            ay.where('id', activeAcademicYear.id).orderBy('name', sortOrder || 'asc')
-          })
-        })
+        query
+          .leftJoin('class_students', 'students.id', 'class_students.student_id')
+          .leftJoin('academic_years', 'class_students.academic_year_id', 'academic_years.id')
+          .where('class_students.academic_year_id', activeAcademicYear.id)
+          .orderBy('academic_years.name', sortOrder || 'asc')
+          .select('students.*')
       }) // TAHUN AJAR BY NAMANYA
       // *                    SORTING FILTER                     */
 
