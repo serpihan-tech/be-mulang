@@ -12,6 +12,7 @@ import Teacher from './teacher.js'
 import type { BelongsTo, HasMany, HasOne } from '@adonisjs/lucid/types/relations'
 import ClassStudent from './class_student.js'
 import ModelFilter from '../utils/filter_query.js'
+import Schedule from './schedule.js'
 // import type { ModelQueryBuilderContract } from '@adonisjs/lucid/types/model'
 
 export default class Class extends BaseModel {
@@ -35,6 +36,9 @@ export default class Class extends BaseModel {
 
   @hasMany(() => ClassStudent, { foreignKey: 'classId' })
   declare classStudent: HasMany<typeof ClassStudent>
+
+  @hasMany(() => Schedule, { foreignKey: 'classId' })
+  declare schedules: HasMany<typeof Schedule>
 
   // @beforeFind()
   // static async addRelations(query: ModelQueryBuilderContract<typeof Class>) {

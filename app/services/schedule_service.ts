@@ -1,6 +1,8 @@
 import Schedule from '#models/schedule'
 import db from '@adonisjs/lucid/services/db'
 import ScheduleContract from '../contracts/schedule_contract.js'
+import { DateTime } from 'luxon'
+import AcademicYear from '#models/academic_year'
 // import db from '@adonisjs/lucid/services/db'
 
 export class ScheduleService implements ScheduleContract {
@@ -44,25 +46,48 @@ export class ScheduleService implements ScheduleContract {
   }
 
   async TeachersSchedule(teacherId: number): Promise<any[]> {
+    const activeAcademicYear = await this.activeSemester()
     const classes = await Schedule.query()
       .select('id', 'days', 'class_id', 'module_id', 'room_id', 'start_time', 'end_time')
-      .whereHas('class', (query) => {
-        query.where('teacher_id', teacherId)
+      .whereHas('module', (query) => {
+        query.where('teacher_id', teacherId).andWhereHas('academicYear', (ay) => {
+          ay.where('status', 1).andWhere('id', activeAcademicYear.id)
+        })
       })
       .preload('class', (c) => {
-        c.withCount('classStudent', (cs) => cs.as('total_students'))
+        c.withCount('classStudent', (cs) =>
+          cs.as('total_students').where('academic_year_id', activeAcademicYear.id)
+        )
       })
       .preload('module', (m) => {
-        m.select('id', 'name', 'academic_year_id')
+        m.select('id', 'name', 'academic_year_id', 'teacher_id')
+        m.where('teacher_id', teacherId)
         m.preload('academicYear', (ay) =>
           ay.select('id', 'name', 'semester', 'date_start', 'date_end', 'status')
         )
       })
       .preload('room', (r) => r.select('id', 'name'))
 
+    // classes.forEach((item) => {
+    //   console.log(`total students of ${item.class.name} (`, item.class.$extras.total_students, ')')
+    // })
+
     return classes.map((item) => ({
       ...item.serialize(),
-      total_students: item.$extras.total_students,
+      total_students: item.class.$extras.total_students,
     }))
+  }
+
+  async activeSemester() {
+    const now =
+      DateTime.now().setZone('Asia/Jakarta').toSQL() ??
+      new Date().toISOString().slice(0, 19).replace('T', ' ')
+    console.log(now)
+
+    return await AcademicYear.query()
+      .where('status', 1)
+      .where('date_start', '<', now)
+      .where('date_end', '>', now)
+      .firstOrFail()
   }
 }

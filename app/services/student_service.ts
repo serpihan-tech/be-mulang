@@ -171,7 +171,7 @@ export default class StudentsService implements StudentContract, UserContract {
         {
           userId: user.id,
           name: data.student.name,
-          isGraduate: data.student.is_graduate || 1,
+          isGraduate: data.student.is_graduate || 0,
         },
         { client: trx }
       )

@@ -1,7 +1,6 @@
 import Class from '#models/class'
 import db from '@adonisjs/lucid/services/db'
 import ClassContract from '../contracts/class_contract.js'
-import ModelFilter from '../utils/filter_query.js'
 import { DateTime } from 'luxon'
 import AcademicYear from '#models/academic_year'
 
@@ -147,7 +146,40 @@ export class ClassService implements ClassContract {
   }
 
   async myClass(teacherId: number) {
-    const theClass = await Class.query().where('teacher_id', teacherId).firstOrFail()
-    return theClass
+    const activeAcademicYear = await this.activeSemester()
+
+    const classesRaw = await db
+      .from('schedules')
+      .select(
+        db.raw('MIN(schedules.id) as schedule_id'),
+        'schedules.class_id',
+        'schedules.module_id',
+        'classes.name as class_name',
+        'modules.name as module_name'
+      )
+      .join('modules', 'schedules.module_id', 'modules.id')
+      .join('classes', 'schedules.class_id', 'classes.id')
+      .where('modules.teacher_id', teacherId)
+      .andWhere('modules.academic_year_id', activeAcademicYear.id)
+      .groupBy('schedules.class_id', 'schedules.module_id', 'classes.name', 'modules.name')
+
+    const classes = await Promise.all(
+      classesRaw.map(async (item, index) => {
+        const classData = await Class.query()
+          .where('id', item.class_id)
+          .withCount('classStudent', (cs) =>
+            cs.as('total_students').where('academic_year_id', activeAcademicYear.id)
+          )
+          .first()
+
+        return {
+          id: index + 1, // Nomor ID urut
+          ...item,
+          total_students: classData?.$extras.total_students || 0,
+        }
+      })
+    )
+
+    return classes
   }
 }

@@ -111,6 +111,7 @@ router.group(() => {
 
     // Classes
     router.group(() => {
+        router.get('/teacher/mine', [ClassesController, 'getClassTeacher'])
         router.get('/', [ClassesController, 'index'])
         router.post('/', [ClassesController, 'store'])
         router.get('/:id', [ClassesController, 'show'])

@@ -76,4 +76,20 @@ export default class ClassesController {
       return response.badRequest({ error })
     }
   }
+
+  async getClassTeacher({ auth, response }: HttpContext) {
+    try {
+      const user = auth.getUserOrFail()
+      await user.load('teacher')
+
+      const theClass = await this.classService.myClass(user.teacher.id)
+
+      return response.ok({
+        message: 'Kelas Berhasil Ditampilkan',
+        data: theClass,
+      })
+    } catch (error) {
+      return response.badRequest({ error })
+    }
+  }
 }
