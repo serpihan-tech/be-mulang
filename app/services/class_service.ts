@@ -3,6 +3,7 @@ import db from '@adonisjs/lucid/services/db'
 import ClassContract from '../contracts/class_contract.js'
 import { DateTime } from 'luxon'
 import AcademicYear from '#models/academic_year'
+import ClassStudent from '#models/class_student'
 
 export class ClassService implements ClassContract {
   async activeSemester() {
@@ -173,13 +174,54 @@ export class ClassService implements ClassContract {
           .first()
 
         return {
-          id: index + 1, // Nomor ID urut
-          ...item,
-          total_students: classData?.$extras.total_students || 0,
+          id: index + 1,
+          scheduleId: item.schedule_id,
+          classId: item.class_id,
+          moduleId: item.module_id,
+          className: item.class_name,
+          moduleName: item.module_name,
+          totalStudents: classData?.$extras.total_students || 0,
         }
       })
     )
 
     return classes
+  }
+
+  async getStudentsByClass(classId: number, moduleId: number) {
+    const activeAcademicYear = await this.activeSemester()
+
+    const theStudents = await ClassStudent.query()
+      .select('id', 'class_id', 'student_id')
+      .where('class_id', classId)
+      .where('academic_year_id', activeAcademicYear.id)
+      .preload('student', (s) =>
+        s
+          .select('id', 'name')
+          .preload('studentDetail', (sd) => sd.select('nis', 'nisn', 'profile_picture'))
+      )
+      .withCount(
+        'absences',
+        (a) => a.as('total_absences').whereHas('schedule', (s) => s.where('module_id', moduleId))
+        // Yang Hadir saja yang dihitung ??
+      )
+      .withCount(
+        'absences',
+        (a) =>
+          a
+            .as('total_absences_hadir')
+            .whereHas('schedule', (s) => s.where('module_id', moduleId).where('status', 'Hadir'))
+        // Yang Hadir saja yang dihitung ??
+      )
+
+    theStudents.forEach((ts) => {
+      console.log(`total absences student (${ts.student.name}):`, ts.$extras.total_absences)
+    })
+
+    return theStudents.map((ts) => ({
+      ...ts.serialize(),
+      totalAbsences: ts.$extras.total_absences,
+      totalAbsencesHadir: ts.$extras.total_absences_hadir,
+    }))
   }
 }

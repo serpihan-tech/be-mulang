@@ -89,7 +89,21 @@ export default class ClassesController {
         data: theClass,
       })
     } catch (error) {
-      return response.badRequest({ error })
+      return response.badRequest({ error: { message: error.message } })
+    }
+  }
+
+  async getStudentsByClass({ params, response }: HttpContext) {
+    try {
+      const classId: number = params.classId
+      const moduleId: number = params.moduleId
+      const theStudents = await this.classService.getStudentsByClass(classId, moduleId)
+      return response.ok({
+        message: 'Siswa Berhasil Ditampilkan',
+        data: theStudents,
+      })
+    } catch (error) {
+      return response.badRequest({ error: { message: error.message } })
     }
   }
 }

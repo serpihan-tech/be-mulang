@@ -74,7 +74,7 @@ export class ScheduleService implements ScheduleContract {
 
     return classes.map((item) => ({
       ...item.serialize(),
-      total_students: item.class.$extras.total_students,
+      totalStudents: item.class.$extras.total_students,
     }))
   }
 
