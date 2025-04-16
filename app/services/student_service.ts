@@ -148,6 +148,8 @@ export default class StudentsService implements StudentContract, UserContract {
   }
 
   async show(id: number): Promise<any> {
+    const activeAcademicYear = await this.getActiveSemester()
+
     return await Student.query()
       .where('id', id)
       .preload('user')
@@ -155,6 +157,9 @@ export default class StudentsService implements StudentContract, UserContract {
       .preload('classStudent', (cs) => {
         cs.preload('class')
         cs.preload('academicYear')
+        cs.whereHas('academicYear', (ay) => {
+          ay.where('id', activeAcademicYear.id)
+        })
       })
       .firstOrFail()
   }
