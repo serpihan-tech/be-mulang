@@ -25,6 +25,7 @@ const AnnouncementByTeachers = () => import('#controllers/announcement_by_teache
 const ScoreController = () => import('#controllers/scores_controller')
 const TeacherAbsenceController = () => import('#controllers/teacher_absences_controller')
 const SchoolCalendarsController = () => import('#controllers/school_calendars_controller')
+const AdminsController = () => import('#controllers/admins_controller')
 
 import { middleware } from '#start/kernel'
 import transmit from '@adonisjs/transmit/services/main'
@@ -62,7 +63,11 @@ router.group(() => {
     
     // Untuk admin
     router.group(() => {
-        // TODO : Implementasi Fitur Admin
+        router.get('/', [AdminsController, 'index']).use(middleware.role(['admin']))
+        router.get('/:id', [AdminsController, 'show'])
+        router.post('/', [AdminsController, 'store']).use(middleware.role([''])) // ! All Roles Not Allowed
+        router.patch('/:id', [AdminsController, 'update']).use(middleware.role(['admin']))
+        router.delete('/:id', [AdminsController, 'destroy']).use(middleware.role(['']))
     }).prefix('/admins')
 
     // Untuk students

@@ -12,7 +12,12 @@ export const createTeacherValidator = vine.compile(
     gender: vine.enum(['pria', 'wanita']),
     religion: vine.enum(['Kristen', 'Katolik', 'Islam', 'Hindu', 'Budha', 'Konghucu']),
     address: vine.string().minLength(4),
-    profile_picture: vine.string().minLength(4),
+    profile_picture: vine
+      .file({
+        size: '2mb',
+        extnames: ['jpg', 'png', 'jpeg'],
+      })
+      .optional(),
   })
 )
 
@@ -26,7 +31,12 @@ export const updateTeacherValidator = vine.compile(
     gender: vine.enum(['pria', 'wanita']).optional(),
     religion: vine.enum(['Kristen', 'Katolik', 'Islam', 'Hindu', 'Budha', 'Konghucu']).optional(),
     address: vine.string().minLength(4).optional(),
-    profile_picture: vine.string().optional(),
+    profile_picture: vine
+      .file({
+        size: '2mb',
+        extnames: ['jpg', 'png', 'jpeg'],
+      })
+      .optional(),
   })
 )
 
