@@ -101,7 +101,7 @@ router.group(() => {
     // Absensi
     router.group(() => {
         router.get('/mine', [AbsenceController, 'getMyAbsences']) // * untuk data/fitur untuk siswa yang sedang login
-        
+        router.get('/student/:studentId/:scheduleId', [AbsenceController, 'getAbsencesBySchedule'])
         router.get('/', [AbsenceController, 'index'])
         router.post('/', [AbsenceController, 'store']) // TODO : Implementasi Absensi
         router.get('/:id', [AbsenceController, 'show'])

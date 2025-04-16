@@ -1,7 +1,10 @@
 import Absence from '#models/absence'
 import AcademicYear from '#models/academic_year'
+import ClassStudent from '#models/class_student'
+import { DateTime } from 'luxon'
 import AbsenceContract from '../contracts/absence_contract.js'
 import Database from '@adonisjs/lucid/services/db'
+import Schedule from '#models/schedule'
 
 export class AbsenceService implements AbsenceContract {
   // TODO : Implement
@@ -164,6 +167,54 @@ export class AbsenceService implements AbsenceContract {
       secondSemester,
       absences: absences.toJSON(),
     }
+  }
+
+  async activeSemester() {
+    const now =
+      DateTime.now().setZone('Asia/Jakarta').toSQL() ??
+      new Date().toISOString().slice(0, 19).replace('T', ' ')
+    console.log(now)
+
+    return await AcademicYear.query()
+      .where('status', 1)
+      .where('date_start', '<', now)
+      .where('date_end', '>', now)
+      .firstOrFail()
+  }
+
+  async getAbsencesBySchedule(studentId: number, scheduleId: number) {
+    const schedule = await Schedule.findOrFail(scheduleId)
+
+    const absences = Absence.query()
+      .select('id', 'schedule_id', 'class_student_id', 'status', 'reason', 'date')
+      .where('schedule_id', schedule.id)
+
+    const activeAcademicYear = await this.activeSemester()
+
+    const cs = await ClassStudent.query()
+      .where('student_id', studentId)
+      .where('academic_year_id', activeAcademicYear.id)
+      .firstOrFail()
+
+    console.log(
+      '(absences services) student ID : ',
+      studentId,
+      'schedule ID : ',
+      scheduleId,
+      'class_student ID : ',
+      cs.id
+    )
+
+    await absences.where('class_student_id', cs.id).preload('classStudent', (c) => {
+      c.select(['id', 'class_id', 'student_id', 'academic_year_id'])
+      c.preload('class', (cl) => cl.select(['id', 'name']))
+      c.preload('student', (s) => {
+        s.select(['id', 'name'])
+        s.preload('studentDetail', (sd) => sd.select(['nis', 'nisn']))
+      })
+    })
+
+    return absences
   }
 
   async create(data: any): Promise<any> {
