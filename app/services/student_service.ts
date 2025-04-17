@@ -401,14 +401,17 @@ export default class StudentsService implements StudentContract, UserContract {
 
   async studentPromoted(data: any) {
     try {
-      for (const datum of data) {
-        const student = await Student.query().where('id', datum.student_id).firstOrFail()
+      const classId = data.class_id
+      const academicYearId = data.academic_year_id
 
-        const kelas = await Class.query().where('id', datum.class_id).firstOrFail()
+      console.log('data : ', data)
+      for (const datum of data.student_ids) {
+        console.log('datum : ', datum)
+        const student = await Student.query().where('id', datum).firstOrFail()
 
-        const academicYear = await AcademicYear.query()
-          .where('id', datum.academic_year_id)
-          .firstOrFail()
+        const kelas = await Class.query().where('id', classId).firstOrFail()
+
+        const academicYear = await AcademicYear.query().where('id', academicYearId).firstOrFail()
 
         await ClassStudent.create({
           studentId: student.id,

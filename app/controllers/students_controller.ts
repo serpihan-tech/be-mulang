@@ -176,7 +176,7 @@ export default class StudentsController {
     try {
       const data = request.input('data')
 
-      if (!Array.isArray(data) || data.length === 0) {
+      if (!Array.isArray(data.student_ids) || data.student_ids.length === 0) {
         return response.badRequest({ error: { message: 'Tidak ada siswa yang diproses' } })
       }
 
