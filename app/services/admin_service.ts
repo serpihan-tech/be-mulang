@@ -64,9 +64,12 @@ export class AdminService {
         await user.merge(data.user).save()
       }
 
+      console.log(data)
+
       admin.merge(data.admin)
       if (data.admin.profile_picture) {
         const profilePicture = data.admin.profile_picture
+        console.log(profilePicture)
         const fileName = `${cuid()}.${profilePicture.extname}`
 
         // Pindahkan file hanya jika `profile_picture` ada dan valid
@@ -77,8 +80,8 @@ export class AdminService {
         // Simpan path file ke dalam database
         admin.profilePicture = `admins-profile/${fileName}`
       }
-
       await admin.save()
+
       await trx.commit()
       await admin.load('user')
 

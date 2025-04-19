@@ -45,6 +45,15 @@ export default class AdminsController {
       await updateUserValidator.validate(request.input('user'))
       await updateAdminValidator.validate(request.input('admin'))
 
+      const data = request.all()
+
+      // Ambil file profile_picture dari request.file() secara terpisah
+      const profilePicture = request.file('admin.profile_picture')
+
+      if (profilePicture) {
+        data.admin.profile_picture = profilePicture
+      }
+
       const admin = await this.adminService.update(params.id, request.all())
       return response.ok({ message: 'Admin Berhasil Diubah', admin })
     } catch (error) {

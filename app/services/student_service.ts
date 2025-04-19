@@ -254,6 +254,21 @@ export default class StudentsService implements StudentContract, UserContract {
         await student.save()
       }
 
+      if (data.class_student) {
+        await ClassStudent.updateOrCreate(
+          {
+            studentId: student.id,
+            classId: data.class_student.class_id,
+            academicYearId: data.class_student.academic_year_id,
+          }, // Search criteria (harus unik)
+          {
+            classId: data.class_student.class_id,
+            academicYearId: data.class_student.academic_year_id,
+          }, // Data yang akan diupdate
+          { client: trx }
+        )
+      }
+
       console.info('STUDENT DETAIL : ', data.student_detail)
       if (data.student_detail && student.studentDetail) {
         student.studentDetail.merge({
@@ -293,6 +308,7 @@ export default class StudentsService implements StudentContract, UserContract {
 
       await student.load('user')
       await student.load('studentDetail')
+      await student.load('classStudent')
 
       return student
     } catch (error) {
