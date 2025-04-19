@@ -104,7 +104,7 @@ export default class StudentsController {
       return response.ok({ message: 'Murid Berhasil Diupdate', student })
     } catch (error) {
       console.log(error)
-      return response.unprocessableEntity({ error })
+      return response.unprocessableEntity({ error: { message: error.message } })
     }
   }
 

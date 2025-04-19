@@ -21,7 +21,7 @@ export default class StudentsService implements StudentContract, UserContract {
     console.log(now)
 
     return await AcademicYear.query()
-      .where('status', 1)
+      .where('status', 1 || true)
       .where('date_start', '<', now)
       .where('date_end', '>', now)
       .firstOrFail()
@@ -229,12 +229,20 @@ export default class StudentsService implements StudentContract, UserContract {
 
   async update(studentId: number, data: any): Promise<any> {
     const trx = await db.transaction()
+    const activeAcademicYear = await this.getActiveSemester()
 
     try {
       const student = await Student.query({ client: trx })
         .where('id', studentId)
         .preload('user')
         .preload('studentDetail')
+        .preload('classStudent', (cs) => {
+          cs.whereHas('academicYear', (ay) => {
+            ay.where('id', activeAcademicYear.id)
+          })
+          cs.preload('academicYear')
+          cs.preload('class')
+        })
         .firstOrFail()
 
       if (data.user) {
@@ -255,18 +263,16 @@ export default class StudentsService implements StudentContract, UserContract {
       }
 
       if (data.class_student) {
-        await ClassStudent.updateOrCreate(
-          {
-            studentId: student.id,
+        console.log(student.classStudent, 'id classStudent :', data.class_student.class_student_id)
+        const classStudentId = Number(data.class_student.class_student_id)
+
+        await student.classStudent
+          .find((cs) => cs.id === classStudentId)
+          ?.merge({
             classId: data.class_student.class_id,
             academicYearId: data.class_student.academic_year_id,
-          }, // Search criteria (harus unik)
-          {
-            classId: data.class_student.class_id,
-            academicYearId: data.class_student.academic_year_id,
-          }, // Data yang akan diupdate
-          { client: trx }
-        )
+          })
+          .save()
       }
 
       console.info('STUDENT DETAIL : ', data.student_detail)
@@ -306,9 +312,9 @@ export default class StudentsService implements StudentContract, UserContract {
 
       await trx.commit()
 
-      await student.load('user')
-      await student.load('studentDetail')
-      await student.load('classStudent')
+      // await student.load('user')
+      // await student.load('studentDetail')
+      // await student.load('classStudent')
 
       return student
     } catch (error) {
