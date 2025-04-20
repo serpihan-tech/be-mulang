@@ -23,11 +23,6 @@ export default class ModulesController {
   }
 
   /**
-   * Display form to create a new record
-   */
-  async create({}: HttpContext) {}
-
-  /**
    * Handle form submission for the create action
    */
   async store({ request, response }: HttpContext) {
@@ -36,11 +31,11 @@ export default class ModulesController {
       const module = await this.moduleService.create(request.all())
 
       return response.created({
-        message: 'Modul Berhasil Dibuat',
+        message: 'Mapel Berhasil Dibuat',
         module,
       })
     } catch (error) {
-      return response.status(error.status).send({ error })
+      return response.badRequest({ error })
     }
   }
 
@@ -52,27 +47,13 @@ export default class ModulesController {
     try {
       const module = await this.moduleService.getOne(id)
       return response.ok({
-        message: 'Module Berhasil Ditampilkan',
+        message: 'Mapel Berhasil Ditampilkan',
         module,
       })
     } catch (error) {
-      return response.status(error.status).send({ error })
-    }
-  }
-
-  /**
-   * Edit individual record
-   */
-  async edit({ params, request, response }: HttpContext) {
-    const id = params.id
-    try {
-      const module = this.moduleService.update(request, id)
-      return response.ok({
-        message: 'Module Berhasil Diupdate',
-        module,
-      })
-    } catch (error) {
-      return response.status(error.status).send({ error })
+      if (error.code === 'E_ROW_NOT_FOUND')
+        return response.notFound({ error: { message: 'ID Mapel Tidak Ditemukan' } })
+      return response.badRequest({ error: { message: error.message } })
     }
   }
 
@@ -86,10 +67,12 @@ export default class ModulesController {
       const module = await this.moduleService.update(request.all(), moduleId)
 
       return response.ok({
-        message: 'Modul Berhasil Diubah',
+        message: 'Mapel Berhasil Diubah',
         module,
       })
     } catch (error) {
+      if (error.code === 'E_ROW_NOT_FOUND')
+        return response.notFound({ error: { message: 'ID Mapel Tidak Ditemukan' } })
       return response.badRequest({ error })
     }
   }
@@ -99,12 +82,14 @@ export default class ModulesController {
    */
   async destroy({ params, response }: HttpContext) {
     try {
-      await this.moduleService.delete(params.id)
+      const module: string = await this.moduleService.delete(params.id)
       return response.ok({
-        message: 'Modul Berhasil Dihapus',
+        message: `Mapel (${module}) Berhasil Dihapus`,
       })
     } catch (error) {
-      return response.notFound({ error: { message: 'ID Modul Tidak Ditemukan' } })
+      if (error.code === 'E_ROW_NOT_FOUND')
+        return response.notFound({ error: { message: 'ID Mapel Tidak Ditemukan' } })
+      return response.badRequest({ error: { message: error.message } })
     }
   }
 }

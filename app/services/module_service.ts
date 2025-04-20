@@ -10,7 +10,7 @@ export default class ModuleService implements ModuleContract {
     const dataModule = await Module.filter(formatedParams)
       .if(params.tahunAjar, (query) => {
         query.whereHas('academicYear', (ayQuery) => {
-          ayQuery.where('name', params.tahunAjar)
+          ayQuery.where('id', params.tahunAjar)
         })
       })
       .if(params.nip, (query) => {
@@ -34,26 +34,23 @@ export default class ModuleService implements ModuleContract {
   }
 
   async create(data: any): Promise<any> {
-    const trx = await db.transaction()
-    const modules = await Module.create(data, { client: trx })
-    await trx.commit()
+    const modules = await Module.create(data)
 
     return modules
   }
 
   async update(data: any, id: number): Promise<any> {
-    const trx = await db.transaction()
-    const modules = await Module.findOrFail(id, { client: trx })
-    modules.merge(data)
-    await modules.useTransaction(trx).save()
-    await trx.commit()
+    const modules = await Module.findOrFail(id)
+    modules.merge(data).save()
 
     return modules
   }
 
   async delete(id: number): Promise<any> {
     const modules = await Module.findOrFail(id)
-
+    const name = modules.name
     await modules.delete()
+
+    return name
   }
 }
