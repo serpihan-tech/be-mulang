@@ -162,4 +162,18 @@ export default class ScoresController {
       return response.badRequest({ error: { message: error.message } })
     }
   }
+  async getRecapScoring({ auth, request, response, params }: HttpContext) {
+    const user = auth.user
+    try {
+      if (user) {
+        const result = await this.scroreService.getRecapScoring(request.all(), user)
+        return {
+          message: 'Score Ditemukan',
+          result,
+        }
+      }
+    } catch (error) {
+      return response.status(error.status).send({ error })
+    }
+  }
 }

@@ -9,6 +9,7 @@ import ScoreType from '#models/score_type'
 import { messages } from '../utils/validation_message.js'
 import Teacher from '#models/teacher'
 import { Database } from '@adonisjs/lucid/database'
+import Class from '#models/class'
 
 type ResultProps = {
   id: number
@@ -71,9 +72,12 @@ export default class ScoreService {
     return scores
   }
 
-  async getOwnScores(user: any, params?: any): Promise<any> {
+  async getOwnScores(user: any): Promise<any> {
+    // Find the student user
     const student = await Student.query().where('user_id', user.id).firstOrFail()
-    // to string
+
+    const scoreType = await ScoreType.query()
+    // Find the class student from student result
     const [...classStudentsIds] = await ClassStudent.query()
       .select('id', 'academic_year_id', 'class_id')
       .where('student_id', student.id)
@@ -175,6 +179,7 @@ export default class ScoreService {
     const taskScoreType = await ScoreType.query().where('id', 1).firstOrFail()
 
     const groupedResult = result.reduce((acc, item) => {
+      // eslint-disable-next-line @typescript-eslint/no-shadow
       const { academicYear, module, scoreType } = item
 
       // Cari academicYear
@@ -225,7 +230,13 @@ export default class ScoreService {
         moduleGroup.scores.uas = scoreData
       }
 
-      moduleGroup.scores.totalList.push(module.score)
+      moduleGroup.scores.totalList.push({
+        score: module.score,
+        sTid: scoreType.id,
+        scoreType: scoreType.name,
+        description: module.description,
+        weight: scoreType.weight,
+      })
 
       return acc
     }, [] as any[])
@@ -259,70 +270,120 @@ export default class ScoreService {
     groupedResult.forEach((yearGroup) => {
       yearGroup.modules.forEach((module: any) => {
         if (module.scores.totalList.length > 0) {
-          const totalSum = module.scores.totalList.reduce(
-            (sum: number, val: number) => sum + val,
-            0
-          )
-          module.scores.total = totalSum / module.scores.totalList.length
+          const taskLength = module.scores.totalList.filter((task: any) => task.sTid === 1).length
+          const taskTotalSum: any = {
+            score:
+              module.scores.totalList
+                .filter((task: any) => task.sTid === 1)
+                .reduce((sum: number, val: { score: number }) => sum + val.score, 0) || 0,
+            weight: scoreType.filter((item) => item.id === 1)[0].weight,
+          }
+
+          const utsTotalSum: any = {
+            score:
+              module.scores.totalList
+                .filter((task: any) => task.sTid === 2)
+                .reduce((sum: number, val: { score: number }) => sum + val.score, 0) || 0,
+            weight: scoreType.filter((item) => item.id === 2)[0].weight,
+          }
+
+          const uasTotalSum: any = {
+            score:
+              module.scores.totalList
+                .filter((task: any) => task.sTid === 3)
+                .reduce((sum: number, val: { score: number }) => sum + val.score, 0) || 0,
+            weight: scoreType.filter((item) => item.id === 3)[0].weight,
+          }
+
+          module.scores.total =
+            (taskTotalSum.score / taskLength) * (taskTotalSum.weight / 100) +
+            (utsTotalSum.score * (utsTotalSum.weight / 100) +
+              uasTotalSum.score * (uasTotalSum.weight / 100))
+
+          module.scores.total = Number(module.scores.total.toFixed(2))
         }
       })
     })
 
-    // Akhirnya return groupedResult
     return groupedResult
-
-    // return {
-    //   meta: scoreResult.serialize().meta,
-    //   data: result,
-    // }
-
-    // return score
   }
 
   async getMyScoring(params: any, user: any) {
     const teacher = await Teacher.query().where('user_id', user.id).firstOrFail()
-    const modules = await Module.query().where('teacher_id', teacher.id)
-    // TODO: find score by the module id
-    const scores = await Score.query()
+    const ac = await AcademicYear.query().orderBy('status', 'desc')
+
+    const modules = await Module.query()
+      .where('teacher_id', teacher.id)
+      .whereIn(
+        'academic_year_id',
+        ac.map((ay) => ay.id)
+      )
+
+    const score = await Score.query()
       .preload('scoreType')
-      .preload('classStudent', (cs) => {
-        cs.preload('academicYear')
-        cs.preload('class')
-        cs.preload('student')
-      })
-      .preload('module')
       .whereIn(
         'module_id',
         modules.map((m) => m.id)
       )
-      .innerJoin('class_students', 'scores.class_student_id', 'class_students.id')
-      .innerJoin('academic_years', 'class_students.academic_year_id', 'academic_years.id')
-      .innerJoin('classes', 'class_students.class_id', 'classes.id')
-      .innerJoin('modules', 'scores.module_id', 'modules.id')
-      .innerJoin('students', 'class_students.student_id', 'students.id')
-      .if(params.mapel, (query) => {
-        query.where('modules.name', 'like', `%${params.mapel}%`)
+      .preload('classStudent', (cs) => {
+        cs.preload('student')
       })
-      .if(params.kelas, (query) => {
-        query.where('classes.name', 'like', `%${params.kelas}%`)
-      })
-      .if(params.search, (query) => {
-        query.where('modules.name', 'like', `%${params.search}%`)
-        query.orWhere('classes.name', 'like', `%${params.search}%`)
-        query.orWhere('students.name', 'like', `%${params.search}%`)
-      })
-      .if(params.sortBy, (query) => {
-        query.if(params.sortBy === 'kelas', (q) =>
-          q.orderBy('classes.name', params.sortOrder || 'asc')
-        )
-        query.if(params.sortBy === 'mapel', (q) =>
-          q.orderBy('modules.name', params.sortOrder || 'asc')
-        )
-      })
-      .orderBy('academic_years.status', 'desc')
-      .paginate(params.page || 1, params.limit || 10)
+    const schedule = await Schedule.query()
+      .whereIn(
+        'module_id',
+        modules.map((m) => m.id)
+      )
+      .preload('class')
 
-    return { scores }
+    const result = ac.map((ay) => {
+      const filteredModules = modules.filter((m) => m.academicYearId === ay.id)
+
+      return {
+        academicYear: ay,
+        modules: filteredModules.map((m) => {
+          const filteredSchedules = schedule.filter((s) => s.moduleId === m.id)
+
+          return {
+            module: m,
+            schedule: filteredSchedules.map((sch) => {
+              const relatedScores = score.filter((sc) => {
+                return sc.moduleId === sch.moduleId && sc.classStudent.classId === sch.classId
+              })
+
+              return {
+                ...sch.serialize(), // schedule fields
+                scores: relatedScores.filter((rSc) =>
+                  rSc.serialize().classStudent.academicYearId === ay.id ? rSc.serialize() : null
+                ), // attach related scores
+              }
+            }),
+          }
+        }),
+      }
+    })
+
+    return {
+      result,
+    }
+  }
+
+  async getRecapScoring(params: any, user: any) {
+    const teacher = await Teacher.query().where('user_id', user.id).firstOrFail()
+    const classes = await Class.query().where('teacher_id', teacher.id).firstOrFail()
+
+    const schedule = await Schedule.query().where('class_id', classes.id).preload('module')
+
+    const ac = await AcademicYear.query().orderBy('status', 'desc')
+
+    const scores = await Score.query()
+      .preload('scoreType')
+      .whereIn(
+        'module_id',
+        schedule.map((s) => s.moduleId)
+      )
+      .preload('classStudent', (cs) => {
+        cs.preload('student')
+      })
   }
 
   async updateMyScoring(params: any, user: any) {
