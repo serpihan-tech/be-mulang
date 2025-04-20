@@ -77,12 +77,21 @@ export default class StudentsService implements StudentContract, UserContract {
       })
 
       // *                    SORTING FILTER                     */
-      .if(sortBy === 'kelas', (k) => {
-        k.join('class_students', 'students.id', 'class_students.student_id')
-          .join('classes', 'class_students.class_id', 'classes.id')
-          .where('class_students.academic_year_id', activeAcademicYear.id)
-          .orderBy('classes.name', sortOrder || 'asc')
-          .select('students.*')
+      .if(sortBy === 'kelas', (query) => {
+        query
+          .whereHas('classStudent', (cs) => {
+            cs.where('academic_year_id', activeAcademicYear.id)
+          })
+          .orderBy(
+            db
+              .from('class_students')
+              .join('classes', 'class_students.class_id', 'classes.id')
+              .whereRaw('class_students.student_id = students.id')
+              .where('class_students.academic_year_id', activeAcademicYear.id)
+              .select('classes.name')
+              .limit(1),
+            sortOrder || 'asc'
+          )
       }) // NAMA KELAS
       .if(sortBy === 'email', (q) => {
         q.leftJoin('users', 'students.user_id', 'users.id').orderBy(
@@ -114,11 +123,19 @@ export default class StudentsService implements StudentContract, UserContract {
       )
       .if(sortBy === 'tahunAjar', (query) => {
         query
-          .leftJoin('class_students', 'students.id', 'class_students.student_id')
-          .leftJoin('academic_years', 'class_students.academic_year_id', 'academic_years.id')
-          .where('class_students.academic_year_id', activeAcademicYear.id)
-          .orderBy('academic_years.name', sortOrder || 'asc')
-          .select('students.*')
+          .whereHas('classStudent', (cs) => {
+            cs.where('academic_year_id', activeAcademicYear.id)
+          })
+          .orderBy(
+            db
+              .from('class_students')
+              .join('academic_years', 'class_students.academic_year_id', 'academic_years.id')
+              .whereRaw('class_students.student_id = students.id')
+              .where('class_students.academic_year_id', activeAcademicYear.id)
+              .select('academic_years.name')
+              .limit(1),
+            sortOrder || 'asc'
+          )
       }) // TAHUN AJAR BY NAMANYA
       // *                    SORTING FILTER                     */
 
