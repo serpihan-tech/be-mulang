@@ -2,6 +2,7 @@ import env from '#start/env'
 import { defineConfig } from '@adonisjs/lucid'
 
 const dbConfig = defineConfig({
+  prettyPrintDebugQueries: true,
   connection: 'mysql',
   connections: {
     mysql: {
@@ -21,6 +22,7 @@ const dbConfig = defineConfig({
       seeders: {
         paths: ['./database/seeders/MainSeeder'],
       },
+      debug: true,
     },
   },
 })
