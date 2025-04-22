@@ -12,6 +12,7 @@ import Admin from '#models/admin'
 // import AnnouncementByTeacher from '#models/announcement_by_teacher'
 // import { DateTime } from 'luxon'
 import db from '@adonisjs/lucid/services/db'
+import { DateTime } from 'luxon'
 
 // type AnnouncementQueryParams = {
 //   page?: number
@@ -34,6 +35,10 @@ import db from '@adonisjs/lucid/services/db'
 export class AnnouncementByAdminService
   implements AnnouncementByAdminContract, AnnouncementContract
 {
+  protected now =
+    DateTime.now().setZone('Asia/Jakarta').toSQL() ??
+    new Date().toISOString().slice(0, 19).replace('T', ' ')
+
   async getBothAll(params: any): Promise<any> {
     const {
       page = 1,
@@ -306,20 +311,22 @@ export class AnnouncementByAdminService
     const admin = await Admin.query().where('id', adminId).firstOrFail()
     const role = await User.getRole(await admin.related('user').query().firstOrFail())
 
-    const t = transmit.broadcast(`notifications/${ann.targetRoles}`, {
-      message: {
-        id: ann.id,
-        title: ann.title,
-        from: admin.name,
-        role: role?.role,
-        // file: ann.files,
-        content: ann.content,
-        category: ann.category,
-        date: ann.date.toISOString(),
-      },
-    })
+    if (ann.date.toISOString() === this.now) {
+      const t = transmit.broadcast(`notifications/${ann.targetRoles}`, {
+        message: {
+          id: ann.id,
+          title: ann.title,
+          from: admin.name,
+          role: role?.role,
+          // file: ann.files,
+          content: ann.content,
+          category: ann.category,
+          date: ann.date.toISOString(),
+        },
+      })
+      console.log(t)
+    }
 
-    console.log(t)
     return ann
   }
 
