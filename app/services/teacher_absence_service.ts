@@ -1,5 +1,6 @@
 import Teacher from '#models/teacher'
 import TeacherAbsence from '#models/teacher_absence'
+import { DateTime } from 'luxon'
 // import db from '@adonisjs/lucid/services/db'
 import TeacherAbsenceContract from '../contracts/teacher_absence_contract.js'
 
@@ -8,8 +9,8 @@ export class TeacherAbsenceService implements TeacherAbsenceContract {
     const now = new Date()
     now.setHours(7, 0, 0, 0)
 
-    const tanggal = params.tanggal ?? now
-
+    const tanggal = DateTime.fromISO(params.tanggal).toISODate() ?? now
+    console.log('tanggal guru absensi : ', tanggal)
     const teacherAbsence = await Teacher.query()
 
       .leftJoin('teacher_absences', (join) => {
@@ -46,6 +47,7 @@ export class TeacherAbsenceService implements TeacherAbsenceContract {
 
       .select('teachers.*')
       .groupBy('teachers.id')
+      .preload('user', (u) => u.select('email'))
       .preload('latestAbsence', (ab) => {
         ab.where('date', tanggal).if(params.status, (query) => query.where('status', params.status))
       })
