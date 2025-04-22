@@ -1,6 +1,6 @@
 import Teacher from '#models/teacher'
 import TeacherAbsence from '#models/teacher_absence'
-import db from '@adonisjs/lucid/services/db'
+// import db from '@adonisjs/lucid/services/db'
 import TeacherAbsenceContract from '../contracts/teacher_absence_contract.js'
 
 export class TeacherAbsenceService implements TeacherAbsenceContract {
@@ -11,13 +11,12 @@ export class TeacherAbsenceService implements TeacherAbsenceContract {
     const tanggal = params.tanggal ?? now
 
     const teacherAbsence = await Teacher.query()
-      // LEFT JOIN ke table absensi berdasarkan tanggal yang dipilih
+
       .leftJoin('teacher_absences', (join) => {
         join.on('teacher_absences.teacher_id', '=', 'teachers.id')
         join.andOnVal('teacher_absences.date', '=', tanggal)
       })
 
-      // Filter pencarian nama atau nip
       .if(params.search, (query) =>
         query
           .where('teachers.name', 'like', `%${params.search}%`)
@@ -28,7 +27,6 @@ export class TeacherAbsenceService implements TeacherAbsenceContract {
         query.where('teachers.nip', 'like', `%${params.nip}%`)
       )
 
-      // Sorting bawaan berdasarkan kolom tabel guru
       .if(params.sortBy === 'nama', (query) =>
         query.orderBy('teachers.name', params.sortOrder || 'asc')
       )
@@ -36,7 +34,6 @@ export class TeacherAbsenceService implements TeacherAbsenceContract {
         query.orderBy('teachers.nip', params.sortOrder || 'asc')
       )
 
-      // Sorting berdasarkan kolom relasi yang di-join
       .if(params.sortBy === 'status', (query) =>
         query.orderBy('teacher_absences.status', params.sortOrder || 'asc')
       )
@@ -47,15 +44,12 @@ export class TeacherAbsenceService implements TeacherAbsenceContract {
         query.orderBy('teacher_absences.check_out_time', params.sortOrder || 'asc')
       )
 
-      // Select hanya kolom guru (hindari kolom duplikat dari join)
       .select('teachers.*')
-
-      // Preload relasi untuk ambil detail absensi
+      .groupBy('teachers.id')
       .preload('latestAbsence', (ab) => {
         ab.where('date', tanggal).if(params.status, (query) => query.where('status', params.status))
       })
 
-      // Pagination
       .paginate(params.page || 1, params.limit || 10)
 
     // console.log(await TeacherAbsence.query().where('id', 12).firstOrFail())
