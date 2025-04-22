@@ -12,8 +12,14 @@ export default class AnnouncementByTeacher extends BaseModel {
   @column()
   declare teacherId: number
 
+  // @column()
+  // declare scheduleId: number
+
   @column()
-  declare scheduleId: number
+  declare classId: number
+
+  @column()
+  declare moduleId: number
 
   @column()
   declare title: string

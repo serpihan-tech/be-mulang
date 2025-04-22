@@ -35,7 +35,8 @@ export const createAnnouncementTeacher = vine.compile(
       'Prestasi',
     ]),
     //   .optional(),
-    schedule_id: vine.number().exists({ table: 'schedules', column: 'id' }),
+    class_id: vine.number().exists({ table: 'classes', column: 'id' }),
+    module_id: vine.number().exists({ table: 'modules', column: 'id' }),
     teacher_id: vine.number().exists({ table: 'teachers', column: 'id' }),
   })
 )
@@ -75,7 +76,8 @@ export const updateAnnouncementTeacher = vine.compile(
         'Prestasi',
       ])
       .optional(),
-    schedule_id: vine.number().exists({ table: 'schedules', column: 'id' }).optional(),
+    class_id: vine.number().exists({ table: 'classes', column: 'id' }).optional(),
+    module_id: vine.number().exists({ table: 'modules', column: 'id' }).optional(),
     teacher_id: vine.number().exists({ table: 'teachers', column: 'id' }).optional(),
   })
 )

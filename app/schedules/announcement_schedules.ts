@@ -4,18 +4,20 @@ import { DateTime } from 'luxon'
 import transmit from '@adonisjs/transmit/services/main'
 import Admin from '#models/admin'
 import User from '#models/user'
+import Teacher from '#models/teacher'
 
 export default class AnnouncementSchedules {
-  protected now =
+  private static now =
     DateTime.now().setZone('Asia/Jakarta').toSQL() ??
     new Date().toISOString().slice(0, 19).replace('T', ' ')
 
-  async postAnnouncementByAdmin() {
+  static async postAnnouncementByAdmin() {
     const announcements = await AnnouncementByAdmin.query().where('date', '=', this.now)
 
+    const role = 'admin'
     let adminId: number = 0
+
     const admin = await Admin.query().where('id', adminId).firstOrFail()
-    const role = await User.getRole(await admin.related('user').query().firstOrFail())
 
     for (const an of announcements) {
       an.adminId = adminId
@@ -25,7 +27,29 @@ export default class AnnouncementSchedules {
           id: an.id,
           title: an.title,
           from: admin.name,
-          role: role.role,
+          role: role,
+          // file: an.files,
+          content: an.content,
+          category: an.category,
+          date: an.date.toISOString(),
+        },
+      })
+    }
+  }
+
+  static async postAnnouncementByTeacher() {
+    const announcements = await AnnouncementByTeacher.query().where('date', '=', this.now)
+    const role = 'teacher'
+
+    for (const an of announcements) {
+      const teacher = await Teacher.query().where('id', an.teacherId).firstOrFail()
+
+      const t = transmit.broadcast(`notifications/teachers/class/${an.classId}`, {
+        message: {
+          id: an.id,
+          title: an.title,
+          from: teacher.name,
+          role: role,
           // file: an.files,
           content: an.content,
           category: an.category,

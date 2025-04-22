@@ -7,8 +7,13 @@ import Schedule from '#models/schedule'
 import Module from '#models/module'
 import User from '#models/user'
 import Teacher from '#models/teacher'
+import { DateTime } from 'luxon'
 
 export class AnnouncementByTeacherService implements AnnouncementByTeacherContract {
+  protected now =
+    DateTime.now().setZone('Asia/Jakarta').toSQL() ??
+    new Date().toISOString().slice(0, 19).replace('T', ' ')
+
   async getAll(params: any, role?: string): Promise<any> {
     // console.log('params announcement by teacher service (getAll) : ', params)
     const query = AnnouncementByTeacher.query()
@@ -41,8 +46,7 @@ export class AnnouncementByTeacherService implements AnnouncementByTeacherContra
     switch (params.sortBy) {
       case 'namaKelas':
         query
-          .join('schedules', 'announcement_by_teachers.schedule_id', 'schedules.id')
-          .join('classes', 'schedules.class_id', 'classes.id')
+          .join('classes', 'announcement_by_teachers.class_id', 'classes.id')
           .orderBy('classes.name', params.sortOrder || 'asc')
         break
       case 'namaPengirim':
@@ -67,7 +71,8 @@ export class AnnouncementByTeacherService implements AnnouncementByTeacherContra
     const result = await AnnouncementByTeacher.create(
       {
         teacherId: data.teacher_id,
-        scheduleId: data.schedule_id,
+        classId: data.class_id,
+        moduleId: data.module_id,
         title: data.title,
         content: data.content,
         category: 'Akademik',
@@ -78,28 +83,26 @@ export class AnnouncementByTeacherService implements AnnouncementByTeacherContra
     )
     await trx.commit()
 
-    const mapel = await Module.query().where('id', result.schedule.moduleId).firstOrFail()
-    const kelas = await Class.query().where('id', result.schedule.classId).firstOrFail()
+    const mapel = await Module.query().where('id', result.moduleId).firstOrFail()
+    const kelas = await Class.query().where('id', result.classId).firstOrFail()
 
     const teacher = await Teacher.query().where('id', result.teacherId).firstOrFail()
     const role = await User.getRole(await teacher.related('user').query().firstOrFail())
 
-    const ann = transmit.broadcastExcept(
-      `notifications/${kelas.name}`,
-      {
+    if (result.date.toISOString() === this.now) {
+      const ann = transmit.broadcast(`notifications/teachers/class/${kelas.id}`, {
         message: {
           title: result.title,
           content: result.content,
           category: result.category,
           role: role?.role,
           date: result.date.toISOString(),
-          files: result.files,
+          // files: result.files,
           module: mapel.name,
           class: kelas.name,
         },
-      },
-      result.teacher.id.toString()
-    )
+      })
+    }
 
     return result
   }
