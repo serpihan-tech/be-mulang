@@ -202,7 +202,12 @@ export class ClassService implements ClassContract {
       )
       .withCount(
         'absences',
-        (a) => a.as('total_absences').whereHas('schedule', (s) => s.where('module_id', moduleId))
+        (a) =>
+          a
+            .as('total_absences')
+            .whereHas('schedule', (s) =>
+              s.where('module_id', moduleId).andWhere('class_id', classId)
+            )
         // Yang Hadir saja yang dihitung ??
       )
       .withCount(
@@ -210,7 +215,9 @@ export class ClassService implements ClassContract {
         (a) =>
           a
             .as('total_absences_hadir')
-            .whereHas('schedule', (s) => s.where('module_id', moduleId).where('status', 'Hadir'))
+            .whereHas('schedule', (s) =>
+              s.where('module_id', moduleId).where('status', 'Hadir').andWhere('class_id', classId)
+            )
         // Yang Hadir saja yang dihitung ??
       )
 

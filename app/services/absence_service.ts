@@ -183,11 +183,17 @@ export class AbsenceService implements AbsenceContract {
   }
 
   async getAbsencesBySchedule(studentId: number, scheduleId: number) {
-    const schedule = await Schedule.findOrFail(scheduleId)
+    const schedule = await Schedule.query().where('id', scheduleId).firstOrFail()
+    const schedules = await Schedule.query()
+      .where('class_id', schedule.classId)
+      .andWhere('module_id', schedule.moduleId)
 
     const absences = Absence.query()
       .select('id', 'schedule_id', 'class_student_id', 'status', 'reason', 'date')
-      .where('schedule_id', schedule.id)
+      .whereIn(
+        'schedule_id',
+        schedules.map((s) => s.id)
+      )
 
     const activeAcademicYear = await this.activeSemester()
 
