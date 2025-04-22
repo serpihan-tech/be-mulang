@@ -15,7 +15,7 @@ export const StudentDetailFactory = factory
       'Budha',
       'Konghucu',
     ])
-    const gender = faker.helpers.arrayElement(['laki-laki', 'perempuan'])
+    const gender = faker.helpers.arrayElement(['Laki-laki', 'Perempuan'])
     const state = faker.location.state()
     const city = faker.location.city()
     const address = `${faker.location.streetAddress({ useFullAddress: true })}, 

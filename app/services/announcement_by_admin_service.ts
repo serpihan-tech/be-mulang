@@ -284,7 +284,7 @@ export class AnnouncementByAdminService
       content: data.content,
       category: data.category,
       adminId: adminId,
-      date: new Date(),
+      date: data.date,
       files: filePath,
       targetRoles: data.target_roles,
     })
