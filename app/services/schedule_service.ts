@@ -7,11 +7,66 @@ import AcademicYear from '#models/academic_year'
 
 export class ScheduleService implements ScheduleContract {
   async getAll(params: any): Promise<any> {
-    const schedule = Schedule.filter(params)
+    const sortBy = params.sortBy
+    const sortOrder = params.sortOrder
+
+    const schedule = Schedule.query()
+      .if(params.search, (q) =>
+        q
+          .orWhereHas('class', (cl) => cl.where('name', 'like', `%${params.search}%`))
+          .orWhereHas('module', (m) =>
+            m
+              .where('name', 'like', `%${params.search}%`)
+              .orWhereHas('teacher', (t) => t.where('name', 'like', `%${params.search}%`))
+          )
+          .orWhereHas('room', (r) => r.where('name', 'like', `%${params.search}%`))
+      )
+      .if(params.hari && params.hari !== '', (query) => query.where('days', params.hari))
+      .if(params.kelas, (k) => k.whereHas('class', (cls) => cls.where('name', params.kelas)))
+      .if(params.mapel, (mpl) => mpl.whereHas('module', (mdl) => mdl.where('name', params.mapel)))
+      .if(params.guru, (mpl) =>
+        mpl.whereHas('module', (mdl) =>
+          mdl.whereHas('teacher', (tc) => tc.where('name', params.guru))
+        )
+      )
+      .if(params.ruang, (ru) => ru.whereHas('room', (ro) => ro.where('name', params.ruang)))
+
+      // sorting
+      .if(sortBy === 'id', (i) => i.orderBy('id', sortOrder || 'asc'))
+      .if(sortBy === 'hari', (hr) => hr.orderBy('days', sortOrder || 'asc'))
+      .if(sortBy === 'mulai', (jm) => jm.orderBy('start_time', sortOrder || 'asc'))
+      .if(sortBy === 'selesai', (js) => js.orderBy('end_time', sortOrder || 'asc'))
+      .if(sortBy === 'kelas', (q) =>
+        q
+          .join('classes', 'schedules.class_id', '=', 'classes.id')
+          .orderBy('classes.name', sortOrder || 'asc')
+          .select('schedules.*')
+      )
+      .if(sortBy === 'mapel', (q) =>
+        q
+          .join('modules', 'schedules.module_id', '=', 'modules.id')
+          .orderBy('modules.name', sortOrder || 'asc')
+          .select('schedules.*')
+      )
+      .if(sortBy === 'guru', (q) =>
+        q
+          .join('modules', 'schedules.module_id', '=', 'modules.id')
+          .join('teachers', 'modules.teacher_id', '=', 'teachers.id')
+          .orderBy('teachers.name', sortOrder || 'asc')
+          .select('schedules.*')
+      )
+      .if(sortBy === 'ruang', (q) =>
+        q
+          .join('rooms', 'schedules.room_id', '=', 'rooms.id')
+          .orderBy('rooms.name', sortOrder || 'asc')
+          .select('schedules.*')
+      )
+
       .preload('module', (m) => m.preload('academicYear'))
       .preload('class', (c) => c.preload('teacher', (t) => t.select('id', 'name')))
       .preload('room')
       .paginate(params.page || 1, params.limit || 10)
+
     return schedule
   }
 
