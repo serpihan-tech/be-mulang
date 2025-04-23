@@ -92,4 +92,16 @@ export default class ModulesController {
       return response.badRequest({ error: { message: error.message } })
     }
   }
+
+  async listNames({ request, response }: HttpContext) {
+    try {
+      const modules = await this.moduleService.getAllNames(request.all())
+      return response.ok({
+        message: 'Berhasil Mendapatkan Data Modul',
+        modules,
+      })
+    } catch (error) {
+      return response.badRequest({ error })
+    }
+  }
 }

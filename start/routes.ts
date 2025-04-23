@@ -165,6 +165,7 @@ router.group(() => {
     // Modules
     router.group(() => {
         router.get('/', [ModulesController, 'index'])
+        router.get('/list-names', [ModulesController, 'listNames'])
         router.post('/', [ModulesController, 'store'])
         router.get('/:id', [ModulesController, 'show'])
         router.patch('/:id', [ModulesController, 'update'])
