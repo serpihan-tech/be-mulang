@@ -39,8 +39,11 @@ export default class StudentsService implements StudentContract, UserContract {
     const activeAcademicYear = await this.getActiveSemester()
     console.log(activeAcademicYear.id, activeAcademicYear.name)
 
-    const kelas = Array.isArray(params.kelas) ? params.kelas : [params.kelas]
+    const kelas = Array.isArray(params.kelas)
+      ? params.kelas.map((k: string) => (k ?? '').toString().trim())
+      : [(params.kelas ?? '').toString().trim()]
 
+    console.log(kelas)
     const students = await Student.query()
       .select('students.*')
       .where('is_graduate', params.status || 0)
@@ -158,6 +161,11 @@ export default class StudentsService implements StudentContract, UserContract {
         })
         cs.preload('academicYear')
         cs.preload('class')
+        if (params.kelas) {
+          cs.whereHas('class', (c) => {
+            c.whereIn('name', kelas)
+          })
+        }
       })
       .paginate(pages, Number(params.limit) || limit)
 
