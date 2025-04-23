@@ -26,6 +26,7 @@ const ScoreController = () => import('#controllers/scores_controller')
 const TeacherAbsenceController = () => import('#controllers/teacher_absences_controller')
 const SchoolCalendarsController = () => import('#controllers/school_calendars_controller')
 const AdminsController = () => import('#controllers/admins_controller')
+const RoomsController = () => import('#controllers/rooms_controller')
 
 import { middleware } from '#start/kernel'
 import transmit from '@adonisjs/transmit/services/main'
@@ -203,6 +204,16 @@ router.group(() => {
         router.patch('/:id', [SchoolCalendarsController, 'update'])
         router.delete('/:id', [SchoolCalendarsController, 'destroy'])
     }).prefix('/school-calendars')
+
+    // Rooms
+    router.group(() => {
+        router.get('/list-rooms', [RoomsController, 'listRooms'])
+        router.get('/', [RoomsController, 'index'])
+        router.post('/', [RoomsController, 'store'])
+        router.get('/:id', [RoomsController, 'show'])
+        router.patch('/:id', [RoomsController, 'update'])
+        router.delete('/:id', [RoomsController, 'destroy'])
+    }).prefix('/rooms')
 
 }).use(middleware.auth())
 
