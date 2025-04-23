@@ -19,11 +19,8 @@ export class AnnouncementByTeacherService implements AnnouncementByTeacherContra
     const query = AnnouncementByTeacher.query()
       .if(role === 'teacher', (q) => q.where('teacher_id', params.teacher_id))
       .preload('teacher', (teacher) => teacher.select('id', 'name', 'profilePicture'))
-      .preload('schedule', (schedule) =>
-        schedule.preload('class', (class_) =>
-          class_.preload('teacher', (teacher) => teacher.select('id', 'name'))
-        )
-      )
+      .preload('class', (cl) => cl.preload('teacher', (tc) => tc.select('id', 'name')))
+      .preload('module', (m) => m.select('id', 'name'))
 
     if (params.tanggal) {
       query.where('date', params.tanggal)
@@ -35,21 +32,21 @@ export class AnnouncementByTeacherService implements AnnouncementByTeacherContra
           .orWhere('content', 'like', `%${params.search}%`)
           .orWhere('date', 'like', `%${params.search}%`)
           .orWhereHas('teacher', (teacher) => teacher.where('name', 'like', `%${params.search}%`))
-          .orWhereHas('schedule', (schedule) =>
-            schedule.whereHas('class', (class_) =>
-              class_.where('name', 'like', `%${params.search}%`)
-            )
-          )
+          .orWhereHas('class', (cl) => cl.where('name', 'like', `%${params.search}%`))
       })
     }
 
+    if (params.kelas) {
+      query.whereHas('class', (cl) => cl.where('name', params.kelas))
+    }
+
     switch (params.sortBy) {
-      case 'namaKelas':
+      case 'kelas':
         query
           .join('classes', 'announcement_by_teachers.class_id', 'classes.id')
           .orderBy('classes.name', params.sortOrder || 'asc')
         break
-      case 'namaPengirim':
+      case 'guru':
         query
           .join('teachers', 'announcement_by_teachers.teacher_id', 'teachers.id')
           .orderBy('teachers.name', params.sortOrder || 'asc')
@@ -58,7 +55,16 @@ export class AnnouncementByTeacherService implements AnnouncementByTeacherContra
         query.orderBy(params.sortBy || 'id', params.sortOrder || 'asc')
     }
 
-    return await query.paginate(params.page || 1, params.limit || 10)
+    let announcement
+
+    if (params.noPaginate) {
+      return await query
+    }
+
+    announcement = await query.paginate(params.page || 1, params.limit || 10)
+
+    console.log('ANNOUNCEMENT BY TEACHERS INDEX : ', query)
+    return announcement
   }
 
   async getOne(id: number): Promise<any> {
