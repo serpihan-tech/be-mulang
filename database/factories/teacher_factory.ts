@@ -27,7 +27,7 @@ export const TeacherFactory = factory
       'Katolik',
       'Islam',
       'Hindu',
-      'Budha',
+      'Buddha',
       'Konghucu',
     ])
 

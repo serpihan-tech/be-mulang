@@ -12,7 +12,7 @@ export const StudentDetailFactory = factory
       'Katolik',
       'Islam',
       'Hindu',
-      'Budha',
+      'Buddha',
       'Konghucu',
     ])
     const gender = faker.helpers.arrayElement(['Laki-laki', 'Perempuan'])
