@@ -123,4 +123,14 @@ export default class AcademicYearsController {
       return response.badRequest({ error })
     }
   }
+
+  async activeYear({ response }: HttpContext) {
+    try {
+      const ay = await this.academicYearService.getActiveAcademicYear()
+
+      return response.ok({ message: 'Tahun Ajaran Aktif Berhasil Ditemukan', ay })
+    } catch (error) {
+      return response.badRequest({ error: { message: error.message } })
+    }
+  }
 }

@@ -2,6 +2,7 @@ import AcademicYear from '#models/academic_year'
 import db from '@adonisjs/lucid/services/db'
 import AcademicYearContract from '../contracts/academicyear_contract.js'
 import Student from '#models/student'
+import { DateTime } from 'luxon'
 
 export default class AcademicYearService implements AcademicYearContract {
   async getMyAcademicYear(studentId: number): Promise<any> {
@@ -84,5 +85,23 @@ export default class AcademicYearService implements AcademicYearContract {
   async delete(id: number) {
     const academicYear = await AcademicYear.query().where('id', id).firstOrFail()
     return await academicYear.delete()
+  }
+
+  async getActiveAcademicYear() {
+    const now =
+      DateTime.now().setZone('Asia/Jakarta').toSQL() ??
+      new Date().toISOString().slice(0, 19).replace('T', ' ')
+
+    const academicYear = await AcademicYear.query()
+      .where('status', 1)
+      .where('date_start', '<', now)
+      .where('date_end', '>', now)
+      .first()
+
+    if (academicYear) {
+      return await AcademicYear.query().where('name', academicYear.name).orderBy('semester', 'asc')
+    }
+
+    return await AcademicYear.query().where('status', 1)
   }
 }

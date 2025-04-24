@@ -130,6 +130,7 @@ router.group(() => {
     router.group(() => {
         router.get('/mine', [AcademicYearsController, 'myAcademicYear'])
             .use(middleware.role(['student'])) // * untuk data/fitur untuk siswa yang sedang login
+        router.get('/active-year', [AcademicYearsController, 'activeYear'])
         router.get('/', [AcademicYearsController, 'index'])
         router.post('/', [AcademicYearsController, 'store'])
         router.get('/:id', [AcademicYearsController, 'show'])
