@@ -9,9 +9,34 @@ export class ScheduleService implements ScheduleContract {
   async getAll(params: any): Promise<any> {
     const sortBy = params.sortBy
     const sortOrder = params.sortOrder
+    const academicYear = await this.activeSemester()
+
+    const kelas = Array.isArray(params.kelas)
+      ? params.kelas.map((k: string) => (k ?? '').toString().trim())
+      : [(params.kelas ?? '').toString().trim()]
+
+    const hari = Array.isArray(params.hari)
+      ? params.hari.map((h: string) => (h ?? '').toString().trim())
+      : [(params.hari ?? '').toString().trim()]
+
+    const mapel = Array.isArray(params.mapel)
+      ? params.mapel.map((m: string) => (m ?? '').toString().trim())
+      : [(params.mapel ?? '').toString().trim()]
+
+    const guru = Array.isArray(params.guru)
+      ? params.guru.map((g: string) => (g ?? '').toString().trim())
+      : [(params.guru ?? '').toString().trim()]
+
+    const ruang = Array.isArray(params.ruang)
+      ? params.ruang.map((r: string) => (r ?? '').toString().trim())
+      : [(params.ruang ?? '').toString().trim()]
 
     const schedule = Schedule.query()
-      .if(params.search, (q) =>
+      .whereHas('module', (m) =>
+        m.where('academic_year_id', params?.tahunAjar?.trim() ? params.tahunAjar : academicYear.id)
+      )
+
+      .if(params.search && params.search !== ' ', (q) =>
         q
           .orWhereHas('class', (cl) => cl.where('name', 'like', `%${params.search}%`))
           .orWhereHas('module', (m) =>
@@ -21,15 +46,13 @@ export class ScheduleService implements ScheduleContract {
           )
           .orWhereHas('room', (r) => r.where('name', 'like', `%${params.search}%`))
       )
-      .if(params.hari && params.hari !== '', (query) => query.where('days', params.hari))
-      .if(params.kelas, (k) => k.whereHas('class', (cls) => cls.where('name', params.kelas)))
-      .if(params.mapel, (mpl) => mpl.whereHas('module', (mdl) => mdl.where('name', params.mapel)))
+      .if(params.hari && params.hari !== '', (query) => query.whereIn('days', hari))
+      .if(params.kelas, (k) => k.whereHas('class', (cls) => cls.whereIn('name', kelas)))
+      .if(params.mapel, (mpl) => mpl.whereHas('module', (mdl) => mdl.whereIn('name', mapel)))
       .if(params.guru, (mpl) =>
-        mpl.whereHas('module', (mdl) =>
-          mdl.whereHas('teacher', (tc) => tc.where('name', params.guru))
-        )
+        mpl.whereHas('module', (mdl) => mdl.whereHas('teacher', (tc) => tc.whereIn('name', guru)))
       )
-      .if(params.ruang, (ru) => ru.whereHas('room', (ro) => ro.where('name', params.ruang)))
+      .if(params.ruang, (ru) => ru.whereHas('room', (ro) => ro.whereIn('name', ruang)))
 
       // sorting
       .if(sortBy === 'id', (i) => i.orderBy('id', sortOrder || 'asc'))
@@ -62,8 +85,10 @@ export class ScheduleService implements ScheduleContract {
           .select('schedules.*')
       )
 
-      .preload('module', (m) => m.preload('academicYear'))
-      .preload('class', (c) => c.preload('teacher', (t) => t.select('id', 'name')))
+      .preload('module', (m) =>
+        m.preload('academicYear').preload('teacher', (t) => t.select('id', 'name'))
+      )
+      .preload('class')
       .preload('room')
       .paginate(params.page || 1, params.limit || 10)
 
