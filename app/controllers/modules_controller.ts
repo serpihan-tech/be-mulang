@@ -104,4 +104,13 @@ export default class ModulesController {
       return response.badRequest({ error })
     }
   }
+
+  async listModules({ request, response }: HttpContext) {
+    try {
+      const modules = await this.moduleService.listModules(request.all())
+      return response.ok({ message: 'List Mapel Berhasil Ditemukan', modules })
+    } catch (error) {
+      return response.badRequest({ error: { message: error.message } })
+    }
+  }
 }

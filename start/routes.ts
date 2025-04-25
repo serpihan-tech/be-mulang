@@ -119,6 +119,7 @@ router.group(() => {
     router.group(() => {
         router.get('/teacher/mine', [ClassesController, 'getClassTeacher']).use(middleware.role(['teacher']))
         router.get('/students/:classId/:moduleId', [ClassesController, 'getStudentsByClass'])
+        router.get('/list-classes', [ClassesController, 'listClasses'])
         router.get('/', [ClassesController, 'index'])
         router.post('/', [ClassesController, 'store'])
         router.get('/:id', [ClassesController, 'show'])
@@ -168,6 +169,7 @@ router.group(() => {
     router.group(() => {
         router.get('/', [ModulesController, 'index'])
         router.get('/list-names', [ModulesController, 'listNames'])
+        router.get('/list-modules', [ModulesController, 'listModules'])
         router.post('/', [ModulesController, 'store'])
         router.get('/:id', [ModulesController, 'show'])
         router.patch('/:id', [ModulesController, 'update'])

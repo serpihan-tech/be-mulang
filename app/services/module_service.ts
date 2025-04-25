@@ -85,12 +85,26 @@ export default class ModuleService implements ModuleContract {
   }
 
   async getAllNames(data: any) {
+    // only return module's name
     const academicYear = await this.getActiveSemester()
 
     const modules = await Module.query()
       .where('academic_year_id', data.tahunAjar ?? academicYear.id)
       .orderBy('name', 'asc')
       .distinct('name')
+
+    return modules
+  }
+
+  async listModules(params: any) {
+    // return module's name and teacher's
+    const activeAcademicYear = await this.getActiveSemester()
+    const yearId = params.tahunAjar ?? activeAcademicYear.id
+
+    const modules = await Module.query()
+      .select('id', 'name', 'academic_year_id', 'teacher_id')
+      .where('academic_year_id', yearId)
+      .preload('teacher', (t) => t.select('id', 'name'))
 
     return modules
   }
