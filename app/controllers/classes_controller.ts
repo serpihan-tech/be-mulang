@@ -106,4 +106,16 @@ export default class ClassesController {
       return response.badRequest({ error: { message: error.message } })
     }
   }
+
+  async listClasses({ request, response }: HttpContext) {
+    try {
+      const classes = await this.classService.listClasses(request.all())
+      return response.ok({
+        message: 'List Kelas Berhasil Ditampilkan',
+        data: classes,
+      })
+    } catch (error) {
+      return response.badRequest({ error: { message: error.message } })
+    }
+  }
 }

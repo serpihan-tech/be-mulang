@@ -231,4 +231,12 @@ export class ClassService implements ClassContract {
       totalAbsencesHadir: ts.$extras.total_absences_hadir,
     }))
   }
+
+  async listClasses(params?: any) {
+    const classes = await Class.query()
+      .select('id', 'name', 'teacher_id')
+      .preload('teacher', (q) => q.select('id', 'name'))
+
+    return classes
+  }
 }
