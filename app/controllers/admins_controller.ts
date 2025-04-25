@@ -32,8 +32,16 @@ export default class AdminsController {
     try {
       await createUserValidator.validate(request.input('user'))
       await createAdminValidator.validate(request.input('admin'))
+      const data = request.all()
 
-      const admin = await this.adminService.create(request.all())
+      // Ambil file profile_picture dari request.file() secara terpisah
+      const profilePicture = request.file('admin.profile_picture')
+
+      if (profilePicture) {
+        data.admin.profile_picture = profilePicture
+      }
+
+      const admin = await this.adminService.create(data)
       return response.created({ message: 'Admin Berhasil Ditambahkan', admin })
     } catch (error) {
       return response.badRequest({ error })
@@ -54,7 +62,7 @@ export default class AdminsController {
         data.admin.profile_picture = profilePicture
       }
 
-      const admin = await this.adminService.update(params.id, request.all())
+      const admin = await this.adminService.update(params.id, data)
       return response.ok({ message: 'Admin Berhasil Diubah', admin })
     } catch (error) {
       if (error.code === 'E_ROW_NOT_FOUND')
