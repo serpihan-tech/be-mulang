@@ -81,7 +81,27 @@ export default class ModuleService implements ModuleContract {
 
   async update(data: any, id: number): Promise<any> {
     const modules = await Module.findOrFail(id)
-    modules.merge(data).save()
+    modules.merge({
+      name: data.name ?? modules.name,
+      academicYearId: data.academic_year_id ?? modules.academicYearId,
+      teacherId: data.teacher_id ?? modules.teacherId,
+    })
+
+    if (data.thumbnail) {
+      const tn = data.thumbnail
+      console.log(tn)
+      const fileName = `${cuid()}.${tn.extname}`
+
+      // Pindahkan file hanya jika `profile_picture` ada dan valid
+      await tn.move(app.makePath('storage/uploads/modules-thumbnail'), {
+        name: fileName,
+      })
+
+      // Simpan path file ke dalam database
+      modules.thumbnail = `modules-thumbnail/${fileName}`
+    }
+
+    await modules.save()
 
     return modules
   }
