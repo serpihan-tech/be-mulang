@@ -81,6 +81,7 @@ export default class TeachersController {
         teacher,
       })
     } catch (error) {
+      // console.error(error)
       return response.unprocessableEntity({ error })
     }
   }

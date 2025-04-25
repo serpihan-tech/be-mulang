@@ -114,11 +114,10 @@ export default class TeacherService implements UserContract {
         birthPlace: data.teacher?.birth_place ?? teacher.birthPlace,
         gender: data.teacher?.gender ?? teacher.gender,
         address: data.teacher?.address ?? teacher.address,
-        profilePicture: data.teacher?.profile_picture ?? teacher.profilePicture,
       })
 
       if (data.teacher.profile_picture) {
-        const profilePicture = data.student_detail.profile_picture
+        const profilePicture = data.teacher.profile_picture
         const fileName = `${cuid()}.${profilePicture.extname}`
 
         // Pindahkan file hanya jika `profile_picture` ada dan valid
