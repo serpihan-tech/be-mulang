@@ -19,6 +19,7 @@ export default class extends BaseSchema {
         .references('id')
         .inTable('teachers')
         .onDelete('CASCADE')
+      table.text('thumbnail').nullable()
       table.timestamp('created_at')
       table.timestamp('updated_at')
     })

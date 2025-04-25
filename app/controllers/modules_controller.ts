@@ -28,7 +28,15 @@ export default class ModulesController {
   async store({ request, response }: HttpContext) {
     try {
       await createModuleValidator.validate(request.all())
-      const module = await this.moduleService.create(request.all())
+      const data = request.all()
+
+      // Ambil file profile_picture dari request.file() secara terpisah
+      const tn = request.file('thumbnail')
+
+      if (tn) {
+        data.thumbnail = tn
+      }
+      const module = await this.moduleService.create(data)
 
       return response.created({
         message: 'Mapel Berhasil Dibuat',
@@ -64,7 +72,15 @@ export default class ModulesController {
     const moduleId = params.id
     try {
       await updateModuleValidator.validate(request.all())
-      const module = await this.moduleService.update(request.all(), moduleId)
+      const data = request.all()
+
+      // Ambil file profile_picture dari request.file() secara terpisah
+      const tn = request.file('thumbnail')
+
+      if (tn) {
+        data.thumbnail = tn
+      }
+      const module = await this.moduleService.update(data, moduleId)
 
       return response.ok({
         message: 'Mapel Berhasil Diubah',

@@ -19,6 +19,9 @@ export default class Module extends BaseModel {
   @column()
   declare academicYearId: number
 
+  @column()
+  declare thumbnail: string
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 

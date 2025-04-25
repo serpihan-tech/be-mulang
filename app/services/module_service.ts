@@ -3,6 +3,8 @@ import Module from '#models/module'
 import ModuleContract from '../contracts/module_contract.js'
 import { DateTime } from 'luxon'
 import AcademicYear from '#models/academic_year'
+import { cuid } from '@adonisjs/core/helpers'
+import app from '@adonisjs/core/services/app'
 
 export default class ModuleService implements ModuleContract {
   async getAll(params: any): Promise<any> {
@@ -51,7 +53,28 @@ export default class ModuleService implements ModuleContract {
         }
       }
     }
-    const modules = await Module.create(data)
+
+    const modules = await Module.create({
+      name: data.name,
+      academicYearId: data.academic_year_id,
+      teacherId: data.teacher_id,
+    })
+
+    if (data.thumbnail) {
+      const tn = data.thumbnail
+      console.log(tn)
+      const fileName = `${cuid()}.${tn.extname}`
+
+      // Pindahkan file hanya jika `profile_picture` ada dan valid
+      await tn.move(app.makePath('storage/uploads/modules-thumbnail'), {
+        name: fileName,
+      })
+
+      // Simpan path file ke dalam database
+      modules.thumbnail = `modules-thumbnail/${fileName}`
+    }
+
+    await modules.save()
 
     return modules
   }
