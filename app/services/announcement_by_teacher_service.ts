@@ -74,6 +74,7 @@ export class AnnouncementByTeacherService implements AnnouncementByTeacherContra
           class: item.class?.name,
           files: item.files,
           senderPicture: item.teacher?.profilePicture,
+          senderEmail: item.teacher?.user?.email,
         })),
       }
     } else {
@@ -96,7 +97,6 @@ export class AnnouncementByTeacherService implements AnnouncementByTeacherContra
 
     try {
       if (file) {
-        // Simpan dulu file di lokasi temporary, jangan langsung move permanen
         filePath = `announcement-teachers/${new Date().getTime()}_${file.clientName}`
         tempFilePath = `${new Date().getTime()}_${file.clientName}`
       }
@@ -110,14 +110,13 @@ export class AnnouncementByTeacherService implements AnnouncementByTeacherContra
           content: data.content,
           category: 'Akademik',
           date: data.date,
-          files: filePath, // simpan nama file aja, file belum dipindahkan
+          files: filePath,
         },
         { client: trx }
       )
 
       await trx.commit()
 
-      // Setelah database commit berhasil, baru pindahkan file ke storage
       if (file) {
         await file.move(app.makePath('storage/uploads/announcement-teachers'), {
           name: tempFilePath,
@@ -141,12 +140,13 @@ export class AnnouncementByTeacherService implements AnnouncementByTeacherContra
             content: result.content,
             category: result.category,
             role: role?.role,
-            date: resultDate.toISOString(), // gunakan resultDate
+            date: resultDate.toISOString(),
             teacher: teacher.name,
             module: mapel.name,
             class: kelas.name,
             files: filePath,
             senderPicture: teacher.profilePicture,
+            senderEmail: teacher.user.email,
           },
         })
       }

@@ -26,12 +26,14 @@ export default class AnnouncementSchedules {
         message: {
           id: an.id,
           title: an.title,
-          from: admin.name,
-          role: role,
-          // file: an.files,
           content: an.content,
           category: an.category,
+          from: admin.name,
+          role: role,
+          files: an.files,
           date: an.date.toISOString(),
+          senderPicture: admin.profilePicture,
+          senderEmail: admin.user.email,
         },
       })
     }
@@ -48,12 +50,14 @@ export default class AnnouncementSchedules {
         message: {
           id: an.id,
           title: an.title,
-          from: teacher.name,
-          role: role,
-          // file: an.files,
           content: an.content,
           category: an.category,
+          from: teacher.name,
+          role: role,
+          files: an.files,
           date: an.date.toISOString(),
+          senderPicture: teacher.profilePicture,
+          senderEmail: teacher.user.email,
         },
       })
     }

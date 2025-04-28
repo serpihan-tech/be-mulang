@@ -138,6 +138,7 @@ export class AnnouncementByAdminService
             category: ann.category,
             date: ann.date.toISOString(),
             senderPicture: admin?.profilePicture,
+            senderEmail: admin?.user?.email,
           }
         })
       )
@@ -185,7 +186,6 @@ export class AnnouncementByAdminService
 
       await trx.commit()
 
-      // Setelah commit, baru move file
       if (file) {
         await file.move(app.makePath('storage/uploads/announcement-admins'), {
           name: tempFilePath,
@@ -210,6 +210,7 @@ export class AnnouncementByAdminService
             category: ann.category,
             date: annDate.toISOString(),
             senderPicture: admin.profilePicture,
+            senderEmail: admin.user.email,
           },
         })
       }
@@ -236,7 +237,7 @@ export class AnnouncementByAdminService
 
         announcement.merge({
           ...data,
-          files: filePath, // Update file path
+          files: filePath,
         })
       } else {
         announcement.merge(data)
@@ -245,7 +246,6 @@ export class AnnouncementByAdminService
       await announcement.useTransaction(trx).save()
       await trx.commit()
 
-      // Setelah commit, move file
       if (file) {
         await file.move(app.makePath('storage/uploads/announcement-admins'), {
           name: tempFilePath,
