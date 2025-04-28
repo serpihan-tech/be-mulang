@@ -17,7 +17,7 @@ export default class AnnouncementSchedules {
     const role = 'admin'
     let adminId: number = 0
 
-    const admin = await Admin.query().where('id', adminId).firstOrFail()
+    const admin = await Admin.query().where('id', adminId).preload('user').firstOrFail()
 
     for (const an of announcements) {
       an.adminId = adminId
@@ -44,7 +44,10 @@ export default class AnnouncementSchedules {
     const role = 'teacher'
 
     for (const an of announcements) {
-      const teacher = await Teacher.query().where('id', an.teacherId).firstOrFail()
+      const teacher = await Teacher.query()
+        .where('id', an.teacherId)
+        .preload('user', (u) => u.select('id', 'name'))
+        .firstOrFail()
 
       const t = transmit.broadcast(`notifications/teachers/class/${an.classId}`, {
         message: {

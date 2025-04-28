@@ -59,7 +59,7 @@ export class AnnouncementByTeacherService implements AnnouncementByTeacherContra
     }
 
     if (params.noPaginate) {
-      const data = await query
+      const data = await query.preload('teacher', (t) => t.preload('user'))
       return {
         total: data.length,
         data: data.map((item) => ({
@@ -130,7 +130,10 @@ export class AnnouncementByTeacherService implements AnnouncementByTeacherContra
         const mapel = await Module.query().where('id', result.moduleId).firstOrFail()
         const kelas = await Class.query().where('id', result.classId).firstOrFail()
 
-        const teacher = await Teacher.query().where('id', result.teacherId).firstOrFail()
+        const teacher = await Teacher.query()
+          .where('id', result.teacherId)
+          .preload('user')
+          .firstOrFail()
         const role = await User.getRole(await teacher.related('user').query().firstOrFail())
 
         transmit.broadcast(`notifications/teachers/class/${kelas.id}`, {

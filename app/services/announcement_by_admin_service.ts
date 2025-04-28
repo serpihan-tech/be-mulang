@@ -138,7 +138,7 @@ export class AnnouncementByAdminService
             category: ann.category,
             date: ann.date.toISOString(),
             senderPicture: admin?.profilePicture,
-            senderEmail: admin?.user?.email,
+            senderEmail: userAdmin.email,
           }
         })
       )
@@ -193,7 +193,7 @@ export class AnnouncementByAdminService
         })
       }
 
-      const admin = await Admin.query().where('id', adminId).firstOrFail()
+      const admin = await Admin.query().where('id', adminId).preload('user').firstOrFail()
       const role = await User.getRole(await admin.related('user').query().firstOrFail())
 
       const annDate = new Date(ann.date)
