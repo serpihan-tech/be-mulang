@@ -5,13 +5,14 @@ import { DateTime } from 'luxon'
 import AcademicYear from '#models/academic_year'
 import { cuid } from '@adonisjs/core/helpers'
 import app from '@adonisjs/core/services/app'
+import normalizeSearch from '../utils/normalize_search.js'
 
 export default class ModuleService implements ModuleContract {
   async getAll(params: any): Promise<any> {
     const dataModule = await Module.query()
 
-      .if(params.search && params.search.trim() !== '', (query) => {
-        const search = params.search.trim()
+      .if(params.search && normalizeSearch(params.search) !== '', (query) => {
+        const search = normalizeSearch(params.search)
         query.where((q) => {
           q.where('modules.name', 'like', `%${search}%`)
             .orWhereHas('teacher', (teacherQuery) => {
