@@ -63,7 +63,7 @@ export class AnnouncementByTeacherService implements AnnouncementByTeacherContra
       return {
         total: data.length,
         data: data.map((item) => ({
-          id: item.id,
+          id: `74${item.id}`,
           title: item.title,
           content: item.content,
           category: item.category,
@@ -138,7 +138,7 @@ export class AnnouncementByTeacherService implements AnnouncementByTeacherContra
 
         transmit.broadcast(`notifications/teachers/class/${kelas.id}`, {
           message: {
-            id: result.id,
+            id: `74${result.id}`,
             title: result.title,
             content: result.content,
             category: result.category,

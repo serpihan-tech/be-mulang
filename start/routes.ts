@@ -48,7 +48,7 @@ router.group(() => {
 router.post('/check-role', [AuthController, 'checkRole']).as('auth.check-role')
 
 // ! This shit cause error on url '/' no matter what the prefixs are, be careful
-router.get('image/:folder/:filename', async ({ params, response }) => { 
+router.get('file/:folder/:filename', async ({ params, response }) => { 
     const filePath = app.makePath(`storage/uploads/${params.folder}`, params.filename)
 
     return response.download(filePath)

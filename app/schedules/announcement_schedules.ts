@@ -24,7 +24,7 @@ export default class AnnouncementSchedules {
 
       const t = transmit.broadcast(`notifications/${an.targetRoles}`, {
         message: {
-          id: an.id,
+          id: `44${an.id}`,
           title: an.title,
           content: an.content,
           category: an.category,
@@ -51,7 +51,7 @@ export default class AnnouncementSchedules {
 
       const t = transmit.broadcast(`notifications/teachers/class/${an.classId}`, {
         message: {
-          id: an.id,
+          id: `74${an.id}`,
           title: an.title,
           content: an.content,
           category: an.category,

@@ -129,7 +129,7 @@ export class AnnouncementByAdminService
           const roleName = userAdmin ? await User.getRole(userAdmin) : null
 
           return {
-            id: ann.id,
+            id: `44${ann.id}`,
             title: ann.title,
             from: admin?.name,
             role: roleName?.role,
@@ -201,7 +201,7 @@ export class AnnouncementByAdminService
       if (annDate.toISOString() === this.now) {
         transmit.broadcast(`notifications/${ann.targetRoles}`, {
           message: {
-            id: ann.id,
+            id: `44${ann.id}`,
             title: ann.title,
             from: admin.name,
             role: role?.role,
