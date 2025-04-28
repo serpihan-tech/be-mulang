@@ -8,24 +8,56 @@ import app from '@adonisjs/core/services/app'
 
 export default class ModuleService implements ModuleContract {
   async getAll(params: any): Promise<any> {
-    const formatedParams = {
-      name: params.namaMapel,
-    }
-    const dataModule = await Module.filter(formatedParams)
+    const dataModule = await Module.query()
+
+      .if(params.search && params.search.trim() !== '', (query) => {
+        const search = params.search.trim()
+        query.where((q) => {
+          q.where('modules.name', 'like', `%${search}%`)
+            .orWhereHas('teacher', (teacherQuery) => {
+              teacherQuery.where('name', 'like', `%${search}%`)
+            })
+            .orWhereHas('academicYear', (ay) => ay.where('name', 'like', `%${search}%`))
+        })
+      })
+
+      .if(params.namaMapel, (query) => {
+        query.where('name', params.namaMapel)
+      })
+
       .if(params.tahunAjar, (query) => {
         query.whereHas('academicYear', (ayQuery) => {
           ayQuery.where('id', params.tahunAjar)
         })
       })
+
       .if(params.nip, (query) => {
         query.whereHas('teacher', (tQuery) => {
           tQuery.where('nip', params.nip)
         })
       })
+
+      .if(params.sortBy === 'mapel', (query) => {
+        query.orderBy('modules.name', params.sortOrder || 'asc')
+      })
+      .if(params.sortBy === 'tahunAjar', (query) => {
+        query
+          .join('academic_years', 'modules.academic_year_id', 'academic_years.id')
+          .orderBy('academic_years.name', params.sortOrder || 'asc')
+          .select('modules.*')
+      })
+      .if(params.sortBy === 'guru', (query) => {
+        query
+          .join('teachers', 'modules.teacher_id', 'teachers.id')
+          .orderBy('teachers.name', params.sortOrder || 'asc')
+          .select('modules.*')
+      })
+
       .preload('academicYear', (ay) =>
         ay.select('id', 'name', 'dateStart', 'dateEnd', 'semester', 'status')
       )
       .preload('teacher', (t) => t.select('id', 'name', 'nip'))
+
       .paginate(params.page || 1, params.limit || 10)
 
     return dataModule
@@ -60,14 +92,16 @@ export default class ModuleService implements ModuleContract {
       teacherId: data.teacher_id,
     })
 
+    console.log(data)
     if (data.thumbnail) {
       const tn = data.thumbnail
       console.log(tn)
-      const fileName = `${cuid()}.${tn.extname}`
+      const fileName = `${tn.clientName}`
 
       // Pindahkan file hanya jika `profile_picture` ada dan valid
       await tn.move(app.makePath('storage/uploads/modules-thumbnail'), {
         name: fileName,
+        overwrite: true,
       })
 
       // Simpan path file ke dalam database
@@ -90,7 +124,7 @@ export default class ModuleService implements ModuleContract {
     if (data.thumbnail) {
       const tn = data.thumbnail
       console.log(tn)
-      const fileName = `${cuid()}.${tn.extname}`
+      const fileName = `${tn.clientName}`
 
       // Pindahkan file hanya jika `profile_picture` ada dan valid
       await tn.move(app.makePath('storage/uploads/modules-thumbnail'), {
