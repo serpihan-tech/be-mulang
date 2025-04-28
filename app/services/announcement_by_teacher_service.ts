@@ -63,6 +63,7 @@ export class AnnouncementByTeacherService implements AnnouncementByTeacherContra
       return {
         total: data.length,
         data: data.map((item) => ({
+          id: item.id,
           title: item.title,
           content: item.content,
           category: item.category,
@@ -72,6 +73,7 @@ export class AnnouncementByTeacherService implements AnnouncementByTeacherContra
           module: item.module?.name,
           class: item.class?.name,
           files: item.files,
+          senderPicture: item.teacher?.profilePicture,
         })),
       }
     } else {
@@ -134,6 +136,7 @@ export class AnnouncementByTeacherService implements AnnouncementByTeacherContra
 
         transmit.broadcast(`notifications/teachers/class/${kelas.id}`, {
           message: {
+            id: result.id,
             title: result.title,
             content: result.content,
             category: result.category,
@@ -143,6 +146,7 @@ export class AnnouncementByTeacherService implements AnnouncementByTeacherContra
             module: mapel.name,
             class: kelas.name,
             files: filePath,
+            senderPicture: teacher.profilePicture,
           },
         })
       }
@@ -156,11 +160,40 @@ export class AnnouncementByTeacherService implements AnnouncementByTeacherContra
 
   async update(data: any, id: number): Promise<any> {
     const trx = await db.transaction()
-    const result = await AnnouncementByTeacher.findOrFail(id)
-    result.merge(data)
-    await result.useTransaction(trx).save()
-    await trx.commit()
-    return result
+    const file = data.files
+    let filePath = ''
+    let tempFilePath = ''
+
+    try {
+      const result = await AnnouncementByTeacher.findOrFail(id)
+
+      if (file) {
+        filePath = `announcement-teachers/${new Date().getTime()}_${file.clientName}`
+        tempFilePath = `${new Date().getTime()}_${file.clientName}`
+
+        result.merge({
+          ...data,
+          files: filePath,
+        })
+      } else {
+        result.merge(data)
+      }
+
+      await result.useTransaction(trx).save()
+      await trx.commit()
+
+      if (file) {
+        await file.move(app.makePath('storage/uploads/announcement-teachers'), {
+          name: tempFilePath,
+          overwrite: true,
+        })
+      }
+
+      return result
+    } catch (error) {
+      await trx.rollback()
+      throw error
+    }
   }
 
   async delete(id: number): Promise<any> {
