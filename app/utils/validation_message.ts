@@ -2,7 +2,7 @@ export const messages = {
   'enum': '{{ field }} harus salah satu dari {{ choices }}',
   'minLength': '{{ field }} harus memiliki panjang minimal {{ min }} karakter',
   'maxLength': '{{ field }} harus memiliki panjang maksimal {{ max }} karakter',
-  'date': '{{ field }} harus berupa tanggal',
+  'date': '{{ field }} harus berupa tanggal yang valid (YYYY-MM-DD)',
   'requiredIfExists': '{{ field }} harus diisi',
   'string': '{{ field }} harus berupa teks',
   'required': '{{ field }} harus diisi',
@@ -17,4 +17,6 @@ export const messages = {
   'sameAs': '{{ field }} harus sama dengan {{ otherField }}',
   'notSameAs': '{{ field }} harus tidak boleh sama dengan {{ otherField }}',
   'boolean': '{{ field }} harus berupa boolean ( benar / salah )',
+  'file.extname': '{{ field }} harus berupa file dengan ekstensi {{ extnames }}',
+  'file.size': '{{ field }} harus berukuran kurang dari {{ size }}',
 }
