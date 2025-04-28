@@ -5,10 +5,10 @@ export const createAnnouncementTeacher = vine.compile(
   vine.object({
     title: vine.string().minLength(4),
     content: vine.string().maxLength(1000),
-    // date: vine.date(),
+    date: vine.date(),
     files: vine
       .file({
-        size: '3mb',
+        size: '3 MB',
         extnames: [
           'jpg',
           'png',
@@ -26,15 +26,16 @@ export const createAnnouncementTeacher = vine.compile(
         ],
       })
       .optional(),
-    category: vine.enum([
-      'Akademik',
-      'Administrasi',
-      'Informasi Umum',
-      'Kegiatan Sekolah',
-      'Fasilitas',
-      'Prestasi',
-    ]),
-    //   .optional(),
+    category: vine
+      .enum([
+        'Akademik',
+        'Administrasi',
+        'Informasi Umum',
+        'Kegiatan Sekolah',
+        'Fasilitas',
+        'Prestasi',
+      ])
+      .optional(),
     class_id: vine.number().exists({ table: 'classes', column: 'id' }),
     module_id: vine.number().exists({ table: 'modules', column: 'id' }),
     teacher_id: vine.number().exists({ table: 'teachers', column: 'id' }),
@@ -48,7 +49,7 @@ export const updateAnnouncementTeacher = vine.compile(
     date: vine.date().optional(),
     files: vine
       .file({
-        size: '3mb',
+        size: '3 MB',
         extnames: [
           'jpg',
           'png',

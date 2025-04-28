@@ -9,7 +9,7 @@ export const createModuleValidator = vine.compile(
     thumbnail: vine
       .file({
         size: '2mb',
-        extnames: ['jpg', 'png', 'jpeg'],
+        extnames: ['jpg', 'png', 'jpeg', 'webp', 'svg'],
       })
       .optional(),
   })
@@ -23,7 +23,7 @@ export const updateModuleValidator = vine.compile(
     thumbnail: vine
       .file({
         size: '2mb',
-        extnames: ['jpg', 'png', 'jpeg'],
+        extnames: ['jpg', 'png', 'jpeg', 'webp', 'svg'],
       })
       .optional(),
   })

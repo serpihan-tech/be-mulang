@@ -14,7 +14,7 @@ export const createTeacherValidator = vine.compile(
     address: vine.string().minLength(4),
     profile_picture: vine
       .file({
-        size: '2mb',
+        size: '2 MB',
         extnames: ['jpg', 'png', 'jpeg'],
       })
       .optional(),
@@ -33,7 +33,7 @@ export const updateTeacherValidator = vine.compile(
     address: vine.string().minLength(4).optional(),
     profile_picture: vine
       .file({
-        size: '2mb',
+        size: '2 MB',
         extnames: ['jpg', 'png', 'jpeg'],
       })
       .optional(),

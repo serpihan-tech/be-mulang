@@ -272,7 +272,7 @@ export class AnnouncementByAdminService
     let filePath = ''
 
     if (file) {
-      await file.move(app.tmpPath('storage/uploads/announcement-admins'), {
+      await file.move(app.makePath('storage/uploads/announcement-admins'), {
         name: `${new Date().getTime()}_${file.clientName}`,
         overwrite: true,
       })

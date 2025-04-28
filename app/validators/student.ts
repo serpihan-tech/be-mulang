@@ -23,7 +23,7 @@ export const createStudentDetailValidator = vine.compile(
     enrollment_year: vine.date(),
     profile_picture: vine
       .file({
-        size: '2mb',
+        size: '2 MB',
         extnames: ['jpg', 'png', 'jpeg'],
       })
       .optional(),
@@ -67,7 +67,7 @@ export const updateStudentDetailValidator = vine.compile(
     enrollment_year: vine.date().optional(),
     profile_picture: vine
       .file({
-        size: '2mb',
+        size: '2 MB',
         extnames: ['jpg', 'png', 'jpeg'],
       })
       .optional(),

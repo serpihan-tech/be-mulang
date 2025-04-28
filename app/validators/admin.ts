@@ -8,7 +8,7 @@ export const createAdminValidator = vine.compile(
     address: vine.string().maxLength(255),
     profile_picture: vine
       .file({
-        size: '2mb',
+        size: '2 MB',
         extnames: ['jpg', 'png', 'jpeg'],
       })
       .optional(),
@@ -23,7 +23,7 @@ export const updateAdminValidator = vine.compile(
     address: vine.string().maxLength(255).optional(),
     profile_picture: vine
       .file({
-        size: '2mb',
+        size: '2 MB',
         extnames: ['jpg', 'png', 'jpeg'],
       })
       .optional(),

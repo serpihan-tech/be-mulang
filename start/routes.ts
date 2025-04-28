@@ -155,9 +155,9 @@ router.group(() => {
     router.group(() => {
         router.get('/', [AnnouncementByTeachers, 'index'])
         router.get('/:id', [AnnouncementByTeachers, 'show'])
-        router.post('/', [AnnouncementByTeachers, 'store']).use(middleware.role(['admin']))
-        router.patch('/:id', [AnnouncementByTeachers, 'update']).use(middleware.role(['admin']))
-        router.delete('/:id', [AnnouncementByTeachers, 'destroy']).use(middleware.role(['admin']))
+        router.post('/', [AnnouncementByTeachers, 'store']).use(middleware.role(['teacher']))
+        router.patch('/:id', [AnnouncementByTeachers, 'update']).use(middleware.role(['teacher']))
+        router.delete('/:id', [AnnouncementByTeachers, 'destroy']).use(middleware.role(['teacher']))
     }).prefix('/announcements/teachers')
 
     // Announcements By Teachers

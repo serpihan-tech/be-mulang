@@ -5,10 +5,10 @@ export const createAnnouncementAdmin = vine.compile(
   vine.object({
     title: vine.string().minLength(4),
     content: vine.string().maxLength(1000),
-    // date: vine.date(),
+    date: vine.date(),
     files: vine
       .file({
-        size: '3mb',
+        size: '3 MB',
         extnames: [
           'jpg',
           'png',
@@ -46,7 +46,7 @@ export const updateAnnouncementAdmin = vine.compile(
     date: vine.date().optional(),
     files: vine
       .file({
-        size: '3mb',
+        size: '3 MB',
         extnames: [
           'jpg',
           'png',

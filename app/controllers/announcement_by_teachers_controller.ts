@@ -47,10 +47,24 @@ export default class AnnouncementByTeachersController {
     }
   }
 
-  public async store({ request, response }: HttpContext) {
+  public async store({ auth, request, response }: HttpContext) {
     try {
+      const us = auth.getUserOrFail()
+      await us.load('teacher')
+
+      if (!us.teacher) {
+        return response.forbidden({ error: { message: 'Anda Tidak Punya Akses!' } })
+      }
+
+      const teacherId: number = us.teacher.id
+
+      const files = request.file('files')
       const data = request.all()
 
+      if (files) data.files = files
+      data.teacher_id = teacherId
+
+      console.log('data : ', data)
       await createAnnouncementTeacher.validate(data)
 
       const announcement = await this.announcementService.create(data)
@@ -63,9 +77,12 @@ export default class AnnouncementByTeachersController {
     }
   }
 
-  public async update({ params, request, response }: HttpContext) {
+  public async update({ auth, params, request, response }: HttpContext) {
     try {
+      const files = request.file('files')
       const data = request.all()
+
+      if (files) data.files = files
 
       await updateAnnouncementTeacher.validate(data)
 
