@@ -30,7 +30,6 @@ const RoomsController = () => import('#controllers/rooms_controller')
 
 import { middleware } from '#start/kernel'
 import transmit from '@adonisjs/transmit/services/main'
-import { throttle } from './limiter.js'
 import app from '@adonisjs/core/services/app' 
 
 transmit.registerRoutes()
@@ -47,7 +46,8 @@ router.group(() => {
 
 router.post('/check-role', [AuthController, 'checkRole']).as('auth.check-role')
 
-// ! This shit cause error on url '/' no matter what the prefixs are, be careful
+// * GET MEDIA / FILE FROM SERVER STORAGE ---------------
+
 router.get('file/:folder/:filename', async ({ params, response }) => { 
     const filePath = app.makePath(`storage/uploads/${params.folder}`, params.filename)
 
