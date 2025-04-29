@@ -7,7 +7,7 @@ type Options =
   | { lowercase: true; uppercase?: never }
   | { lowercase?: never; uppercase: true }
   | undefined
-
+  
 /**
  * Normalizes the given text by trimming whitespace,
  * and optionally converting it to lowercase or uppercase.
