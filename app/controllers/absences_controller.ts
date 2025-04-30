@@ -1,7 +1,11 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import { AbsenceService } from '#services/absence_service'
 import { inject } from '@adonisjs/core'
-import { createAbsenceValidator, updateAbsenceValidator } from '#validators/absence'
+import {
+  createAbsenceValidator,
+  massCreateAbsencesValidator,
+  updateAbsenceValidator,
+} from '#validators/absence'
 
 @inject()
 export default class AbsencesController {
@@ -108,6 +112,19 @@ export default class AbsencesController {
     } catch (error) {
       if (error.code === 'E_ROW_NOT_FOUND')
         return response.notFound({ error: { message: 'Data Tidak Ditemukan' } })
+      return response.badRequest({ error: { message: error.message } })
+    }
+  }
+
+  async massAbsences({ request, response }: HttpContext) {
+    try {
+      const data = request.all()
+      // console.log('data mass absences : \n', data)
+      // await massCreateAbsencesValidator.validate(data)
+
+      const absences = await this.absenceService.massAbsences(data)
+      return response.ok({ message: 'Absensi Berhasil Ditambahkan', absences })
+    } catch (error) {
       return response.badRequest({ error: { message: error.message } })
     }
   }

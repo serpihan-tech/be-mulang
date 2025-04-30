@@ -5,6 +5,7 @@ import { DateTime } from 'luxon'
 import AbsenceContract from '../contracts/absence_contract.js'
 import Database from '@adonisjs/lucid/services/db'
 import Schedule from '#models/schedule'
+import db from '@adonisjs/lucid/services/db'
 
 export class AbsenceService implements AbsenceContract {
   // TODO : Implement
@@ -273,7 +274,7 @@ export class AbsenceService implements AbsenceContract {
     const studentList = classStudents.map((cs) => {
       const student = cs.student
       return {
-        studentId: student.id,
+        classStudentId: cs.id,
         name: student.name,
         nis: student.studentDetail?.nis,
         nisn: student.studentDetail?.nisn,
@@ -289,18 +290,18 @@ export class AbsenceService implements AbsenceContract {
       scheduleId: number
       day: string
       absences: Array<{
-        studentId: number
+        classStudentId: number
         status: string | null
         reason: string | null
       }>
     }[] = []
 
     const dates = [
-      ...new Set(absences.map((a) => a.date.toISODate()).filter((d): d is string => d !== null)),
+      ...new Set(absences.map((a) => a.date.toString()).filter((d): d is string => d !== null)),
     ]
 
     for (const date of dates) {
-      const absenceOnDate = absences.filter((a) => a.date.toISODate() === date)
+      const absenceOnDate = absences.filter((a) => a.date.toString() === date)
 
       const scheduleId = absenceOnDate[0]?.scheduleId ?? 0
       const day = await Schedule.query()
@@ -309,11 +310,11 @@ export class AbsenceService implements AbsenceContract {
         .then((s) => s.days)
 
       const absencesForDate = classStudents.map((cs) => {
-        const studentId = cs.student.id
-        const record = absenceOnDate.find((a) => a.classStudent?.studentId === studentId)
+        const classStudentId = cs.id
+        const record = absenceOnDate.find((a) => a.classStudentId === classStudentId)
 
         return {
-          studentId,
+          classStudentId,
           status: record?.status ?? null,
           reason: record?.reason ?? null,
         }
@@ -331,6 +332,65 @@ export class AbsenceService implements AbsenceContract {
       students: studentList,
       dates: groupedAbsences,
     }
+  }
+
+  // async massAbsences(data: any) {
+  //   const date = data.date
+  //   const scheduleId = Number(data.scheduleId)
+
+  //   const trx = await db.transaction()
+
+  //   try {
+  //     const result = []
+
+  //     for (const a of data.absences) {
+  //       const absence = await Absence.updateOrCreate(
+  //         {
+  //           date,
+  //           scheduleId,
+  //           classStudentId: a.classStudentId,
+  //         },
+  //         {
+  //           date,
+  //           scheduleId,
+  //           classStudentId: a.classStudentId,
+  //           status: a.status,
+  //           reason: a.reason,
+  //         },
+  //         { client: trx }
+  //       )
+
+  //       result.push(absence)
+  //     }
+
+  //     await trx.commit()
+  //     return result
+  //   } catch (error) {
+  //     await trx.rollback()
+  //     throw error
+  //   }
+  // }
+
+  async massAbsences(data: any): Promise<any> {
+    const date = new Date(data.date)
+    const scheduleId = Number(data.scheduleId)
+
+    const absData = data.absences.map((a: any) => ({
+      date,
+      scheduleId: scheduleId,
+      classStudentId: a.classStudentId,
+      status: a.status,
+      reason: a.reason,
+    }))
+
+    console.log(absData)
+
+    const absences = await Absence.updateOrCreateMany(
+      ['date', 'scheduleId', 'classStudentId'],
+      absData
+    )
+
+    return absences
   }
 
   async create(data: any): Promise<any> {
