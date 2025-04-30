@@ -2,14 +2,13 @@ import Teacher from '#models/teacher'
 import db from '@adonisjs/lucid/services/db'
 import UserContract from '../contracts/user_contract.js'
 import User from '#models/user'
-import ModelFilter from '../utils/filter_query.js'
 import { cuid } from '@adonisjs/core/helpers'
 import app from '@adonisjs/core/services/app'
 
 export default class TeacherService implements UserContract {
   async index(params: any, page?: number, limit?: number): Promise<any> {
     const lim = Number(limit) || 10
-    const pg = Number(page) || page || 1
+    const pg = Number(page) || 1
 
     const sortBy = params.sortBy
     const sortOrder = params.sortOrder

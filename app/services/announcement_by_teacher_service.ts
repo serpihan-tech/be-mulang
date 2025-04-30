@@ -60,23 +60,21 @@ export class AnnouncementByTeacherService implements AnnouncementByTeacherContra
 
     if (params.noPaginate) {
       const data = await query.preload('teacher', (t) => t.preload('user'))
-      return {
-        total: data.length,
-        data: data.map((item) => ({
-          id: `74${item.id}`,
-          title: item.title,
-          content: item.content,
-          category: item.category,
-          role: 'teacher',
-          date: item.date.toISOString(),
-          teacher: item.teacher?.name,
-          module: item.module?.name,
-          class: item.class?.name,
-          files: item.files,
-          senderPicture: item.teacher?.profilePicture,
-          senderEmail: item.teacher?.user?.email,
-        })),
-      }
+
+      return data.map((item) => ({
+        id: `74${item.id}`,
+        title: item.title,
+        content: item.content,
+        category: item.category,
+        role: 'teacher',
+        date: item.date.toISOString(),
+        teacherName: item.teacher?.name ?? null,
+        teacherEmail: item.teacher?.user?.email ?? null,
+        teacherPicture: item.teacher?.profilePicture ?? null,
+        moduleName: item.module?.name ?? null,
+        className: item.class?.name ?? null,
+        files: item.files,
+      }))
     } else {
       const announcement = await query.paginate(params.page || 1, params.limit || 10)
       return announcement
