@@ -87,7 +87,22 @@ export default class AbsencesController {
       const scheduleId = params.scheduleId
       const studentId = params.studentId
 
-      const absences = await this.absenceService.getAbsencesBySchedule(studentId, scheduleId)
+      const absences = await this.absenceService.getAbsencesBySchedule(scheduleId, studentId)
+
+      return response.ok({ message: 'Absensi Berhasil Ditemukan', absences })
+    } catch (error) {
+      if (error.code === 'E_ROW_NOT_FOUND')
+        return response.notFound({ error: { message: 'Data Tidak Ditemukan' } })
+      return response.badRequest({ error: { message: error.message } })
+    }
+  }
+
+  async getAbsencesByModule({ params, response }: HttpContext) {
+    try {
+      const moduleId = params.moduleId
+      const classId = params.classId
+
+      const absences = await this.absenceService.getAbsencesByModule(moduleId, classId)
 
       return response.ok({ message: 'Absensi Berhasil Ditemukan', absences })
     } catch (error) {

@@ -99,12 +99,14 @@ export class AbsenceService implements AbsenceContract {
         'student_details.nisn as nisn',
         'student_details.nis as nis',
         'classes.name as class_name',
+        'modules.name as module_name',
       ])
       .join('class_students', 'absences.class_student_id', 'class_students.id')
       .join('students', 'class_students.student_id', 'students.id')
       .join('student_details', 'students.id', 'student_details.student_id')
       .join('classes', 'class_students.class_id', 'classes.id')
-      // .join('schedules', 'absences.schedule_id', 'schedules.id')
+      .join('schedules', 'absences.schedule_id', 'schedules.id')
+      .join('modules', 'schedules.module_id', 'modules.id')
       // .join('academic_years', 'class_students.academic_year_id', 'academic_years.id')
       .if(params.nis, (query) => {
         query.where('student_details.nis', params.nis)
@@ -120,10 +122,17 @@ export class AbsenceService implements AbsenceContract {
             .orWhere('classes.name', 'like', `%${params.search}%`)
             .orWhere('absences.status', 'like', `%${params.search}%`)
             .orWhere('absences.reason', 'like', `%${params.search}%`)
+            .orWhere('modules.name', 'like', `%${params.search}%`)
         })
       })
       .if(params.kelas, (query) => {
         query.whereIn('classes.name', params.kelas)
+      })
+      .if(params.mapel, (query) => {
+        query.whereIn('modules.name', params.mapel)
+      })
+      .if(params.status, (query) => {
+        query.whereIn('absences.status', params.status)
       })
 
     // Sorting
@@ -145,10 +154,16 @@ export class AbsenceService implements AbsenceContract {
     if (params.sortBy === 'alasan') {
       absencesQuery.orderBy('absences.reason', params.sortOrder || 'asc')
     }
+    if (params.sortBy === 'mapel') {
+      absencesQuery.orderBy('schedules.name', params.sortOrder || 'asc')
+    }
 
     absencesQuery
       .preload('schedule', (s) => {
-        s.select(['id', 'class_id', 'days', 'start_time', 'end_time'])
+        s.select(['id', 'class_id', 'days', 'start_time', 'end_time', 'module_id']).preload(
+          'module',
+          (m) => m.select(['id', 'name'])
+        )
       })
       .preload('classStudent', (cs) => {
         cs.select(['id', 'class_id', 'student_id', 'academic_year_id'])
@@ -182,7 +197,7 @@ export class AbsenceService implements AbsenceContract {
       .firstOrFail()
   }
 
-  async getAbsencesBySchedule(studentId: number, scheduleId: number) {
+  async getAbsencesBySchedule(scheduleId: number, studentId?: number) {
     const schedule = await Schedule.query().where('id', scheduleId).firstOrFail()
     const schedules = await Schedule.query()
       .where('class_id', schedule.classId)
@@ -197,8 +212,16 @@ export class AbsenceService implements AbsenceContract {
 
     const activeAcademicYear = await this.activeSemester()
 
+    const absenceData = await absences
+
     const cs = await ClassStudent.query()
-      .where('student_id', studentId)
+      .if(studentId, (query) => query.where('student_id', Number(studentId)))
+      .if(!studentId, (query) =>
+        query.whereIn(
+          'id',
+          absenceData.map((s) => s.classStudentId)
+        )
+      )
       .where('academic_year_id', activeAcademicYear.id)
       .firstOrFail()
 
@@ -221,6 +244,93 @@ export class AbsenceService implements AbsenceContract {
     })
 
     return absences
+  }
+
+  async getAbsencesByModule(moduleId: number, classId: number) {
+    const activeAcademicYear = await this.activeSemester()
+
+    const schedules = await Schedule.query()
+      .where('module_id', moduleId)
+      .andWhere('class_id', classId)
+
+    const scheduleIds = schedules.map((s) => s.id)
+
+    if (scheduleIds.length === 0) {
+      return {
+        students: [],
+        date: {},
+      }
+    }
+
+    const classStudents = await ClassStudent.query()
+      .where('class_id', classId)
+      .where('academic_year_id', activeAcademicYear.id)
+      .preload('student', (s) => {
+        s.select(['id', 'name'])
+        s.preload('studentDetail', (sd) => sd.select(['nis', 'nisn']))
+      })
+
+    const studentList = classStudents.map((cs) => {
+      const student = cs.student
+      return {
+        studentId: student.id,
+        name: student.name,
+        nis: student.studentDetail?.nis,
+        nisn: student.studentDetail?.nisn,
+      }
+    })
+
+    const absences = await Absence.query()
+      .whereIn('schedule_id', scheduleIds)
+      .preload('classStudent', (cs) => cs.select(['id', 'student_id']))
+
+    const groupedAbsences: {
+      date: string
+      scheduleId: number
+      day: string
+      absences: Array<{
+        studentId: number
+        status: string | null
+        reason: string | null
+      }>
+    }[] = []
+
+    const dates = [
+      ...new Set(absences.map((a) => a.date.toISODate()).filter((d): d is string => d !== null)),
+    ]
+
+    for (const date of dates) {
+      const absenceOnDate = absences.filter((a) => a.date.toISODate() === date)
+
+      const scheduleId = absenceOnDate[0]?.scheduleId ?? 0
+      const day = await Schedule.query()
+        .where('id', scheduleId)
+        .firstOrFail()
+        .then((s) => s.days)
+
+      const absencesForDate = classStudents.map((cs) => {
+        const studentId = cs.student.id
+        const record = absenceOnDate.find((a) => a.classStudent?.studentId === studentId)
+
+        return {
+          studentId,
+          status: record?.status ?? null,
+          reason: record?.reason ?? null,
+        }
+      })
+
+      groupedAbsences.push({
+        date,
+        scheduleId,
+        day,
+        absences: absencesForDate,
+      })
+    }
+
+    return {
+      students: studentList,
+      dates: groupedAbsences,
+    }
   }
 
   async create(data: any): Promise<any> {
