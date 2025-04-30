@@ -106,6 +106,7 @@ router.group(() => {
 
     // Absensi
     router.group(() => {
+        router.post('/mass/students', [AbsenceController, 'massAbsences'])
         router.get('/mine', [AbsenceController, 'getMyAbsences']) // * untuk data/fitur untuk siswa yang sedang login
         router.get('/student/:studentId/:scheduleId', [AbsenceController, 'getAbsencesBySchedule'])
         router.get('/students/:moduleId/:classId', [AbsenceController, 'getAbsencesByModule'])
@@ -227,3 +228,5 @@ router.group(() => {
 router.get('/cek-ip', async ({ request, response }) => {
     return response.ok({ ip: request.ip })
 }).use(middleware.ip('absen'))
+
+  

@@ -72,7 +72,7 @@ export default class ScoreService {
     return scores
   }
 
-  async getOwnScores(user: any): Promise<any> {
+  async getOwnScores(user: any, params?: any): Promise<any> {
     // Find the student user
     const student = await Student.query().where('user_id', user.id).firstOrFail()
 
