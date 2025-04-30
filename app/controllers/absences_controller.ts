@@ -120,7 +120,7 @@ export default class AbsencesController {
     try {
       const data = request.all()
       // console.log('data mass absences : \n', data)
-      // await massCreateAbsencesValidator.validate(data)
+      await massCreateAbsencesValidator.validate(data)
 
       const absences = await this.absenceService.massAbsences(data)
       return response.ok({ message: 'Absensi Berhasil Ditambahkan', absences })

@@ -24,7 +24,7 @@ export const AbsenceFactory = factory
 
     // Generate tanggal acak dalam 1 tahun terakhir hingga hari ini
     const randomDays = faker.number.int({ min: 0, max: 365 })
-    const date = DateTime.now().minus({ days: randomDays })
+    const date = DateTime.now().minus({ days: randomDays }).toFormat('yyyy-MM-dd')
 
     return {
       classStudentId: faker.helpers.arrayElement(csIds),
