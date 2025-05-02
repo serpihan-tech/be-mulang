@@ -104,7 +104,9 @@ export default class StudentsController {
       return response.ok({ message: 'Murid Berhasil Diupdate', student })
     } catch (error) {
       console.log(error)
-      return response.unprocessableEntity({ error: { message: error.message } })
+      if (error.code === 'E_ROW_NOT_FOUND')
+        return response.notFound({ error: { message: 'ID Murid Tidak Ditemukan' } })
+      return response.unprocessableEntity({ error })
     }
   }
 

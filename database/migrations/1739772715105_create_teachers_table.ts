@@ -16,7 +16,7 @@ export default class extends BaseSchema {
       table.string('birth_date').nullable()
       table.string('birth_place').nullable()
       table.string('address').nullable()
-      table.enum('gender', ['Laki-Laki', 'Perempuan']).notNullable()
+      table.enum('gender', ['Laki-laki', 'Perempuan']).notNullable()
       table.string('profile_picture').nullable()
       table.timestamp('created_at')
       table.timestamp('updated_at')
