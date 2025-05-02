@@ -107,7 +107,7 @@ router.group(() => {
     // Absensi
     router.group(() => {
         router.post('/mass/students', [AbsenceController, 'massAbsences'])
-        router.get('/mine', [AbsenceController, 'getMyAbsences']) // * untuk data/fitur untuk siswa yang sedang login
+        router.get('/mine', [AbsenceController, 'getMyAbsences']).use(middleware.role(['student'])) // * untuk data/fitur untuk siswa yang sedang login
         router.get('/student/:studentId/:scheduleId', [AbsenceController, 'getAbsencesBySchedule'])
         router.get('/students/:moduleId/:classId', [AbsenceController, 'getAbsencesByModule'])
         router.get('/', [AbsenceController, 'index'])
@@ -119,6 +119,7 @@ router.group(() => {
 
     // Classes
     router.group(() => {
+        router.get('/teacher/is-homeroom', [ClassesController, 'isHomeroom']).use(middleware.role(['teacher']))
         router.get('/teacher/mine', [ClassesController, 'getClassTeacher']).use(middleware.role(['teacher']))
         router.get('/students/:classId/:moduleId', [ClassesController, 'getStudentsByClass'])
         router.get('/list-classes', [ClassesController, 'listClasses'])

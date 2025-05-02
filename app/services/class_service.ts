@@ -239,4 +239,10 @@ export class ClassService implements ClassContract {
 
     return classes
   }
+
+  async isHomeroom(teacherId: number) {
+    const classes = await Class.query().where('teacher_id', teacherId).preload('teacher')
+
+    return classes
+  }
 }
