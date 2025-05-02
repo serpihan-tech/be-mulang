@@ -125,7 +125,7 @@ export default class AbsencesController {
       const absences = await this.absenceService.massAbsences(data)
       return response.ok({ message: 'Absensi Berhasil Ditambahkan', absences })
     } catch (error) {
-      return response.badRequest({ error: { message: error.message } })
+      return response.badRequest({ error })
     }
   }
 }

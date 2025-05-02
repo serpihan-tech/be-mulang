@@ -157,6 +157,8 @@ export default class ScoresController {
           message: 'Score Ditemukan',
           result,
         }
+      } else {
+        return response.unauthorized({ error: { message: 'Harap Login Terlebih Dahulu' } })
       }
     } catch (error) {
       return response.badRequest({ error: { message: error.message } })

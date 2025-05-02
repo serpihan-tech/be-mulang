@@ -19,4 +19,5 @@ export const messages = {
   'boolean': '{{ field }} harus berupa boolean ( benar / salah )',
   'file.extname': '{{ field }} harus berupa file dengan ekstensi {{ extnames }}',
   'file.size': '{{ field }} harus berukuran kurang dari {{ size }}',
+  'array': '{{ field }} harus berupa array',
 }

@@ -34,6 +34,11 @@ export default class ScoreService {
           .preload('academicYear', (academicYearQuery) =>
             academicYearQuery.select('id', 'name', 'dateStart', 'dateEnd', 'semester', 'status')
           )
+          .preload('student', (studentQuery) =>
+            studentQuery
+              .select('id', 'name')
+              .preload('studentDetail', (sd) => sd.select('nis', 'nisn'))
+          )
       )
       .preload('module')
       .preload('scoreType')
