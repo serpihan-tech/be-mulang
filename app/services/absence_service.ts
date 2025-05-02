@@ -156,7 +156,7 @@ export class AbsenceService implements AbsenceContract {
       absencesQuery.orderBy('absences.reason', params.sortOrder || 'asc')
     }
     if (params.sortBy === 'mapel') {
-      absencesQuery.orderBy('schedules.name', params.sortOrder || 'asc')
+      absencesQuery.orderBy('modules.name', params.sortOrder || 'asc')
     }
 
     absencesQuery
