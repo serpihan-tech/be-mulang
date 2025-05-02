@@ -87,6 +87,7 @@ export class AnnouncementByTeacherService implements AnnouncementByTeacherContra
   }
 
   async create(data: any): Promise<any> {
+    console.log('data announcemnet by teacher : ', data)
     const trx = await db.transaction()
 
     const file = data.files

@@ -48,6 +48,7 @@ export default class AnnouncementByTeachersController {
   }
 
   public async store({ auth, request, response }: HttpContext) {
+    console.log('store controller announcement by teacher : ', request.all())
     try {
       const us = auth.getUserOrFail()
       await us.load('teacher')
