@@ -24,10 +24,12 @@ const AnnouncementByAdmins = () => import('#controllers/announcement_by_admins_c
 const AnnouncementByTeachers = () => import('#controllers/announcement_by_teachers_controller')
 const ScoreController = () => import('#controllers/scores_controller')
 const TeacherAbsenceController = () => import('#controllers/teacher_absences_controller')
+const SchoolCalendarsController = () => import('#controllers/school_calendars_controller')
+const AdminsController = () => import('#controllers/admins_controller')
+const RoomsController = () => import('#controllers/rooms_controller')
 
 import { middleware } from '#start/kernel'
 import transmit from '@adonisjs/transmit/services/main'
-import { throttle } from './limiter.js'
 import app from '@adonisjs/core/services/app' 
 
 transmit.registerRoutes()
@@ -44,8 +46,9 @@ router.group(() => {
 
 router.post('/check-role', [AuthController, 'checkRole']).as('auth.check-role')
 
-// ! This shit cause error on url '/' no matter what the prefixs are, be careful
-router.get('image/:folder/:filename', async ({ params, response }) => { 
+// * GET MEDIA / FILE FROM SERVER STORAGE ---------------
+
+router.get('file/:folder/:filename', async ({ params, response }) => { 
     const filePath = app.makePath(`storage/uploads/${params.folder}`, params.filename)
 
     return response.download(filePath)
@@ -61,7 +64,11 @@ router.group(() => {
     
     // Untuk admin
     router.group(() => {
-        // TODO : Implementasi Fitur Admin
+        router.get('/', [AdminsController, 'index']).use(middleware.role(['admin']))
+        router.get('/:id', [AdminsController, 'show'])
+        router.post('/', [AdminsController, 'store']).use(middleware.role([''])) // ! All Roles Not Allowed
+        router.patch('/:id', [AdminsController, 'update']).use(middleware.role(['admin']))
+        router.delete('/:id', [AdminsController, 'destroy']).use(middleware.role(['']))
     }).prefix('/admins')
 
     // Untuk students
@@ -99,17 +106,23 @@ router.group(() => {
 
     // Absensi
     router.group(() => {
-        router.get('/mine', [AbsenceController, 'getMyAbsences']) // * untuk data/fitur untuk siswa yang sedang login
-        
+        router.post('/mass/students', [AbsenceController, 'massAbsences'])
+        router.get('/mine', [AbsenceController, 'getMyAbsences']).use(middleware.role(['student'])) // * untuk data/fitur untuk siswa yang sedang login
+        router.get('/student/:studentId/:scheduleId', [AbsenceController, 'getAbsencesBySchedule'])
+        router.get('/students/:moduleId/:classId', [AbsenceController, 'getAbsencesByModule'])
         router.get('/', [AbsenceController, 'index'])
-        // router.post('/', [AbsenceController, 'store']) // TODO : Implementasi Absensi
-        // router.get('/:id', [AbsenceController, 'show'])
+        router.post('/', [AbsenceController, 'store']) // TODO : Implementasi Absensi
+        router.get('/:id', [AbsenceController, 'show'])
         router.patch('/:id', [AbsenceController, 'update'])
         router.delete('/:id', [AbsenceController, 'destroy'])
     }).prefix('/absences')
 
     // Classes
     router.group(() => {
+        router.get('/teacher/is-homeroom', [ClassesController, 'isHomeroom']).use(middleware.role(['teacher']))
+        router.get('/teacher/mine', [ClassesController, 'getClassTeacher']).use(middleware.role(['teacher']))
+        router.get('/students/:classId/:moduleId', [ClassesController, 'getStudentsByClass'])
+        router.get('/list-classes', [ClassesController, 'listClasses'])
         router.get('/', [ClassesController, 'index'])
         router.post('/', [ClassesController, 'store'])
         router.get('/:id', [ClassesController, 'show'])
@@ -121,6 +134,7 @@ router.group(() => {
     router.group(() => {
         router.get('/mine', [AcademicYearsController, 'myAcademicYear'])
             .use(middleware.role(['student'])) // * untuk data/fitur untuk siswa yang sedang login
+        router.get('/active-year', [AcademicYearsController, 'activeYear'])
         router.get('/', [AcademicYearsController, 'index'])
         router.post('/', [AcademicYearsController, 'store'])
         router.get('/:id', [AcademicYearsController, 'show'])
@@ -144,9 +158,9 @@ router.group(() => {
     router.group(() => {
         router.get('/', [AnnouncementByTeachers, 'index'])
         router.get('/:id', [AnnouncementByTeachers, 'show'])
-        router.post('/', [AnnouncementByTeachers, 'store']).use(middleware.role(['admin']))
-        router.patch('/:id', [AnnouncementByTeachers, 'update']).use(middleware.role(['admin']))
-        router.delete('/:id', [AnnouncementByTeachers, 'destroy']).use(middleware.role(['admin']))
+        router.post('/', [AnnouncementByTeachers, 'store']).use(middleware.role(['teacher']))
+        router.patch('/:id', [AnnouncementByTeachers, 'update']).use(middleware.role(['teacher']))
+        router.delete('/:id', [AnnouncementByTeachers, 'destroy']).use(middleware.role(['teacher']))
     }).prefix('/announcements/teachers')
 
     // Announcements By Teachers
@@ -157,6 +171,8 @@ router.group(() => {
     // Modules
     router.group(() => {
         router.get('/', [ModulesController, 'index'])
+        router.get('/list-names', [ModulesController, 'listNames'])
+        router.get('/list-modules', [ModulesController, 'listModules'])
         router.post('/', [ModulesController, 'store'])
         router.get('/:id', [ModulesController, 'show'])
         router.patch('/:id', [ModulesController, 'update'])
@@ -178,12 +194,32 @@ router.group(() => {
 
     // Teacher Absences
     router.group(() => {
+        router.get('/mine-today', [TeacherAbsenceController, 'getMineToday']).use(middleware.role(['teacher']))
         router.get('/', [TeacherAbsenceController, 'index'])
         router.post('/', [TeacherAbsenceController, 'store'])
         router.get('/:id', [TeacherAbsenceController, 'show'])
         router.patch('/:id', [TeacherAbsenceController, 'update'])
         router.delete('/:id', [TeacherAbsenceController, 'destroy'])
     }).prefix('/teacher-absences')
+
+    // School Calendar / Kalender Akademik Sekolah
+    router.group(() => {
+        router.get('/', [SchoolCalendarsController, 'index'])
+        router.post('/', [SchoolCalendarsController, 'store'])
+        router.get('/:id', [SchoolCalendarsController, 'show'])
+        router.patch('/:id', [SchoolCalendarsController, 'update'])
+        router.delete('/:id', [SchoolCalendarsController, 'destroy'])
+    }).prefix('/school-calendars')
+
+    // Rooms
+    router.group(() => {
+        router.get('/list-rooms', [RoomsController, 'listRooms'])
+        router.get('/', [RoomsController, 'index'])
+        router.post('/', [RoomsController, 'store'])
+        router.get('/:id', [RoomsController, 'show'])
+        router.patch('/:id', [RoomsController, 'update'])
+        router.delete('/:id', [RoomsController, 'destroy'])
+    }).prefix('/rooms')
 
 }).use(middleware.auth())
 
@@ -193,3 +229,5 @@ router.group(() => {
 router.get('/cek-ip', async ({ request, response }) => {
     return response.ok({ ip: request.ip })
 }).use(middleware.ip('absen'))
+
+  

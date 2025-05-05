@@ -27,7 +27,7 @@ export const TeacherFactory = factory
       'Katolik',
       'Islam',
       'Hindu',
-      'Budha',
+      'Buddha',
       'Konghucu',
     ])
 
@@ -48,7 +48,7 @@ export const TeacherFactory = factory
       phone: faker.phone.number({ style: 'human' }),
       birthDate: birthDate,
       birthPlace: birthPlace,
-      gender: faker.helpers.arrayElement(['pria', 'wanita']),
+      gender: faker.helpers.arrayElement(['Laki-laki', 'Perempuan']),
       address: `${faker.location.streetAddress()}, ${city}, ${faker.location.state()}`,
       profilePicture: faker.image.avatar(),
     }

@@ -2,6 +2,7 @@ import { createClassValidator, updateClassValidator } from '#validators/class'
 import type { HttpContext } from '@adonisjs/core/http'
 import { inject } from '@adonisjs/core'
 import { ClassService } from '#services/class_service'
+import User from '#models/user'
 
 @inject()
 export default class ClassesController {
@@ -33,10 +34,12 @@ export default class ClassesController {
     }
   }
 
-  async show({ params, response }: HttpContext) {
+  async show({ params, request, response }: HttpContext) {
     const id: number = params.id
+    const data = request?.all()
+
     try {
-      const theClass = await this.classService.getOne(id)
+      const theClass = await this.classService.getOne(id, data!)
       return response.ok({
         messages: 'Kelas Berhasil ditampilkan',
         data: theClass,
@@ -72,6 +75,72 @@ export default class ClassesController {
       })
     } catch (error) {
       return response.badRequest({ error })
+    }
+  }
+
+  async getClassTeacher({ auth, response }: HttpContext) {
+    try {
+      const user = auth.getUserOrFail()
+      await user.load('teacher')
+
+      const theClass = await this.classService.myClass(user.teacher.id)
+
+      return response.ok({
+        message: 'Kelas Berhasil Ditampilkan',
+        data: theClass,
+      })
+    } catch (error) {
+      return response.badRequest({ error: { message: error.message } })
+    }
+  }
+
+  async getStudentsByClass({ params, response }: HttpContext) {
+    try {
+      const classId: number = params.classId
+      const moduleId: number = params.moduleId
+      const theStudents = await this.classService.getStudentsByClass(classId, moduleId)
+      return response.ok({
+        message: 'Siswa Berhasil Ditampilkan',
+        data: theStudents,
+      })
+    } catch (error) {
+      return response.badRequest({ error: { message: error.message } })
+    }
+  }
+
+  async listClasses({ request, response }: HttpContext) {
+    try {
+      const classes = await this.classService.listClasses(request.all())
+      return response.ok({
+        message: 'List Kelas Berhasil Ditampilkan',
+        data: classes,
+      })
+    } catch (error) {
+      return response.badRequest({ error: { message: error.message } })
+    }
+  }
+
+  async isHomeroom({ auth, response }: HttpContext) {
+    try {
+      const user = auth.getUserOrFail()
+      const role = await User.getRole(user)
+
+      if (role.role !== 'teacher')
+        return response.notFound({ error: { message: 'Role Tidak Sesuai!' } })
+
+      await user.load('teacher')
+
+      console.log('teacher id : ', user.teacher.id)
+      const isHomeroom = await this.classService.isHomeroom(user.teacher.id)
+
+      return response.ok({
+        message: 'Kelas Berhasil Ditampilkan',
+        data: isHomeroom,
+      })
+    } catch (error) {
+      if (error.code === 'E_ROW_NOT_FOUND')
+        return response.notFound({ error: { message: 'Guru Tidak Ditemukan' } })
+      return response.badRequest({ error: { message: error.message } })
     }
   }
 }

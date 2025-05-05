@@ -5,36 +5,25 @@ export const createAnnouncementTeacher = vine.compile(
   vine.object({
     title: vine.string().minLength(4),
     content: vine.string().maxLength(1000),
-    // date: vine.date(),
+    date: vine.date(),
     files: vine
       .file({
-        size: '3mb',
-        extnames: ['jpg', 'png', 'jpeg'],
-      })
-      .optional(),
-    category: vine.enum([
-      'Akademik',
-      'Administrasi',
-      'Informasi Umum',
-      'Kegiatan Sekolah',
-      'Fasilitas',
-      'Prestasi',
-    ]),
-    //   .optional(),
-    schedule_id: vine.number().exists({ table: 'schedules', column: 'id' }),
-    teacher_id: vine.number().exists({ table: 'teachers', column: 'id' }),
-  })
-)
-
-export const updateAnnouncementTeacher = vine.compile(
-  vine.object({
-    title: vine.string().minLength(4).optional(),
-    content: vine.string().maxLength(1000).optional(),
-    date: vine.date().optional(),
-    files: vine
-      .file({
-        size: '3mb',
-        extnames: ['jpg', 'png', 'jpeg'],
+        size: '3 MB',
+        extnames: [
+          'jpg',
+          'png',
+          'jpeg',
+          'pdf',
+          'doc',
+          'docx',
+          'xls',
+          'xlsx',
+          'ppt',
+          'pptx',
+          'txt',
+          'zip',
+          'rar',
+        ],
       })
       .optional(),
     category: vine
@@ -47,7 +36,49 @@ export const updateAnnouncementTeacher = vine.compile(
         'Prestasi',
       ])
       .optional(),
-    schedule_id: vine.number().exists({ table: 'schedules', column: 'id' }).optional(),
+    class_id: vine.number().exists({ table: 'classes', column: 'id' }),
+    module_id: vine.number().exists({ table: 'modules', column: 'id' }),
+    teacher_id: vine.number().exists({ table: 'teachers', column: 'id' }),
+  })
+)
+
+export const updateAnnouncementTeacher = vine.compile(
+  vine.object({
+    title: vine.string().minLength(4).optional(),
+    content: vine.string().maxLength(1000).optional(),
+    date: vine.date().optional(),
+    files: vine
+      .file({
+        size: '3 MB',
+        extnames: [
+          'jpg',
+          'png',
+          'jpeg',
+          'pdf',
+          'doc',
+          'docx',
+          'xls',
+          'xlsx',
+          'ppt',
+          'pptx',
+          'txt',
+          'zip',
+          'rar',
+        ],
+      })
+      .optional(),
+    category: vine
+      .enum([
+        'Akademik',
+        'Administrasi',
+        'Informasi Umum',
+        'Kegiatan Sekolah',
+        'Fasilitas',
+        'Prestasi',
+      ])
+      .optional(),
+    class_id: vine.number().exists({ table: 'classes', column: 'id' }).optional(),
+    module_id: vine.number().exists({ table: 'modules', column: 'id' }).optional(),
     teacher_id: vine.number().exists({ table: 'teachers', column: 'id' }).optional(),
   })
 )

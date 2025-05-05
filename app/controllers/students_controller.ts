@@ -4,8 +4,10 @@ import { inject } from '@adonisjs/core'
 import Student from '#models/student'
 import { createUserValidator, updateUserValidator } from '#validators/user'
 import {
+  createClassStudentValidator,
   createStudentDetailValidator,
   createStudentValidator,
+  updateClassStudentValidator,
   updateStudentDetailValidator,
   updateStudentValidator,
 } from '#validators/student'
@@ -49,14 +51,25 @@ export default class StudentsController {
       await createUserValidator.validate(request.input('user'))
       await createStudentValidator.validate(request.input('student'))
       await createStudentDetailValidator.validate(request.input('student_detail'))
+      await createClassStudentValidator.validate(request.input('class_student'))
 
       const student = await this.studentsService.create(request.all())
+
+      const data = request.all()
+
+      // Ambil file profile_picture dari request.file() secara terpisah
+      const profilePicture = request.file('student_detail.profile_picture')
+
+      if (profilePicture) {
+        data.student_detail.profile_picture = profilePicture
+      }
+
       return response.created({
         message: 'Murid Berhasil Ditambahkan',
         student,
       })
     } catch (error) {
-      return response.status(error.status).send({ error })
+      return response.badRequest({ error })
     }
   }
 
@@ -76,6 +89,7 @@ export default class StudentsController {
       await updateUserValidator.validate(request.input('user'))
       await updateStudentValidator.validate(request.input('student'))
       await updateStudentDetailValidator.validate(request.input('student_detail'))
+      await updateClassStudentValidator.validate(request.input('class_student'))
 
       const data = request.all()
 
@@ -90,6 +104,8 @@ export default class StudentsController {
       return response.ok({ message: 'Murid Berhasil Diupdate', student })
     } catch (error) {
       console.log(error)
+      if (error.code === 'E_ROW_NOT_FOUND')
+        return response.notFound({ error: { message: 'ID Murid Tidak Ditemukan' } })
       return response.unprocessableEntity({ error })
     }
   }
@@ -98,8 +114,10 @@ export default class StudentsController {
     try {
       const student = await this.studentsService.delete(params.id)
 
-      return response.ok({ message: `Murid atas nama (${student?.name}) Berhasil Dihapus!` })
+      return response.ok({ message: `Murid atas nama (${student}) Berhasil Dihapus!` })
     } catch (error) {
+      if (error.code !== 'E_ROW_NOT_FOUND')
+        return response.badRequest({ error: { message: error.message } })
       return response.notFound({ error: { message: 'ID Murid Tidak Ditemukan' } })
     }
   }
@@ -160,7 +178,7 @@ export default class StudentsController {
     try {
       const data = request.input('data')
 
-      if (!Array.isArray(data) || data.length === 0) {
+      if (!Array.isArray(data.student_ids) || data.student_ids.length === 0) {
         return response.badRequest({ error: { message: 'Tidak ada siswa yang diproses' } })
       }
 

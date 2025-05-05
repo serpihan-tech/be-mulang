@@ -41,7 +41,16 @@ export default class TeachersController {
       await createUserValidator.validate(request.input('user'))
       await createTeacherValidator.validate(request.input('teacher'))
 
-      const teacher = await this.teacherService.create(request.all())
+      const data = request.all()
+
+      // Ambil file profile_picture dari request.file() secara terpisah
+      const profilePicture = request.file('teacher.profile_picture')
+
+      if (profilePicture) {
+        data.teacher.profile_picture = profilePicture
+      }
+
+      const teacher = await this.teacherService.create(data)
 
       return response.created({
         message: 'Guru Berhasil Ditambahkan',
@@ -57,12 +66,22 @@ export default class TeachersController {
       await updateUserValidator.validate(request.input('user'))
       await updateTeacherValidator.validate(request.input('teacher'))
 
-      const teacher = await this.teacherService.update(params.id, request.all())
+      const data = request.all()
+
+      // Ambil file profile_picture dari request.file() secara terpisah
+      const profilePicture = request.file('teacher.profile_picture')
+
+      if (profilePicture) {
+        data.teacher.profile_picture = profilePicture
+      }
+
+      const teacher = await this.teacherService.update(params.id, data)
       return response.ok({
         message: 'Data Guru Berhasil Diubah',
         teacher,
       })
     } catch (error) {
+      // console.error(error)
       return response.unprocessableEntity({ error })
     }
   }

@@ -36,29 +36,31 @@ export default class AcademicYear extends BaseModel {
   @hasMany(() => ClassStudent, { foreignKey: 'academicYearId' })
   declare classStudents: HasMany<typeof ClassStudent>
 
-  /**
-   * Jika butuh filter seperti %LIKE%
-   */
-  public static whiteList = ['name']
+  // ! I dont think we need this (cause the params in Indonesia Lang, not English like in DB Coloumns), but just in case
 
-  public static blackList = ['page', 'limit']
+  // /**
+  //  * Jika butuh filter seperti %LIKE%
+  //  */
+  // public static whiteList = ['name']
 
-  /**
-   * Metode untuk apply filter langsung di model
-   *
-   * @example
-   * // GET /api/academic-years?semester=ganjil&status=true
-   * const academicYears = await AcademicYear.filter(request.all())
-   *
-   * @param queryParams - Parameter yang masuk di request
-   * @returns AcademicYear
-   */
-  public static filter<T extends typeof BaseModel>(
-    // model: T,
-    // query: ModelQueryBuilderContract<T, InstanceType<T>>,
-    // query: typeof BaseModel,
-    queryParams: Record<string, any>
-  ): any {
-    return ModelFilter.apply(this, queryParams, this.whiteList, this.blackList)
-  }
+  // public static blackList = ['page', 'limit']
+
+  // /**
+  //  * Metode untuk apply filter langsung di model
+  //  *
+  //  * @example
+  //  * // GET /api/academic-years?semester=ganjil&status=true
+  //  * const academicYears = await AcademicYear.filter(request.all())
+  //  *
+  //  * @param queryParams - Parameter yang masuk di request
+  //  * @returns AcademicYear
+  //  */
+  // public static filter(
+  //   // model: T,
+  //   // query: ModelQueryBuilderContract<T, InstanceType<T>>,
+  //   // query: typeof BaseModel,
+  //   queryParams: Record<string, any>
+  // ): any {
+  //   return ModelFilter.apply(this, queryParams, this.whiteList, this.blackList)
+  // }
 }

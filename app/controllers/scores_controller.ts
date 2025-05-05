@@ -10,13 +10,13 @@ export default class ScoresController {
    */
   async index({ response, request }: HttpContext) {
     try {
-      const scores = await this.scroreService.getAll(request.all())
+      const result = await this.scroreService.getAll(request.all())
       return response.ok({
         message: 'Score Ditemukan',
-        scores,
+        result,
       })
     } catch (error) {
-      return response.status(error.status).send({ error })
+      return response.badRequest({ error: { message: error.message } })
     }
   }
 
@@ -133,12 +133,18 @@ export default class ScoresController {
     const user = auth.user
     console.log(user)
     try {
+      const data = request.all()
       if (user) {
-        const result = await this.scroreService.getOwnScores(user, request.all())
-        return { result }
+        const result = await this.scroreService.getOwnScores(user, data)
+        return response.ok({
+          message: 'Data rekap nilai siswa berhasil ditemukan',
+          result,
+        })
+      } else {
+        return response.unauthorized({ error: { message: 'Harap Login Terlebih Dahulu' } })
       }
     } catch (error) {
-      return response.status(error.status).send({ error })
+      return response.badRequest({ error })
     }
   }
 
@@ -151,9 +157,11 @@ export default class ScoresController {
           message: 'Score Ditemukan',
           result,
         }
+      } else {
+        return response.unauthorized({ error: { message: 'Harap Login Terlebih Dahulu' } })
       }
     } catch (error) {
-      return response.status(error.status).send({ error })
+      return response.badRequest({ error: { message: error.message } })
     }
   }
   async getRecapScoring({ auth, request, response, params }: HttpContext) {

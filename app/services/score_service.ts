@@ -15,7 +15,7 @@ export default class ScoreService {
     const now =
       DateTime.now().setZone('Asia/Jakarta').toSQL() ??
       new Date().toISOString().slice(0, 19).replace('T', ' ')
-    console.log(now)
+    // console.log(now)
 
     return await AcademicYear.query()
       .where('status', 1)
@@ -24,94 +24,99 @@ export default class ScoreService {
       .firstOrFail()
   }
   async getAll(params: any | undefined): Promise<any> {
-    const semester = params.tahunAjarId
-      ? await AcademicYear.query().where('name', params.tahunAjarId).firstOrFail()
+    // bisa dapetin semua score per kelas berdasarkan semester
+    const semester = params.tahunAjar
+      ? await AcademicYear.query().where('id', params.tahunAjar).firstOrFail()
       : await this.getActiveSemester()
 
-    const classStudents = await ClassStudent.query()
-      .where('academic_year_id', semester.id)
-      .preload('class')
-      .preload('student')
-      .paginate(params.page || 1, params.limit || 10)
+    const classStudent = ClassStudent.query()
 
-    const schedules = await Schedule.query().preload('module')
-    const scores = await Score.query().preload('scoreType')
+    const schedule = await Schedule.query().preload('module')
+
+    const score = await Score.query()
     const scoreTypes = await ScoreType.query()
 
-    const result = classStudents.reduce((acc: any[], classStudent) => {
-      acc.push({
-        id: classStudent.id,
-        student: classStudent.student,
-        class: classStudent.class,
-        modules: schedules
-          .filter((sch) => {
-            return sch.classId === classStudent.classId
-          })
-          .reduce((prev: any[], current) => {
-            prev.push({
-              module: {
-                id: current.module.id,
-                name: current.module.name,
-                score:
-                  scores
-                    .filter((score) => {
-                      return (
-                        score.classStudentId === classStudent.id &&
-                        score.moduleId === current.moduleId
-                      )
-                    })
-                    .reduce(
-                      (prevSc: any, currentSc) => {
-                        prevSc.taskList =
-                          currentSc.scoreTypeId === 1
-                            ? [
-                                ...prevSc.taskList,
-                                {
-                                  score: currentSc.score,
-                                  description: currentSc.description,
-                                  scoreType: {
-                                    id: currentSc.scoreType.id,
-                                    name: currentSc.scoreType.name,
-                                  },
-                                },
-                              ]
-                            : [
-                                ...prevSc.taskList,
-                                {
-                                  score: null,
-                                  description: null,
-                                  scoreType: {
-                                    id: null,
-                                    name: null,
-                                  },
-                                },
-                              ]
+    let classStud
+    if (params?.tahunAjar) {
+      classStud = await classStudent
+        .where('academic_year_id', Number(params.tahunAjar))
+        .paginate(params.page || 1, 10)
+    } else {
+      classStud = await classStudent
+        .where('academic_year_id', semester.id)
+        .paginate(params.page || 1, 10)
+    }
 
-                        prevSc.task =
-                          prevSc.taskList.length > 0
-                            ? prevSc.taskList.reduce(
+    const result = {
+      semester: {
+        id: semester.id,
+        name: semester.name,
+        semester: semester.semester,
+        status: semester.status,
+      },
+      classStudents: {
+        meta: classStud.getMeta(),
+        data: classStud.all().map((cs) => {
+          return {
+            ...cs.serialize(),
+            modules: schedule
+              .filter((s) => s.classId === cs.classId)
+              .reduce((acc, s) => {
+                acc.push(s.module)
+                return acc
+              }, [])
+              .map((m) => {
+                return {
+                  module: m,
+                  scores: score
+                    .filter((rSc) =>
+                      rSc.serialize().academicYearId === semester.id &&
+                      rSc.serialize().moduleId === m.id
+                        ? rSc.serialize()
+                        : null
+                    )
+                    .reduce(
+                      (rsPrev: any, rsCurrent: any) => {
+                        rsPrev.taskList =
+                          rsCurrent.scoreTypeId === 1
+                            ? [
+                                ...rsPrev.taskList,
+                                {
+                                  score: rsCurrent.score,
+                                  description: rsCurrent.description,
+                                  scoreType: {
+                                    id: rsCurrent.scoreType.id,
+                                    name: rsCurrent.scoreType.name,
+                                  },
+                                },
+                              ]
+                            : rsPrev.taskList
+
+                        rsPrev.task =
+                          rsPrev.taskList.length > 0
+                            ? rsPrev.taskList.reduce(
                                 (taskP: any, taskC: any) => taskP + taskC.score,
                                 0
                               ) / scoreTypes.filter((st) => st.id === 1)[0].taskQuota
                             : null
-                        prevSc.uts = currentSc.scoreTypeId === 2 ? currentSc.score : null
-                        prevSc.uas = currentSc.scoreTypeId === 3 ? currentSc.score : null
-                        prevSc.totalList = [
-                          ...prevSc.totalList,
+                        rsPrev.uts = rsCurrent.scoreTypeId === 2 ? rsCurrent.score : null
+                        rsPrev.uas = rsCurrent.scoreTypeId === 3 ? rsCurrent.score : null
+                        rsPrev.totalList = [
+                          ...rsPrev.totalList,
                           {
-                            score: currentSc.score,
-                            description: currentSc.description,
+                            score: rsCurrent.score,
+                            description: rsCurrent.description,
                             scoreType: {
-                              id: currentSc.scoreType.id,
-                              name: currentSc.scoreType.name,
+                              id: rsCurrent.scoreType.id,
+                              name: rsCurrent.scoreType.name,
                             },
                           },
                         ]
 
-                        if (prevSc.totalList.length > 0) {
+                        if (rsPrev.totalList.length > 0) {
                           const taskTotalSum: any = {
                             score:
-                              prevSc.totalList
+                              rsPrev.totalList
                                 .filter((task: any) => task.scoreType.id === 1)
                                 .reduce(
                                   (sum: number, val: { score: number }) => sum + val.score,
@@ -122,7 +127,7 @@ export default class ScoreService {
 
                           const utsTotalSum: any = {
                             score:
-                              prevSc.totalList
+                              rsPrev.totalList
                                 .filter((task: any) => task.scoreType.id === 2)
                                 .reduce(
                                   (sum: number, val: { score: number }) => sum + val.score,
@@ -133,7 +138,7 @@ export default class ScoreService {
 
                           const uasTotalSum: any = {
                             score:
-                              prevSc.totalList
+                              rsPrev.totalList
                                 .filter((task: any) => task.scoreType.id === 3)
                                 .reduce(
                                   (sum: number, val: { score: number }) => sum + val.score,
@@ -142,16 +147,16 @@ export default class ScoreService {
                             weight: scoreTypes.filter((item) => item.id === 3)[0].weight,
                           }
 
-                          prevSc.total =
+                          rsPrev.total =
                             (taskTotalSum.score /
                               scoreTypes.filter((st) => st.id === 1)[0].taskQuota) *
                               (taskTotalSum.weight / 100) +
                             (utsTotalSum.score * (utsTotalSum.weight / 100) +
                               uasTotalSum.score * (uasTotalSum.weight / 100))
 
-                          prevSc.total = Number(prevSc.total.toFixed(2))
+                          rsPrev.total = Number(rsPrev.total.toFixed(2))
                         }
-                        return prevSc
+                        return rsPrev
                       },
                       {
                         taskList: [],
@@ -161,22 +166,15 @@ export default class ScoreService {
                         totalList: [],
                         total: null,
                       }
-                    ) || [],
-              },
-            })
-            return prev
-          }, []),
-      })
-      return acc
-    }, [])
-
-    return {
-      meta: classStudents.getMeta(),
-      data: {
-        semester: semester,
-        classStudents: result,
+                    ),
+                }
+              }),
+          }
+        }),
       },
     }
+
+    return result
   }
 
   async getOne(id: number): Promise<any> {
@@ -185,7 +183,7 @@ export default class ScoreService {
     return scores
   }
 
-  async getOwnScores(user: any, params: any): Promise<any> {
+  async getOwnScores(user: any, params?: any): Promise<any> {
     // Find the student user
     const student = await Student.query().where('user_id', user.id).firstOrFail()
 
@@ -205,6 +203,7 @@ export default class ScoreService {
       .innerJoin('modules', 'schedules.module_id', 'modules.id')
       .innerJoin('classes', 'schedules.class_id', 'classes.id')
       .innerJoin('academic_years', 'modules.academic_year_id', 'academic_years.id')
+      .if(params.tahunAjar, (q) => q.where('modules.academic_year_id', params.tahunAjar))
 
     classStudentsIds.forEach((cs, index) => {
       if (index === 0) {
@@ -248,8 +247,9 @@ export default class ScoreService {
       .preload('module', (mq) => mq.select('id', 'name', 'academic_year_id'))
       .preload('scoreType')
       .innerJoin('modules', 'scores.module_id', 'modules.id')
-      .innerJoin('class_students', 'scores.class_student_id', 'class_students.id')
+      .innerJoin('class_students', 'scores.class_student_id', 'class_students.id') // ✅ JOIN ini wajib!
       .innerJoin('academic_years', 'modules.academic_year_id', 'academic_years.id')
+      .if(params.tahunAjar, (q) => q.where('academic_years.id', params.tahunAjar))
 
     // Build dynamic where
     ids.forEach((cs, index) => {
@@ -272,7 +272,7 @@ export default class ScoreService {
 
     const scoreResult = await score.orderBy('academic_years.status', 'desc').paginate(1, 20)
 
-    const result = scoreResult.serialize().data.map((item) => {
+    let result = scoreResult.serialize().data.map((item) => {
       const { module, classStudent, ...rest } = item
       const academicYear = classStudent?.academicYear || null
 
@@ -288,6 +288,11 @@ export default class ScoreService {
         scoreType: item.scoreType,
       }
     })
+    if (params.tahunAjar) {
+      result = result.filter((item) => {
+        return item.academicYear.id === Number(params.tahunAjar)
+      })
+    }
 
     const taskScoreType = await ScoreType.query().where('id', 1).firstOrFail()
 
@@ -418,14 +423,7 @@ export default class ScoreService {
       })
     })
 
-    //filtering groupedResult by params.tahunAjaran
-    if (params.tahunAjaran) {
-      groupedResult = groupedResult.filter(
-        (yearGroup) => yearGroup.academicYear.name === params.tahunAjaran
-      )
-    }
-
-    return groupedResult
+    return result
   }
 
   async getMyScoring(params: any, user: any) {
@@ -743,6 +741,39 @@ export default class ScoreService {
       .firstOrFail()
 
     return { scores }
+    // return academicYears.map((academicYear) => {
+    //   const moduleMap = new Map<number, any>()
+
+    //   for (const module of modules) {
+    //     if (module.academicYearId !== academicYear.id) continue
+
+    //     moduleMap.set(module.id, {
+    //       id: module.id,
+    //       name: module.name,
+    //       scores: {
+    //         taskList: [],
+    //         task: null,
+    //         uts: null,
+    //         uas: null,
+    //         totalList: [],
+    //         total: null,
+    //       },
+    //     })
+    //   }
+
+    //   for (const score of scores) {
+    //     const moduleData = moduleMap.get(score.moduleId)
+    //     if (!moduleData) continue
+
+    //     if (score.scoreTypeId === 1) {
+    //       moduleData.scores.taskList.push(score.score)
+    //     scoreTypeId: data.score_type_id,
+    //     description: data.description,
+    //   }, // Search criteria (harus unik)
+    //   {
+    //     score: data.score,
+    //   } // Data yang akan diupdate
+    // )
   }
 
   async create(data: any): Promise<any> {

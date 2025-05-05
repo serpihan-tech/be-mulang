@@ -6,6 +6,7 @@ import { errors as authErrors } from '@adonisjs/auth'
 import { errors as lucidErrors } from '@adonisjs/lucid'
 import limiter from '@adonisjs/limiter/services/main'
 import { DateTime } from 'luxon'
+import Teacher from '#models/teacher'
 
 export default class AuthController {
   async checkRole({ request, response }: HttpContext) {
@@ -30,7 +31,7 @@ export default class AuthController {
       const loginLimiter = limiter.use({
         requests: 5,
         duration: '1 min',
-        blockDuration: '20 mins',
+        blockDuration: '30 mins',
       })
 
       /**
@@ -129,8 +130,14 @@ export default class AuthController {
       .firstOrFail()
   }
 
+  protected async isGuardian(teacher: Teacher) {
+    const isGuardian: boolean = (await teacher.related('class').query().first()) ? true : false
+
+    return isGuardian
+  }
+
   async getProfile(role: Role, user: User) {
-    let profile
+    let profile: any
     let details
     let classStudent
 
@@ -139,9 +146,18 @@ export default class AuthController {
     switch (role?.role) {
       case 'admin':
         profile = await user.related('admin').query().first()
+        profile = {
+          ...profile.serialize(),
+        }
         break
       case 'teacher':
         profile = await user.related('teacher').query().first()
+        if (profile) {
+          profile = {
+            isGuardian: await this.isGuardian(profile),
+            ...profile.serialize(), // pastikan bentuknya plain object
+          }
+        }
         break
       case 'student':
         profile = await user.related('student').query().first()
@@ -150,15 +166,18 @@ export default class AuthController {
           ?.related('classStudent')
           .query()
           .where('academic_year_id', activeSemester.id)
-          .preload('class', (c) => c.select('id', 'name'))
+          .preload('class', (c: any) => c.select('id', 'name'))
           .firstOrFail()
+        profile = {
+          ...profile.serialize(),
+        }
         break
     }
 
     return {
       user,
       profile: {
-        ...profile?.serialize(),
+        ...profile,
         details: { ...details?.serialize(), classStudent },
       },
       activeSemester,

@@ -12,6 +12,7 @@ import Admin from '#models/admin'
 // import AnnouncementByTeacher from '#models/announcement_by_teacher'
 // import { DateTime } from 'luxon'
 import db from '@adonisjs/lucid/services/db'
+import { DateTime } from 'luxon'
 
 // type AnnouncementQueryParams = {
 //   page?: number
@@ -34,6 +35,10 @@ import db from '@adonisjs/lucid/services/db'
 export class AnnouncementByAdminService
   implements AnnouncementByAdminContract, AnnouncementContract
 {
+  protected now =
+    DateTime.now().setZone('Asia/Jakarta').toSQL() ??
+    new Date().toISOString().slice(0, 19).replace('T', ' ')
+
   async getBothAll(params: any): Promise<any> {
     const {
       page = 1,
@@ -97,142 +102,6 @@ export class AnnouncementByAdminService
     return query.paginate(page, limit)
   }
 
-  // async getBothAll(params: any): Promise<{
-  //   meta: {
-  //     total: number
-  //     perPage: number
-  //     currentPage: number
-  //     lastPage: number
-  //     firstPage: number
-  //     firstPageUrl: string
-  //     lastPageUrl: string
-  //     nextPageUrl: string | null
-  //     previousPageUrl: string | null
-  //   }
-  //   data: AnnouncementWithMadeBy[]
-  // }> {
-  //   const page = Number(params.page) || 1
-  //   const limit = Number(params.limit) || 10
-  //   const search = params.search || ''
-  //   const sort = params.sort || 'desc'
-  //   const sortBy = params.sortBy || 'date'
-  //   const filterDate = params.filterDate || ''
-  //   const startDate = params.startDate || ''
-  //   const endDate = params.endDate || ''
-
-  //   // Pastikan `madeBy` dan `category` bisa menerima banyak nilai
-  //   const madeByFilter = Array.isArray(params.madeBy)
-  //     ? params.madeBy
-  //     : params.madeBy
-  //       ? [params.madeBy]
-  //       : ['Admin', 'Teacher']
-  //   const categoryFilter = Array.isArray(params.category)
-  //     ? params.category
-  //     : params.category
-  //       ? [params.category]
-  //       : []
-
-  //   let annAdmin: AnnouncementWithMadeBy[] = []
-  //   if (madeByFilter.includes('Admin')) {
-  //     const adminQuery = AnnouncementByAdmin.query()
-
-  //     if (categoryFilter.length > 0) {
-  //       adminQuery.whereIn('category', categoryFilter)
-  //     }
-
-  //     if (search) {
-  //       adminQuery.where((query) => {
-  //         query
-  //           .whereILike('title', `%${search}%`)
-  //           .orWhereILike('content', `%${search}%`)
-  //           .orWhereILike('category', `%${search}%`)
-  //       })
-  //     }
-
-  //     if (filterDate) {
-  //       adminQuery.where('date', filterDate)
-  //     } else if (startDate && endDate) {
-  //       adminQuery.whereBetween('date', [startDate, endDate])
-  //     }
-
-  //     const adminData = await adminQuery.orderBy(sortBy, sort)
-  //     annAdmin = adminData.map((ann) => ({
-  //       ...(ann.toJSON() as AnnouncementWithMadeBy), // Pastikan semua field tetap ada
-  //       madeBy: 'Admin',
-  //     }))
-  //   }
-
-  //   let annTeacher: AnnouncementWithMadeBy[] = []
-  //   if (madeByFilter.includes('Teacher')) {
-  //     const teacherQuery = AnnouncementByTeacher.query()
-
-  //     if (categoryFilter.length > 0) {
-  //       teacherQuery.whereIn('category', categoryFilter)
-  //     }
-
-  //     if (search) {
-  //       teacherQuery.where((query) => {
-  //         query
-  //           .whereILike('title', `%${search}%`)
-  //           .orWhereILike('content', `%${search}%`)
-  //           .orWhereILike('category', `%${search}%`)
-  //       })
-  //     }
-
-  //     if (filterDate) {
-  //       teacherQuery.where('date', filterDate)
-  //     } else if (startDate && endDate) {
-  //       teacherQuery.whereBetween('date', [startDate, endDate])
-  //     }
-
-  //     const teacherData = await teacherQuery.orderBy(sortBy, sort)
-  //     annTeacher = teacherData.map((ann) => ({
-  //       ...(ann.toJSON() as AnnouncementWithMadeBy), // Pastikan semua field tetap ada
-  //       madeBy: 'Teacher',
-  //     }))
-  //   }
-
-  //   const allAnnouncements = [...annAdmin, ...annTeacher].sort((a, b) => {
-  //     if (sortBy === 'date') {
-  //       const dateA = DateTime.fromISO(a.date)
-  //       const dateB = DateTime.fromISO(b.date)
-  //       return sort === 'asc'
-  //         ? dateA.toMillis() - dateB.toMillis()
-  //         : dateB.toMillis() - dateA.toMillis()
-  //     } else {
-  //       return sort === 'asc'
-  //         ? a[sortBy].localeCompare(b[sortBy])
-  //         : b[sortBy].localeCompare(a[sortBy])
-  //     }
-  //   })
-
-  //   const total = allAnnouncements.length
-  //   const lastPage = Math.ceil(total / limit)
-  //   const paginated = allAnnouncements.slice((page - 1) * limit, page * limit)
-
-  //   const baseUrl = `/?page=`
-  //   const firstPage = 1
-  //   const firstPageUrl = `${baseUrl}${firstPage}`
-  //   const lastPageUrl = `${baseUrl}${lastPage}`
-  //   const nextPageUrl = page < lastPage ? `${baseUrl}${page + 1}` : null
-  //   const previousPageUrl = page > 1 ? `${baseUrl}${page - 1}` : null
-
-  //   return {
-  //     meta: {
-  //       total,
-  //       perPage: limit,
-  //       currentPage: page,
-  //       lastPage,
-  //       firstPage,
-  //       firstPageUrl,
-  //       lastPageUrl,
-  //       nextPageUrl,
-  //       previousPageUrl,
-  //     },
-  //     data: paginated,
-  //   }
-  // }
-
   async getAll(page: number, limit?: number, role?: string, data?: any, user?: User): Promise<any> {
     const perPage: number = limit || 10
 
@@ -242,7 +111,7 @@ export class AnnouncementByAdminService
       adminId = user.admin.id
     }
 
-    const query = AnnouncementByAdmin.query() // TODO : Add filtering
+    const query = AnnouncementByAdmin.query().preload('admin', (admin) => admin.preload('user'))
 
     if (adminId !== undefined) {
       query.where('admin_id', adminId)
@@ -250,6 +119,34 @@ export class AnnouncementByAdminService
       query.where('target_roles', `${role}`)
     }
 
+    if (data?.noPaginate) {
+      const announcements = await query.orderBy('date', 'desc')
+
+      const results = await Promise.all(
+        announcements.map(async (ann) => {
+          const admin = ann.admin
+          const userAdmin = admin?.user
+          const roleName = userAdmin ? await User.getRole(userAdmin) : null
+
+          return {
+            id: `44${ann.id}`,
+            title: ann.title,
+            from: admin?.name,
+            role: roleName?.role,
+            files: ann.files,
+            content: ann.content,
+            category: ann.category,
+            date: ann.date.toISOString(),
+            senderPicture: admin?.profilePicture,
+            senderEmail: userAdmin.email,
+          }
+        })
+      )
+
+      return results
+    }
+
+    // Default paginate
     const announcement = await query.paginate(page, perPage)
 
     return announcement
@@ -262,89 +159,105 @@ export class AnnouncementByAdminService
   }
 
   async create(data: any, adminId: number): Promise<Object> {
+    const trx = await db.transaction()
+
     const file = data.files
-    // console.log(file)
     let filePath = ''
+    let tempFilePath = ''
 
-    if (file) {
-      await file.move(app.tmpPath('storage/uploads/announcement-admins'), {
-        name: `${new Date().getTime()}_${file.clientName}`,
-        overwrite: true,
-      })
-      filePath = `${file.fileName}`
+    try {
+      if (file) {
+        filePath = `announcement-admins/${new Date().getTime()}_${file.clientName}`
+        tempFilePath = `${new Date().getTime()}_${file.clientName}`
+      }
+
+      const ann = await AnnouncementByAdmin.create(
+        {
+          title: data.title,
+          content: data.content,
+          category: data.category,
+          adminId: adminId,
+          date: data.date,
+          files: filePath,
+          targetRoles: data.target_roles,
+        },
+        { client: trx }
+      )
+
+      await trx.commit()
+
+      if (file) {
+        await file.move(app.makePath('storage/uploads/announcement-admins'), {
+          name: tempFilePath,
+          overwrite: true,
+        })
+      }
+
+      const admin = await Admin.query().where('id', adminId).preload('user').firstOrFail()
+      const role = await User.getRole(await admin.related('user').query().firstOrFail())
+
+      const annDate = new Date(ann.date)
+
+      if (annDate.toISOString() === this.now) {
+        transmit.broadcast(`notifications/${ann.targetRoles}`, {
+          message: {
+            id: `44${ann.id}`,
+            title: ann.title,
+            from: admin.name,
+            role: role?.role,
+            files: ann.files,
+            content: ann.content,
+            category: ann.category,
+            date: annDate.toISOString(),
+            senderPicture: admin.profilePicture,
+            senderEmail: admin.user.email,
+          },
+        })
+      }
+
+      return ann
+    } catch (error) {
+      await trx.rollback()
+      throw error
     }
-
-    const ann = await AnnouncementByAdmin.create({
-      title: data.title,
-      content: data.content,
-      category: data.category,
-      adminId: adminId,
-      date: new Date(),
-      files: filePath,
-      targetRoles: data.target_roles,
-    })
-
-    // const users = await User.query().whereHas('roles', (query) => {
-    //   query.where('role', ann.target_roles)
-    // })
-
-    // for (const user of users) {
-    //   console.log(`Mengirim notifikasi ke notifications/${user.id}`)
-
-    //   transmit.broadcast(`notifications/${user.id}`, {
-    //     message: {
-    //       id: ann.id,
-    //       title: ann.title,
-    //       content: ann.content,
-    //       category: ann.category,
-    //       date: ann.date.toISOString(),
-    //     },
-    //   })
-    // }
-    console.log(ann.targetRoles)
-
-    const admin = await Admin.query().where('id', adminId).firstOrFail()
-    const role = await User.getRole(await admin.related('user').query().firstOrFail())
-
-    const t = transmit.broadcast(`notifications/${ann.targetRoles}`, {
-      message: {
-        id: ann.id,
-        title: ann.title,
-        from: admin.name,
-        role: role?.role,
-        // file: ann.files,
-        content: ann.content,
-        category: ann.category,
-        date: ann.date.toISOString(),
-      },
-    })
-
-    console.log(t)
-    return ann
   }
 
   async update(id: number, data: any): Promise<Object> {
-    const announcement = await AnnouncementByAdmin.query().where('id', id).firstOrFail()
-    // console.log(data)
+    const trx = await db.transaction()
+    const file = data.files
+    let filePath = ''
+    let tempFilePath = ''
 
-    if (data.files) {
-      const file = data.files
-      const fileName = `${cuid()}.${data.files.extname}`
+    try {
+      const announcement = await AnnouncementByAdmin.findOrFail(id)
 
-      await file.move(app.makePath('storage/uploads/announcement-admins'), {
-        name: fileName,
-      })
+      if (file) {
+        filePath = `announcement-admins/${new Date().getTime()}_${file.clientName}`
+        tempFilePath = `${new Date().getTime()}_${file.clientName}`
 
-      data.files = `${fileName}`
+        announcement.merge({
+          ...data,
+          files: filePath,
+        })
+      } else {
+        announcement.merge(data)
+      }
+
+      await announcement.useTransaction(trx).save()
+      await trx.commit()
+
+      if (file) {
+        await file.move(app.makePath('storage/uploads/announcement-admins'), {
+          name: tempFilePath,
+          overwrite: true,
+        })
+      }
+
+      return announcement
+    } catch (error) {
+      await trx.rollback()
+      throw error
     }
-
-    announcement.merge({
-      files: data.files,
-      ...data,
-    })
-    await announcement.save()
-
-    return announcement
   }
 
   async delete(id: number): Promise<void> {

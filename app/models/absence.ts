@@ -19,13 +19,13 @@ export default class Absence extends BaseModel {
   @column()
   declare reason: string
 
-  @column.dateTime()
-  declare date: DateTime
-
   @column()
+  declare date: Date | string
+
+  @column({ columnName: 'class_student_id' })
   declare classStudentId: number
 
-  @column()
+  @column({ columnName: 'schedule_id' })
   declare scheduleId: number
 
   @column()

@@ -1,20 +1,30 @@
+import SchoolCalendar from '#models/school_calendar'
 import SchoolCalendarContract from '../contracts/school_calendar_contract.js'
 
 export class SchoolCalendarService implements SchoolCalendarContract {
   async getAll(): Promise<any> {
-    throw new Error('Method not implemented.')
+    const sc = await SchoolCalendar.all()
+
+    return sc
   }
-  async getOne(): Promise<Object> {
-    throw new Error('Method not implemented.')
+  async getOne(id: number): Promise<Object> {
+    const sc = await SchoolCalendar.query().where('id', id).firstOrFail()
+
+    return sc
   }
-  async create(): Promise<Object> {
-    throw new Error('Method not implemented.')
+  async create(data: any): Promise<Object> {
+    const sc = await SchoolCalendar.create(data)
+
+    return sc
   }
-  async update(): Promise<Object> {
-    throw new Error('Method not implemented.')
+  async update(id: number, data: any): Promise<Object> {
+    const sc = await SchoolCalendar.query().where('id', id).firstOrFail()
+    sc.merge(data)
+
+    return await sc.save()
   }
-  async delete(): Promise<void> {
-    throw new Error('Method not implemented.')
+  async delete(id: number): Promise<void> {
+    const sc = await SchoolCalendar.query().where('id', id).firstOrFail()
+    return await sc.delete()
   }
-  // Your code here
 }

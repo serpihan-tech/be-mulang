@@ -49,6 +49,7 @@ export const ModuleFactory = factory
       name: moduleName,
       academicYearId: faker.helpers.arrayElement(academicYears).id,
       teacherId: faker.helpers.arrayElement(teachers).id,
+      thumbnail: faker.image.urlPicsumPhotos({ width: 400, height: 400 }),
     }
   })
   .build()

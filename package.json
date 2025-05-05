@@ -60,6 +60,7 @@
     "@adonisjs/mail": "^9.2.2",
     "@adonisjs/transmit": "^2.0.2",
     "@vinejs/vine": "^3.0.0",
+    "adonisjs-scheduler": "^2.4.0",
     "luxon": "^3.5.0",
     "mysql2": "^3.12.0",
     "reflect-metadata": "^0.2.2"

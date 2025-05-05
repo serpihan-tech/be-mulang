@@ -21,7 +21,7 @@ export default class StudentsService implements StudentContract, UserContract {
     console.log(now)
 
     return await AcademicYear.query()
-      .where('status', 1)
+      .where('status', 1 || true)
       .where('date_start', '<', now)
       .where('date_end', '>', now)
       .firstOrFail()
@@ -33,14 +33,17 @@ export default class StudentsService implements StudentContract, UserContract {
 
     const sortBy = params.sortBy
     const sortOrder = params.sortOrder
-    console.log(params)
-    console.log(Number(params.limit))
+    // console.log(params)
+    // console.log(Number(params.limit))
 
     const activeAcademicYear = await this.getActiveSemester()
     console.log(activeAcademicYear.id, activeAcademicYear.name)
 
-    const kelas = Array.isArray(params.kelas) ? params.kelas : [params.kelas]
+    const kelas = Array.isArray(params.kelas)
+      ? params.kelas.map((k: string) => (k ?? '').toString().trim())
+      : [(params.kelas ?? '').toString().trim()]
 
+    console.log(kelas)
     const students = await Student.query()
       .select('students.*')
       .where('is_graduate', params.status || 0)
@@ -78,9 +81,20 @@ export default class StudentsService implements StudentContract, UserContract {
 
       // *                    SORTING FILTER                     */
       .if(sortBy === 'kelas', (query) => {
-        query.whereHas('classStudent', (c) =>
-          c.whereHas('class', (q) => q.orderBy('name', sortOrder || 'asc'))
-        )
+        query
+          .whereHas('classStudent', (cs) => {
+            cs.where('academic_year_id', activeAcademicYear.id)
+          })
+          .orderBy(
+            db
+              .from('class_students')
+              .join('classes', 'class_students.class_id', 'classes.id')
+              .whereRaw('class_students.student_id = students.id')
+              .where('class_students.academic_year_id', activeAcademicYear.id)
+              .select('classes.name')
+              .limit(1),
+            sortOrder || 'asc'
+          )
       }) // NAMA KELAS
       .if(sortBy === 'email', (q) => {
         q.leftJoin('users', 'students.user_id', 'users.id').orderBy(
@@ -111,11 +125,20 @@ export default class StudentsService implements StudentContract, UserContract {
             .orderBy('nisn', sortOrder || 'asc') // NISN
       )
       .if(sortBy === 'tahunAjar', (query) => {
-        query.whereHas('classStudent', (cs) => {
-          cs.whereHas('academicYear', (ay) => {
-            ay.where('id', activeAcademicYear.id).orderBy('name', sortOrder || 'asc')
+        query
+          .whereHas('classStudent', (cs) => {
+            cs.where('academic_year_id', activeAcademicYear.id)
           })
-        })
+          .orderBy(
+            db
+              .from('class_students')
+              .join('academic_years', 'class_students.academic_year_id', 'academic_years.id')
+              .whereRaw('class_students.student_id = students.id')
+              .where('class_students.academic_year_id', activeAcademicYear.id)
+              .select('academic_years.name')
+              .limit(1),
+            sortOrder || 'asc'
+          )
       }) // TAHUN AJAR BY NAMANYA
       // *                    SORTING FILTER                     */
 
@@ -138,6 +161,11 @@ export default class StudentsService implements StudentContract, UserContract {
         })
         cs.preload('academicYear')
         cs.preload('class')
+        if (params.kelas) {
+          cs.whereHas('class', (c) => {
+            c.whereIn('name', kelas)
+          })
+        }
       })
       .paginate(pages, Number(params.limit) || limit)
 
@@ -145,6 +173,8 @@ export default class StudentsService implements StudentContract, UserContract {
   }
 
   async show(id: number): Promise<any> {
+    const activeAcademicYear = await this.getActiveSemester()
+
     return await Student.query()
       .where('id', id)
       .preload('user')
@@ -152,6 +182,9 @@ export default class StudentsService implements StudentContract, UserContract {
       .preload('classStudent', (cs) => {
         cs.preload('class')
         cs.preload('academicYear')
+        cs.whereHas('academicYear', (ay) => {
+          ay.where('id', activeAcademicYear.id)
+        })
       })
       .firstOrFail()
   }
@@ -168,7 +201,7 @@ export default class StudentsService implements StudentContract, UserContract {
         {
           userId: user.id,
           name: data.student.name,
-          isGraduate: data.student.is_graduate,
+          isGraduate: data.student.is_graduate || 0,
         },
         { client: trx }
       )
@@ -192,14 +225,26 @@ export default class StudentsService implements StudentContract, UserContract {
 
         // Simpan path file ke dalam database
         student.studentDetail.profilePicture = `students-profile/${fileName}`
+        await student.studentDetail.save()
       }
 
-      await student.studentDetail.save()
+      if (data.class_student) {
+        await ClassStudent.create(
+          {
+            studentId: student.id,
+            classId: data.class_student.class_id,
+            academicYearId: data.class_student.academic_year_id,
+          },
+          { client: trx }
+        )
+      }
 
       await student.useTransaction(trx).load('user')
       await student.useTransaction(trx).load('studentDetail')
+      await student.useTransaction(trx).load('classStudent')
 
       await trx.commit()
+
       return student
     } catch (error) {
       await trx.rollback()
@@ -209,12 +254,20 @@ export default class StudentsService implements StudentContract, UserContract {
 
   async update(studentId: number, data: any): Promise<any> {
     const trx = await db.transaction()
+    const activeAcademicYear = await this.getActiveSemester()
 
     try {
       const student = await Student.query({ client: trx })
         .where('id', studentId)
         .preload('user')
         .preload('studentDetail')
+        .preload('classStudent', (cs) => {
+          cs.whereHas('academicYear', (ay) => {
+            ay.where('id', activeAcademicYear.id)
+          })
+          cs.preload('academicYear')
+          cs.preload('class')
+        })
         .firstOrFail()
 
       if (data.user) {
@@ -232,6 +285,19 @@ export default class StudentsService implements StudentContract, UserContract {
           isGraduate: data.student.is_graduate ?? student.isGraduate,
         })
         await student.save()
+      }
+
+      if (data.class_student) {
+        console.log(student.classStudent, 'id classStudent :', data.class_student.class_student_id)
+        const classStudentId = Number(data.class_student.class_student_id)
+
+        await student.classStudent
+          .find((cs) => cs.id === classStudentId)
+          ?.merge({
+            classId: data.class_student.class_id,
+            academicYearId: data.class_student.academic_year_id,
+          })
+          .save()
       }
 
       console.info('STUDENT DETAIL : ', data.student_detail)
@@ -271,8 +337,9 @@ export default class StudentsService implements StudentContract, UserContract {
 
       await trx.commit()
 
-      await student.load('user')
-      await student.load('studentDetail')
+      // await student.load('user')
+      // await student.load('studentDetail')
+      // await student.load('classStudent')
 
       return student
     } catch (error) {
@@ -283,7 +350,11 @@ export default class StudentsService implements StudentContract, UserContract {
 
   async delete(id: number): Promise<any> {
     const student = await Student.query().where('id', id).firstOrFail()
-    return await student.user.delete()
+    const name = student.name
+
+    await User.query().where('id', student.userId).delete()
+
+    return name
   }
 
   /**
@@ -377,14 +448,17 @@ export default class StudentsService implements StudentContract, UserContract {
 
   async studentPromoted(data: any) {
     try {
-      for (const datum of data) {
-        const student = await Student.query().where('id', datum.student_id).firstOrFail()
+      const classId = data.class_id
+      const academicYearId = data.academic_year_id
 
-        const kelas = await Class.query().where('id', datum.class_id).firstOrFail()
+      console.log('data : ', data)
+      for (const datum of data.student_ids) {
+        console.log('datum : ', datum)
+        const student = await Student.query().where('id', datum).firstOrFail()
 
-        const academicYear = await AcademicYear.query()
-          .where('id', datum.academic_year_id)
-          .firstOrFail()
+        const kelas = await Class.query().where('id', classId).firstOrFail()
+
+        const academicYear = await AcademicYear.query().where('id', academicYearId).firstOrFail()
 
         await ClassStudent.create({
           studentId: student.id,

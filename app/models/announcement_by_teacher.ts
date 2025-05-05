@@ -4,6 +4,8 @@ import Teacher from './teacher.js'
 import Schedule from './schedule.js'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import ModelFilter from '../utils/filter_query.js'
+import Class from './class.js'
+import Module from './module.js'
 
 export default class AnnouncementByTeacher extends BaseModel {
   @column({ isPrimary: true })
@@ -12,8 +14,14 @@ export default class AnnouncementByTeacher extends BaseModel {
   @column()
   declare teacherId: number
 
+  // @column()
+  // declare scheduleId: number
+
   @column()
-  declare scheduleId: number
+  declare classId: number
+
+  @column()
+  declare moduleId: number
 
   @column()
   declare title: string
@@ -39,8 +47,11 @@ export default class AnnouncementByTeacher extends BaseModel {
   @belongsTo(() => Teacher, { foreignKey: 'teacherId' })
   declare teacher: BelongsTo<typeof Teacher>
 
-  @belongsTo(() => Schedule, { foreignKey: 'scheduleId' })
-  declare schedule: BelongsTo<typeof Schedule>
+  @belongsTo(() => Class, { foreignKey: 'classId' })
+  declare class: BelongsTo<typeof Class>
+
+  @belongsTo(() => Module, { foreignKey: 'moduleId' })
+  declare module: BelongsTo<typeof Module>
 
   public static whiteList: string[] = ['title', 'content', 'date']
   public static blackList: string[] = [

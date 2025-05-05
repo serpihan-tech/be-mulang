@@ -19,9 +19,9 @@ export default class extends BaseSchema {
       table.string('students_phone').nullable()
       table.string('nis').notNullable().unique()
       table.string('nisn').notNullable().unique()
-      table.enum('gender', ['Laki-Laki', 'Perempuan']).notNullable()
+      table.enum('gender', ['Laki-laki', 'Perempuan']).notNullable()
       table
-        .enum('religion', ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Budha', 'Konghucu'])
+        .enum('religion', ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghucu'])
         .notNullable()
       table.date('birth_date').notNullable()
       table.string('birth_place').notNullable()
