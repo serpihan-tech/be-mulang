@@ -36,6 +36,7 @@ export default class ScoreService {
 
     const schedules = await Schedule.query().preload('module')
     const scores = await Score.query().preload('scoreType')
+    const scoreTypes = await ScoreType.query()
 
     const result = classStudents.reduce((acc: any[], classStudent) => {
       acc.push({
@@ -48,12 +49,120 @@ export default class ScoreService {
           })
           .reduce((prev: any[], current) => {
             prev.push({
-              module: current.module,
-              scores: scores.filter((score) => {
-                return (
-                  score.classStudentId === classStudent.id && score.moduleId === current.moduleId
-                )
-              }),
+              module: {
+                id: current.module.id,
+                name: current.module.name,
+                score:
+                  scores
+                    .filter((score) => {
+                      return (
+                        score.classStudentId === classStudent.id &&
+                        score.moduleId === current.moduleId
+                      )
+                    })
+                    .reduce(
+                      (prevSc: any, currentSc) => {
+                        prevSc.taskList =
+                          currentSc.scoreTypeId === 1
+                            ? [
+                                ...prevSc.taskList,
+                                {
+                                  score: currentSc.score,
+                                  description: currentSc.description,
+                                  scoreType: {
+                                    id: currentSc.scoreType.id,
+                                    name: currentSc.scoreType.name,
+                                  },
+                                },
+                              ]
+                            : [
+                                ...prevSc.taskList,
+                                {
+                                  score: null,
+                                  description: null,
+                                  scoreType: {
+                                    id: null,
+                                    name: null,
+                                  },
+                                },
+                              ]
+
+                        prevSc.task =
+                          prevSc.taskList.length > 0
+                            ? prevSc.taskList.reduce(
+                                (taskP: any, taskC: any) => taskP + taskC.score,
+                                0
+                              ) / scoreTypes.filter((st) => st.id === 1)[0].taskQuota
+                            : null
+                        prevSc.uts = currentSc.scoreTypeId === 2 ? currentSc.score : null
+                        prevSc.uas = currentSc.scoreTypeId === 3 ? currentSc.score : null
+                        prevSc.totalList = [
+                          ...prevSc.totalList,
+                          {
+                            score: currentSc.score,
+                            description: currentSc.description,
+                            scoreType: {
+                              id: currentSc.scoreType.id,
+                              name: currentSc.scoreType.name,
+                            },
+                          },
+                        ]
+
+                        if (prevSc.totalList.length > 0) {
+                          const taskTotalSum: any = {
+                            score:
+                              prevSc.totalList
+                                .filter((task: any) => task.scoreType.id === 1)
+                                .reduce(
+                                  (sum: number, val: { score: number }) => sum + val.score,
+                                  0
+                                ) || 0,
+                            weight: scoreTypes.filter((item) => item.id === 1)[0].weight,
+                          }
+
+                          const utsTotalSum: any = {
+                            score:
+                              prevSc.totalList
+                                .filter((task: any) => task.scoreType.id === 2)
+                                .reduce(
+                                  (sum: number, val: { score: number }) => sum + val.score,
+                                  0
+                                ) || 0,
+                            weight: scoreTypes.filter((item) => item.id === 2)[0].weight,
+                          }
+
+                          const uasTotalSum: any = {
+                            score:
+                              prevSc.totalList
+                                .filter((task: any) => task.scoreType.id === 3)
+                                .reduce(
+                                  (sum: number, val: { score: number }) => sum + val.score,
+                                  0
+                                ) || 0,
+                            weight: scoreTypes.filter((item) => item.id === 3)[0].weight,
+                          }
+
+                          prevSc.total =
+                            (taskTotalSum.score /
+                              scoreTypes.filter((st) => st.id === 1)[0].taskQuota) *
+                              (taskTotalSum.weight / 100) +
+                            (utsTotalSum.score * (utsTotalSum.weight / 100) +
+                              uasTotalSum.score * (uasTotalSum.weight / 100))
+
+                          prevSc.total = Number(prevSc.total.toFixed(2))
+                        }
+                        return prevSc
+                      },
+                      {
+                        taskList: [],
+                        task: null,
+                        uts: null,
+                        uas: null,
+                        totalList: [],
+                        total: null,
+                      }
+                    ) || [],
+              },
             })
             return prev
           }, []),
@@ -76,7 +185,7 @@ export default class ScoreService {
     return scores
   }
 
-  async getOwnScores(user: any): Promise<any> {
+  async getOwnScores(user: any, params: any): Promise<any> {
     // Find the student user
     const student = await Student.query().where('user_id', user.id).firstOrFail()
 
@@ -182,7 +291,7 @@ export default class ScoreService {
 
     const taskScoreType = await ScoreType.query().where('id', 1).firstOrFail()
 
-    const groupedResult = result.reduce((acc, item) => {
+    let groupedResult = result.reduce((acc, item) => {
       const { academicYear, module, scoreType } = item
 
       // Cari academicYear
@@ -235,10 +344,11 @@ export default class ScoreService {
 
       moduleGroup.scores.totalList.push({
         score: module.score,
-        sTid: scoreType.id,
-        scoreType: scoreType.name,
         description: module.description,
-        weight: scoreType.weight,
+        scoreType: {
+          id: scoreType.id,
+          name: scoreType.name,
+        },
       })
 
       return acc
@@ -308,6 +418,13 @@ export default class ScoreService {
       })
     })
 
+    //filtering groupedResult by params.tahunAjaran
+    if (params.tahunAjaran) {
+      groupedResult = groupedResult.filter(
+        (yearGroup) => yearGroup.academicYear.name === params.tahunAjaran
+      )
+    }
+
     return groupedResult
   }
 
@@ -338,6 +455,8 @@ export default class ScoreService {
       )
       .preload('class')
 
+    const scoreTypes = await ScoreType.query()
+
     const result = ac.map((ay) => {
       const filteredModules = modules.filter((m) => m.academicYearId === ay.id)
 
@@ -355,9 +474,102 @@ export default class ScoreService {
 
               return {
                 ...sch.serialize(), // schedule fields
-                scores: relatedScores.filter((rSc) =>
-                  rSc.serialize().classStudent.academicYearId === ay.id ? rSc.serialize() : null
-                ), // attach related scores
+                scores: relatedScores
+                  .filter((rSc) =>
+                    rSc.serialize().classStudent.academicYearId === ay.id ? rSc.serialize() : null
+                  )
+                  .reduce(
+                    (rsPrev: any, rsCurrent: any) => {
+                      rsPrev.taskList =
+                        rsCurrent.scoreTypeId === 1
+                          ? [
+                              ...rsPrev.taskList,
+                              {
+                                score: rsCurrent.score,
+                                description: rsCurrent.description,
+                                scoreType: {
+                                  id: rsCurrent.scoreType.id,
+                                  name: rsCurrent.scoreType.name,
+                                },
+                              },
+                            ]
+                          : rsPrev.taskList
+
+                      rsPrev.task =
+                        rsPrev.taskList.length > 0
+                          ? rsPrev.taskList.reduce(
+                              (taskP: any, taskC: any) => taskP + taskC.score,
+                              0
+                            ) / scoreTypes.filter((st) => st.id === 1)[0].taskQuota
+                          : null
+                      rsPrev.uts = rsCurrent.scoreTypeId === 2 ? rsCurrent.score : null
+                      rsPrev.uas = rsCurrent.scoreTypeId === 3 ? rsCurrent.score : null
+                      rsPrev.totalList = [
+                        ...rsPrev.totalList,
+                        {
+                          score: rsCurrent.score,
+                          description: rsCurrent.description,
+                          scoreType: {
+                            id: rsCurrent.scoreType.id,
+                            name: rsCurrent.scoreType.name,
+                          },
+                        },
+                      ]
+
+                      if (rsPrev.totalList.length > 0) {
+                        const taskTotalSum: any = {
+                          score:
+                            rsPrev.totalList
+                              .filter((task: any) => task.scoreType.id === 1)
+                              .reduce(
+                                (sum: number, val: { score: number }) => sum + val.score,
+                                0
+                              ) || 0,
+                          weight: scoreTypes.filter((item) => item.id === 1)[0].weight,
+                        }
+
+                        const utsTotalSum: any = {
+                          score:
+                            rsPrev.totalList
+                              .filter((task: any) => task.scoreType.id === 2)
+                              .reduce(
+                                (sum: number, val: { score: number }) => sum + val.score,
+                                0
+                              ) || 0,
+                          weight: scoreTypes.filter((item) => item.id === 2)[0].weight,
+                        }
+
+                        const uasTotalSum: any = {
+                          score:
+                            rsPrev.totalList
+                              .filter((task: any) => task.scoreType.id === 3)
+                              .reduce(
+                                (sum: number, val: { score: number }) => sum + val.score,
+                                0
+                              ) || 0,
+                          weight: scoreTypes.filter((item) => item.id === 3)[0].weight,
+                        }
+
+                        rsPrev.total =
+                          (taskTotalSum.score /
+                            scoreTypes.filter((st) => st.id === 1)[0].taskQuota) *
+                            (taskTotalSum.weight / 100) +
+                          (utsTotalSum.score * (utsTotalSum.weight / 100) +
+                            uasTotalSum.score * (uasTotalSum.weight / 100))
+
+                        rsPrev.total = Number(rsPrev.total.toFixed(2))
+                      }
+                      return rsPrev
+                    },
+                    {
+                      taskList: [],
+                      task: null,
+                      uts: null,
+                      uas: null,
+                      totalList: [],
+                      total: null,
+                    }
+                  ),
               }
             }),
           }
@@ -389,6 +601,8 @@ export default class ScoreService {
         schedule.map((s) => s.module.id)
       )
 
+    const scoreTypes = await ScoreType.query()
+
     const result = ac.map((ay) => {
       const filteredSchedule = schedule.filter((s) => {
         return s.module.academicYearId === ay.id
@@ -402,7 +616,10 @@ export default class ScoreService {
           })
 
           return {
-            module: s.module,
+            module: {
+              id: s.module.id,
+              name: s.module.name,
+            },
             classStudents: filteredClassStudent.map((cs) => {
               const relatedScores = score.filter((sc) => {
                 return sc.moduleId === s.module.id && sc.classStudentId === cs.id
@@ -410,7 +627,91 @@ export default class ScoreService {
 
               return {
                 ...cs.serialize(), // class student fields
-                scores: relatedScores, // attach related scores
+                scores: relatedScores.reduce(
+                  (rsPrev: any, rsCurrent: any) => {
+                    rsPrev.taskList =
+                      rsCurrent.scoreTypeId === 1
+                        ? [
+                            ...rsPrev.taskList,
+                            {
+                              score: rsCurrent.score,
+                              description: rsCurrent.description,
+                              scoreType: {
+                                id: rsCurrent.scoreType.id,
+                                name: rsCurrent.scoreType.name,
+                              },
+                            },
+                          ]
+                        : rsPrev.taskList
+
+                    rsPrev.task =
+                      rsPrev.taskList.length > 0
+                        ? rsPrev.taskList.reduce(
+                            (taskP: any, taskC: any) => taskP + taskC.score,
+                            0
+                          ) / scoreTypes.filter((st) => st.id === 1)[0].taskQuota
+                        : null
+                    rsPrev.uts = rsCurrent.scoreTypeId === 2 ? rsCurrent.score : null
+                    rsPrev.uas = rsCurrent.scoreTypeId === 3 ? rsCurrent.score : null
+                    rsPrev.totalList = [
+                      ...rsPrev.totalList,
+                      {
+                        score: rsCurrent.score,
+                        description: rsCurrent.description,
+                        scoreType: {
+                          id: rsCurrent.scoreType.id,
+                          name: rsCurrent.scoreType.name,
+                        },
+                      },
+                    ]
+
+                    if (rsPrev.totalList.length > 0) {
+                      const taskTotalSum: any = {
+                        score:
+                          rsPrev.totalList
+                            .filter((task: any) => task.scoreType.id === 1)
+                            .reduce((sum: number, val: { score: number }) => sum + val.score, 0) ||
+                          0,
+                        weight: scoreTypes.filter((item) => item.id === 1)[0].weight,
+                      }
+
+                      const utsTotalSum: any = {
+                        score:
+                          rsPrev.totalList
+                            .filter((task: any) => task.scoreType.id === 2)
+                            .reduce((sum: number, val: { score: number }) => sum + val.score, 0) ||
+                          0,
+                        weight: scoreTypes.filter((item) => item.id === 2)[0].weight,
+                      }
+
+                      const uasTotalSum: any = {
+                        score:
+                          rsPrev.totalList
+                            .filter((task: any) => task.scoreType.id === 3)
+                            .reduce((sum: number, val: { score: number }) => sum + val.score, 0) ||
+                          0,
+                        weight: scoreTypes.filter((item) => item.id === 3)[0].weight,
+                      }
+
+                      rsPrev.total =
+                        (taskTotalSum.score / scoreTypes.filter((st) => st.id === 1)[0].taskQuota) *
+                          (taskTotalSum.weight / 100) +
+                        (utsTotalSum.score * (utsTotalSum.weight / 100) +
+                          uasTotalSum.score * (uasTotalSum.weight / 100))
+
+                      rsPrev.total = Number(rsPrev.total.toFixed(2))
+                    }
+                    return rsPrev
+                  },
+                  {
+                    taskList: [],
+                    task: null,
+                    uts: null,
+                    uas: null,
+                    totalList: [],
+                    total: null,
+                  }
+                ), // attach related scores
               }
             }),
           }

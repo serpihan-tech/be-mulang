@@ -129,12 +129,12 @@ export default class ScoresController {
     }
   }
 
-  async getOwnScores({ auth, response }: HttpContext) {
+  async getOwnScores({ auth, response, request }: HttpContext) {
     const user = auth.user
     console.log(user)
     try {
       if (user) {
-        const result = await this.scroreService.getOwnScores(user)
+        const result = await this.scroreService.getOwnScores(user, request.all())
         return { result }
       }
     } catch (error) {
