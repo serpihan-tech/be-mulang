@@ -36,7 +36,7 @@ export class AnnouncementByAdminService
   implements AnnouncementByAdminContract, AnnouncementContract
 {
   protected now =
-    DateTime.now().setZone('Asia/Jakarta').toSQL() ??
+    DateTime.now().setZone('Asia/Jakarta').toFormat('yyyy-MM-dd 00:00:00.000 +07:00') ?? // DateTime.now().setZone('Asia/Jakarta').toSQL() ??
     new Date().toISOString().slice(0, 19).replace('T', ' ')
 
   async getBothAll(params: any): Promise<any> {
@@ -196,9 +196,10 @@ export class AnnouncementByAdminService
       const admin = await Admin.query().where('id', adminId).preload('user').firstOrFail()
       const role = await User.getRole(await admin.related('user').query().firstOrFail())
 
-      const annDate = new Date(ann.date)
+      const annDate = DateTime.fromISO(ann.date.toString()).setZone('Asia/Jakarta').toSQL()
 
-      if (annDate.toISOString() === this.now) {
+      console.log('annDate : ', annDate, 'this.now : ', this.now)
+      if (annDate === this.now) {
         transmit.broadcast(`notifications/${ann.targetRoles}`, {
           message: {
             id: `44${ann.id}`,
@@ -208,7 +209,7 @@ export class AnnouncementByAdminService
             files: ann.files,
             content: ann.content,
             category: ann.category,
-            date: annDate.toISOString(),
+            date: ann.date.toString(),
             senderPicture: admin.profilePicture,
             senderEmail: admin.user.email,
           },

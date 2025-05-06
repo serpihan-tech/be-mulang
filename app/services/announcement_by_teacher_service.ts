@@ -13,7 +13,7 @@ import app from '@adonisjs/core/services/app'
 
 export class AnnouncementByTeacherService implements AnnouncementByTeacherContract {
   protected now =
-    DateTime.now().setZone('Asia/Jakarta').toSQL() ??
+    DateTime.now().setZone('Asia/Jakarta').toFormat('yyyy-MM-dd 00:00:00.000 +07:00') ?? // DateTime.now().setZone('Asia/Jakarta').toSQL() ??
     new Date().toISOString().slice(0, 19).replace('T', ' ')
 
   async getAll(params: any, role?: string): Promise<any> {
@@ -123,9 +123,10 @@ export class AnnouncementByTeacherService implements AnnouncementByTeacherContra
         })
       }
 
-      const resultDate = new Date(result.date)
+      const resultDate = DateTime.fromISO(result.date.toString()).setZone('Asia/Jakarta').toSQL()
+      console.log('resultDate : ', resultDate, 'this.now : ', this.now)
 
-      if (resultDate.toISOString() === this.now) {
+      if (resultDate === this.now) {
         const mapel = await Module.query().where('id', result.moduleId).firstOrFail()
         const kelas = await Class.query().where('id', result.classId).firstOrFail()
 
@@ -142,7 +143,7 @@ export class AnnouncementByTeacherService implements AnnouncementByTeacherContra
             content: result.content,
             category: result.category,
             role: role?.role,
-            date: resultDate.toISOString(),
+            date: result.date.toString(),
             teacher: teacher.name,
             module: mapel.name,
             class: kelas.name,

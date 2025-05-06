@@ -77,7 +77,7 @@ export default class ScoreService {
     return scores
   }
 
-  async getOwnScores(user: any, params?: any): Promise<any> {
+  async getOwnScores(user: any): Promise<any> {
     // Find the student user
     const student = await Student.query().where('user_id', user.id).firstOrFail()
 
@@ -140,7 +140,7 @@ export default class ScoreService {
       .preload('module', (mq) => mq.select('id', 'name', 'academic_year_id'))
       .preload('scoreType')
       .innerJoin('modules', 'scores.module_id', 'modules.id')
-      .innerJoin('class_students', 'scores.class_student_id', 'class_students.id') // ✅ JOIN ini wajib!
+      .innerJoin('class_students', 'scores.class_student_id', 'class_students.id')
       .innerJoin('academic_years', 'modules.academic_year_id', 'academic_years.id')
 
     // Build dynamic where
@@ -412,39 +412,6 @@ export default class ScoreService {
       .firstOrFail()
 
     return { scores }
-    // return academicYears.map((academicYear) => {
-    //   const moduleMap = new Map<number, any>()
-
-    //   for (const module of modules) {
-    //     if (module.academicYearId !== academicYear.id) continue
-
-    //     moduleMap.set(module.id, {
-    //       id: module.id,
-    //       name: module.name,
-    //       scores: {
-    //         taskList: [],
-    //         task: null,
-    //         uts: null,
-    //         uas: null,
-    //         totalList: [],
-    //         total: null,
-    //       },
-    //     })
-    //   }
-
-    //   for (const score of scores) {
-    //     const moduleData = moduleMap.get(score.moduleId)
-    //     if (!moduleData) continue
-
-    //     if (score.scoreTypeId === 1) {
-    //       moduleData.scores.taskList.push(score.score)
-    //     scoreTypeId: data.score_type_id,
-    //     description: data.description,
-    //   }, // Search criteria (harus unik)
-    //   {
-    //     score: data.score,
-    //   } // Data yang akan diupdate
-    // )
   }
 
   async create(data: any): Promise<any> {
