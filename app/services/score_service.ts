@@ -36,8 +36,8 @@ export default class ScoreService {
       .where('academic_year_id', semester.id)
       .if(params.kelas, (q) =>
         q
-          .if(Array.isArray(params.kelas), (q) => q.whereIn('class_id', paramsKelas))
-          .if(!Array.isArray(params.kelas), (q) => q.where('class_id', params.kelas))
+          .if(Array.isArray(params.kelas), (p) => p.whereIn('class_id', paramsKelas))
+          .if(!Array.isArray(params.kelas), (p) => p.where('class_id', params.kelas))
       )
 
     const scoreTypes = await ScoreType.query()
@@ -55,8 +55,8 @@ export default class ScoreService {
       )
       .if(params.mapel, (q) =>
         q
-          .if(Array.isArray(params.mapel), (q) => q.whereIn('module_id', paramsMapel))
-          .if(!Array.isArray(params.mapel), (q) => q.where('module_id', params.mapel))
+          .if(Array.isArray(params.mapel), (p) => p.whereIn('module_id', paramsMapel))
+          .if(!Array.isArray(params.mapel), (p) => p.where('module_id', params.mapel))
       )
       .orderBy('module_id', 'asc')
 
@@ -275,7 +275,7 @@ export default class ScoreService {
     return scores
   }
 
-  async getOwnScores(user: any, params?: any): Promise<any> {
+  async getOwnScores(user: any, params: any): Promise<any> {
     // Find the student user
     const student = await Student.query().where('user_id', user.id).firstOrFail()
 
@@ -339,7 +339,7 @@ export default class ScoreService {
       .preload('module', (mq) => mq.select('id', 'name', 'academic_year_id'))
       .preload('scoreType')
       .innerJoin('modules', 'scores.module_id', 'modules.id')
-      .innerJoin('class_students', 'scores.class_student_id', 'class_students.id') // ✅ JOIN ini wajib!
+      .innerJoin('class_students', 'scores.class_student_id', 'class_students.id')
       .innerJoin('academic_years', 'modules.academic_year_id', 'academic_years.id')
       .if(params.tahunAjar, (q) => q.where('academic_years.id', params.tahunAjar))
 
@@ -833,39 +833,6 @@ export default class ScoreService {
       .firstOrFail()
 
     return { scores }
-    // return academicYears.map((academicYear) => {
-    //   const moduleMap = new Map<number, any>()
-
-    //   for (const module of modules) {
-    //     if (module.academicYearId !== academicYear.id) continue
-
-    //     moduleMap.set(module.id, {
-    //       id: module.id,
-    //       name: module.name,
-    //       scores: {
-    //         taskList: [],
-    //         task: null,
-    //         uts: null,
-    //         uas: null,
-    //         totalList: [],
-    //         total: null,
-    //       },
-    //     })
-    //   }
-
-    //   for (const score of scores) {
-    //     const moduleData = moduleMap.get(score.moduleId)
-    //     if (!moduleData) continue
-
-    //     if (score.scoreTypeId === 1) {
-    //       moduleData.scores.taskList.push(score.score)
-    //     scoreTypeId: data.score_type_id,
-    //     description: data.description,
-    //   }, // Search criteria (harus unik)
-    //   {
-    //     score: data.score,
-    //   } // Data yang akan diupdate
-    // )
   }
 
   async create(data: any): Promise<any> {

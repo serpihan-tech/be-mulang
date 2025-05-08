@@ -9,6 +9,7 @@ export const createTeacherAbsenceValidator = vine.compile(
     check_in_time: vine
       .date({ formats: ['HH:mm:ss'] })
       .optional()
+      .requiredIfExists('check_out_time')
       .requiredWhen('status', '=', 'Hadir'),
     check_out_time: vine
       .date({ formats: ['HH:mm:ss'] })
@@ -23,7 +24,11 @@ export const updateTeacherAbsenceValidator = vine.compile(
     teacher_id: vine.number().exists({ table: 'teachers', column: 'id' }).optional(),
     date: vine.date().optional(),
     status: vine.enum(['Hadir', 'Izin', 'Sakit', 'Alfa']).optional(),
-    check_in_time: vine.date({ formats: ['HH:mm:ss'] }).optional(),
+    check_in_time: vine
+      .date({ formats: ['HH:mm:ss'] })
+      .optional()
+      .requiredIfExists('check_out_time')
+      .requiredWhen('status', '=', 'Hadir'),
     check_out_time: vine.date({ formats: ['HH:mm:ss'] }).optional(),
   })
 )

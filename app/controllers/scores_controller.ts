@@ -135,7 +135,7 @@ export default class ScoresController {
     try {
       const data = request.all()
       if (user) {
-        const result = await this.scroreService.getOwnScores(user, data)
+        const result = await this.scroreService.getOwnScores(user)
         return response.ok({
           message: 'Data rekap nilai siswa berhasil ditemukan',
           result,
