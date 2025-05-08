@@ -9,7 +9,7 @@ export default class SchedulesController {
 
   async index({ request, response }: HttpContext) {
     try {
-      const schedules = await this.scheduleService.getAll(request.input('page', 1))
+      const schedules = await this.scheduleService.getAll(request.all())
       return response.ok({
         message: 'Jadwal Berhasil Ditemukan',
         schedules,
@@ -21,7 +21,7 @@ export default class SchedulesController {
 
   async show({ params, response }: HttpContext) {
     try {
-      const schedule = await this.scheduleService.getById(params.id)
+      const schedule = await this.scheduleService.getOne(params.id)
       return response.ok({
         message: 'Jadwal Berhasil Ditemukan',
         schedule,
@@ -67,6 +67,23 @@ export default class SchedulesController {
       })
     } catch (error) {
       return response.notFound({ error: { message: 'ID Jadwal Tidak Ditemukan' } })
+    }
+  }
+
+  async teachersSchedule({ auth, response }: HttpContext) {
+    try {
+      const user = auth.getUserOrFail()
+      await user.load('teacher')
+
+      if (!user.teacher) {
+        return response.badRequest({ error: { message: 'Data Guru Tidak Ditemukan' } })
+      }
+
+      // console.log('tecaher id di teachers schedule : ', user.teacher)
+      const teachers = await this.scheduleService.TeachersSchedule(user.teacher.id)
+      return response.ok({ message: 'Jadwal Berhasil Ditemukan', teachers })
+    } catch (error) {
+      return response.badRequest({ error: { message: error.message } })
     }
   }
 }

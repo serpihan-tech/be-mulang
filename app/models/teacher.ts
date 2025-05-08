@@ -6,13 +6,15 @@ import Class from './class.js'
 import Module from './module.js'
 import AnnouncementByTeacher from './announcement_by_teacher.js'
 import TeacherAbsence from './teacher_absence.js'
+import ModelFilter from '../utils/filter_query.js'
+import { ModelQueryBuilderContract } from '@adonisjs/lucid/types/model'
 
 export default class Teacher extends BaseModel {
   @column({ isPrimary: true })
   declare id: number
 
   @column()
-  declare user_id: number
+  declare userId: number
 
   @column()
   declare name: string
@@ -30,13 +32,13 @@ export default class Teacher extends BaseModel {
   declare address: string | null
 
   @column()
-  declare profile_picture: string
+  declare profilePicture: string
 
   @column()
-  declare birth_date: Date
+  declare birthDate: Date
 
   @column()
-  declare birth_place: string
+  declare birthPlace: string
 
   @column()
   declare gender: string
@@ -47,18 +49,30 @@ export default class Teacher extends BaseModel {
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 
-  @belongsTo(() => User, { foreignKey: 'user_id' })
+  @belongsTo(() => User, { foreignKey: 'userId' })
   declare user: BelongsTo<typeof User>
 
-  @hasOne(() => Class, { foreignKey: 'teacher_id' })
+  @hasOne(() => Class, { foreignKey: 'teacherId' })
   declare class: HasOne<typeof Class>
 
-  @hasMany(() => Module, { foreignKey: 'teacher_id' })
+  @hasMany(() => Module, { foreignKey: 'teacherId' })
   declare modules: HasMany<typeof Module>
 
-  @hasMany(() => AnnouncementByTeacher, { foreignKey: 'teacher_id' })
+  @hasMany(() => AnnouncementByTeacher, { foreignKey: 'teacherId' })
   declare announcements: HasMany<typeof AnnouncementByTeacher>
 
-  @hasMany(() => TeacherAbsence, { foreignKey: 'teacher_id' })
+  @hasMany(() => TeacherAbsence, { foreignKey: 'teacherId' })
   declare absences: HasMany<typeof TeacherAbsence>
+
+  @hasOne(() => TeacherAbsence, { foreignKey: 'teacherId' })
+  declare latestAbsence: HasOne<typeof TeacherAbsence>
+
+  public static whiteList: string[] = ['phone']
+  public static blackList: string[] = ['page', 'limit', 'email']
+
+  public static filter(
+    queryParams: Record<string, any>
+  ): ModelQueryBuilderContract<typeof Teacher, Teacher> {
+    return ModelFilter.apply(this, queryParams, this.whiteList, this.blackList)
+  }
 }

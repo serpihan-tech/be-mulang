@@ -2,6 +2,7 @@ import { DateTime } from 'luxon'
 import { BaseModel, belongsTo, column } from '@adonisjs/lucid/orm'
 import Admin from './admin.js'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
+import ModelFilter from '../utils/filter_query.js'
 
 export default class AnnouncementByAdmin extends BaseModel {
   @column({ isPrimary: true })
@@ -14,7 +15,7 @@ export default class AnnouncementByAdmin extends BaseModel {
   declare content: string
 
   @column()
-  declare admin_id: number // fk
+  declare adminId: number // fk
 
   @column()
   declare files: string
@@ -26,7 +27,7 @@ export default class AnnouncementByAdmin extends BaseModel {
   declare date: Date
 
   @column()
-  declare target_roles: string
+  declare targetRoles: string
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -34,6 +35,13 @@ export default class AnnouncementByAdmin extends BaseModel {
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 
-  @belongsTo(() => Admin, { foreignKey: 'admin_id' })
+  @belongsTo(() => Admin, { foreignKey: 'adminId' })
   declare admin: BelongsTo<typeof Admin>
+
+  public static whiteList: string[] = ['description']
+  public static blackList: string[] = []
+
+  public static filter(queryParams: Record<string, any>) {
+    return ModelFilter.apply(this, queryParams, this.whiteList, this.blackList)
+  }
 }

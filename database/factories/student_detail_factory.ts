@@ -12,10 +12,10 @@ export const StudentDetailFactory = factory
       'Katolik',
       'Islam',
       'Hindu',
-      'Budha',
+      'Buddha',
       'Konghucu',
     ])
-    const gender = faker.helpers.arrayElement(['laki-laki', 'perempuan'])
+    const gender = faker.helpers.arrayElement(['Laki-laki', 'Perempuan'])
     const state = faker.location.state()
     const city = faker.location.city()
     const address = `${faker.location.streetAddress({ useFullAddress: true })}, 
@@ -108,20 +108,20 @@ export const StudentDetailFactory = factory
     usedStudentIds.add(student.id)
 
     return {
-      student_id: student.id,
+      studentId: student.id,
       religion,
       gender,
       address,
-      parents_name: parentsName,
-      parents_phone: parentsPhone,
-      parents_job: parentsJob,
-      students_phone: studentsPhone,
+      parentsName: parentsName,
+      parentsPhone: parentsPhone,
+      parentsJob: parentsJob,
+      studentsPhone: studentsPhone,
       nis,
       nisn,
-      birth_date: birthDate,
-      birth_place: birthPlace,
-      enrollment_year: enrollmentYear,
-      profile_picture: faker.image.avatar(),
+      birthDate: birthDate,
+      birthPlace: birthPlace,
+      enrollmentYear: enrollmentYear,
+      profilePicture: faker.image.avatar(),
     }
   })
   .build()

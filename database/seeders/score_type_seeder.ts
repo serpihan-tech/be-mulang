@@ -7,14 +7,17 @@ export default class extends BaseSeeder {
       {
         name: 'Tugas / Ulangan Harian',
         weight: 35,
+        taskQuota: 4,
       },
       {
         name: 'UTS',
         weight: 25,
+        taskQuota: 1,
       },
       {
         name: 'UAS',
         weight: 40,
+        taskQuota: 1,
       },
     ])
   }

@@ -9,10 +9,9 @@ export default class AcademicYearsController {
   /**
    * Display a list of resources
    */
-  async index({ response }: HttpContext) {
+  async index({ request, response }: HttpContext) {
     try {
-      const column = ['id', 'name', 'date_start', 'date_end', 'semester', 'status']
-      const academicYears = await this.academicYearService.get(column)
+      const academicYears = await this.academicYearService.getAll(request.all())
 
       return response.ok({
         message: 'Berhasil Mendapatkan Data Tahun Ajaran',
@@ -51,13 +50,14 @@ export default class AcademicYearsController {
   async show({ params, response }: HttpContext) {
     const id: number = params.id
     try {
-      const column = ['id', 'name', 'date_start', 'date_end', 'semester', 'status']
-      const academicYears = await this.academicYearService.get(column, id)
+      const academicYears = await this.academicYearService.getOne(id)
       return response.ok({
         message: 'Berhasil Mendapatkan Data Tahun Ajaran',
         academicYears,
       })
     } catch (error) {
+      if (error.code === 'E_ROW_NOT_FOUND')
+        return response.notFound({ error: { message: 'ID Tahun Ajaran Tidak Ditemukan' } })
       return response.badRequest({ error })
     }
   }
@@ -72,6 +72,7 @@ export default class AcademicYearsController {
    */
   async update({ params, request, response }: HttpContext) {
     const academicYearId: number = params.id
+    // console.log('academic year id : ', academicYearId)
     try {
       await updateAcademicYearValidator.validate(request.all())
       const academicYear = await this.academicYearService.update(request.all(), academicYearId)
@@ -81,6 +82,8 @@ export default class AcademicYearsController {
         academicYear,
       })
     } catch (error) {
+      if (error.code === 'E_ROW_NOT_FOUND')
+        return response.notFound({ error: { message: 'ID Tahun Ajaran Tidak Ditemukan' } })
       return response.badRequest({ error })
     }
   }
@@ -96,7 +99,38 @@ export default class AcademicYearsController {
         message: 'Kelas Berhasil Dihapus',
       })
     } catch (error) {
+      if (error.code === 'E_ROW_NOT_FOUND')
+        return response.notFound({ error: { message: 'ID Tahun Ajaran Tidak Ditemukan' } })
       return response.badRequest({ error })
+    }
+  }
+
+  async myAcademicYear({ auth, response }: HttpContext) {
+    try {
+      const user = auth.getUserOrFail()
+      await user.load('student')
+
+      // console.log(user)
+      // console.log('student id: ', user.student?.id)
+
+      if (!user.student) {
+        return response.badRequest({ error: { message: 'Data Siswa Tidak Ditemukan' } })
+      }
+
+      const student = await this.academicYearService.getMyAcademicYear(user.student.id)
+      return response.ok({ message: 'Tahun Ajaran Berhasil Ditemukan', student })
+    } catch (error) {
+      return response.badRequest({ error })
+    }
+  }
+
+  async activeYear({ response }: HttpContext) {
+    try {
+      const ay = await this.academicYearService.getActiveAcademicYear()
+
+      return response.ok({ message: 'Tahun Ajaran Aktif Berhasil Ditemukan', ay })
+    } catch (error) {
+      return response.badRequest({ error: { message: error.message } })
     }
   }
 }

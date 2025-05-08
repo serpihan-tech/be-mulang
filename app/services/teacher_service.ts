@@ -2,11 +2,43 @@ import Teacher from '#models/teacher'
 import db from '@adonisjs/lucid/services/db'
 import UserContract from '../contracts/user_contract.js'
 import User from '#models/user'
+import { cuid } from '@adonisjs/core/helpers'
+import app from '@adonisjs/core/services/app'
 
 export default class TeacherService implements UserContract {
-  async index(page: number): Promise<any> {
-    const limit = 10
-    const teachers = await Teacher.query().preload('user').paginate(page, limit)
+  async index(params: any, page?: number, limit?: number): Promise<any> {
+    const lim = Number(limit) || 10
+    const pg = Number(page) || 1
+
+    const sortBy = params.sortBy
+    const sortOrder = params.sortOrder
+
+    const teachers = await Teacher.query()
+      .if(params.search, (q) =>
+        q
+          .where('name', 'like', `%${params.search}%`)
+          .orWhere('nip', 'like', `%${params.search}%`)
+          .orWhere('phone', 'like', `%${params.search}%`)
+          .orWhereHas('user', (user) => user.where('email', 'like', `%${params.search}%`))
+      )
+      .if(sortBy === 'nama', (qs) => qs.orderBy('name', sortOrder || 'asc'))
+      .if(sortBy === 'nip', (qs) => qs.orderBy('nip', sortOrder || 'asc'))
+      .if(sortBy === 'noTelp', (qs) => qs.orderBy('phone', sortOrder || 'asc'))
+      .if(sortBy === 'email', (qs) =>
+        qs
+          .join('users', 'teachers.user_id', '=', 'users.id')
+          .orderBy('users.email', sortOrder || 'asc')
+          .select('teachers.*')
+      )
+      .preload('user')
+      .paginate(pg, lim)
+
+    return teachers
+  }
+
+  async getIdName(): Promise<any> {
+    const teachers = await Teacher.query().select('id', 'name')
+    // console.log('teachers : ', teachers)
     return teachers
   }
 
@@ -29,6 +61,21 @@ export default class TeacherService implements UserContract {
         },
         { client: trx }
       )
+
+      if (data.teacher.profile_picture) {
+        const profilePicture = data.student_detail.profile_picture
+        const fileName = `${cuid()}.${profilePicture.extname}`
+
+        // Pindahkan file hanya jika `profile_picture` ada dan valid
+        await profilePicture.move(app.makePath('storage/uploads/teachers-profile'), {
+          name: fileName,
+        })
+
+        // Simpan path file ke dalam database
+        teacher.profilePicture = `teachers-profile/${fileName}`
+      }
+
+      await teacher.save()
 
       await trx.commit()
       return teacher
@@ -62,12 +109,25 @@ export default class TeacherService implements UserContract {
         nip: data.teacher?.nip ?? teacher.nip,
         phone: data.teacher?.phone ?? teacher.phone,
         religion: data.teacher?.religion ?? teacher.religion,
-        birth_date: data.teacher?.birth_date ?? teacher.birth_date,
-        birth_place: data.teacher?.birth_place ?? teacher.birth_place,
+        birthDate: data.teacher?.birth_date ?? teacher.birthDate,
+        birthPlace: data.teacher?.birth_place ?? teacher.birthPlace,
         gender: data.teacher?.gender ?? teacher.gender,
         address: data.teacher?.address ?? teacher.address,
-        profile_picture: data.teacher?.profile_picture ?? teacher.profile_picture,
       })
+
+      if (data.teacher.profile_picture) {
+        const profilePicture = data.teacher.profile_picture
+        const fileName = `${cuid()}.${profilePicture.extname}`
+
+        // Pindahkan file hanya jika `profile_picture` ada dan valid
+        await profilePicture.move(app.makePath('storage/uploads/teachers-profile'), {
+          name: fileName,
+        })
+
+        // Simpan path file ke dalam database
+        teacher.profilePicture = `teachers-profile/${fileName}`
+      }
+
       await teacher.save()
 
       await trx.commit()

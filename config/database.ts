@@ -2,6 +2,7 @@ import env from '#start/env'
 import { defineConfig } from '@adonisjs/lucid'
 
 const dbConfig = defineConfig({
+  prettyPrintDebugQueries: true,
   connection: 'mysql',
   connections: {
     mysql: {
@@ -12,6 +13,7 @@ const dbConfig = defineConfig({
         user: env.get('DB_USER'),
         password: env.get('DB_PASSWORD'),
         database: env.get('DB_DATABASE'),
+        timezone: 'Asia/Jakarta', // ! Menimbulkan warning MySQL akan tidak support di versi mendatang, figure it out!
       },
       migrations: {
         naturalSort: true,
@@ -20,6 +22,7 @@ const dbConfig = defineConfig({
       seeders: {
         paths: ['./database/seeders/MainSeeder'],
       },
+      debug: true,
     },
   },
 })

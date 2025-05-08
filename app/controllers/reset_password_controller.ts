@@ -7,32 +7,62 @@ import mail from '@adonisjs/mail/services/main'
 import hash from '@adonisjs/core/services/hash'
 import { randomBytes } from 'node:crypto'
 import { passwordValidator } from '#validators/user'
+import limiter from '@adonisjs/limiter/services/main'
 
 export default class ResetPasswordController {
   async sendOtp({ request, response }: HttpContext) {
     const { email } = request.only(['email'])
-  
-    // Find User by Email
-    const user = await User.findBy('email', email)
-  
-    if (!user) {
-      return response.badRequest({ error: { message: 'Email Tidak Ditemukan' } })
+    
+    const key = `user_${request.ip()}_${email}`
+
+    const sendOtpLimiter = limiter.use({
+      requests:  1,
+      duration: '1 minute',
+      blockDuration: '1 minute'
+    })
+
+    let user
+
+    const executed = await sendOtpLimiter.attempt(key, async () => {
+      // Find User by Email
+      user = await User.findBy('email', email)
+    
+      if (!user) {
+        return response.badRequest({ error: { message: 'Email Tidak Ditemukan' } })
+      }
+    
+      // Generate 4-digit OTP
+      const otp = Math.floor(1000 + Math.random() * 9000)
+      user.otp = otp
+      user.otp_created_at = DateTime.now().setZone('Asia/Jakarta')
+    
+      // Save user (Database)
+      await user.save()
+    
+      // Send Email (Async)
+      mail.send(new ResetPasswordENotification(user, otp)).catch(console.error)
+
+      return true
+    })
+    
+    /**
+     * Notify users that they have exceeded the limit
+     */
+    if (!executed) {
+      const availableIn = await sendOtpLimiter.availableIn(key)
+      return response.tooManyRequests({
+        error: {
+          message: `Terlalu Banyak Permintaan Kode OTP, Ulangi Lagi dalam ${availableIn} detik`,
+          code: 'E_TOO_MANY_REQUESTS',
+          status: 429,
+          availableIn: availableIn
+        },
+      })
     }
-  
-    // Generate 4-digit OTP
-    const otp = Math.floor(1000 + Math.random() * 9000)
-    user.otp = otp
-    user.otp_created_at = DateTime.now().setZone('Asia/Jakarta')
-  
-    // Save user (Database)
-    await user.save()
-  
-    // Send Email (Async)
-    mail.send(new ResetPasswordENotification(user, otp)).catch(console.error)
-  
+
     return {
       message: 'OTP Berhasil Dikirim, Check Email Anda Secara Berkala!',
-      email: user.email,
+      email: user!.email,
     }
   }
   

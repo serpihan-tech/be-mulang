@@ -5,19 +5,20 @@ import Student from './student.js'
 import Class from './class.js'
 import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
 import Score from './score.js'
+import Absence from './absence.js'
 
 export default class ClassStudent extends BaseModel {
   @column({ isPrimary: true })
   declare id: number
 
   @column()
-  declare class_id: number
+  declare classId: number
 
   @column()
-  declare student_id: number
+  declare studentId: number
 
   @column()
-  declare academic_year_id: number
+  declare academicYearId: number
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -25,15 +26,18 @@ export default class ClassStudent extends BaseModel {
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 
-  @belongsTo(() => Class, { foreignKey: 'class_id' })
+  @belongsTo(() => Class, { foreignKey: 'classId' })
   declare class: BelongsTo<typeof Class>
 
-  @belongsTo(() => Student, { foreignKey: 'student_id' })
+  @belongsTo(() => Student, { foreignKey: 'studentId' })
   declare student: BelongsTo<typeof Student>
 
-  @belongsTo(() => AcademicYear, { foreignKey: 'academic_year_id' })
+  @belongsTo(() => AcademicYear, { foreignKey: 'academicYearId' })
   declare academicYear: BelongsTo<typeof AcademicYear>
 
-  @hasMany(() => Score, { foreignKey: 'class_student_id' })
+  @hasMany(() => Absence, { foreignKey: 'classStudentId' })
+  declare absences: HasMany<typeof Absence>
+
+  @hasMany(() => Score, { foreignKey: 'classStudentId' })
   declare scores: HasMany<typeof Score>
 }

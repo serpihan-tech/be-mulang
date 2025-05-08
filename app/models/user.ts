@@ -50,11 +50,11 @@ export default class User extends compose(BaseModel, AuthFinder) {
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
 
-  @hasOne(() => Teacher, { foreignKey: 'user_id' }) declare teacher: HasOne<typeof Teacher>
+  @hasOne(() => Teacher, { foreignKey: 'userId' }) declare teacher: HasOne<typeof Teacher>
 
-  @hasOne(() => Admin, { foreignKey: 'user_id' }) declare admin: HasOne<typeof Admin>
+  @hasOne(() => Admin, { foreignKey: 'userId' }) declare admin: HasOne<typeof Admin>
 
-  @hasOne(() => Student, { foreignKey: 'user_id' }) declare student: HasOne<typeof Student>
+  @hasOne(() => Student, { foreignKey: 'userId' }) declare student: HasOne<typeof Student>
 
   @manyToMany(() => Role, {
     pivotTable: 'user_has_roles',

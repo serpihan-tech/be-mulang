@@ -13,9 +13,9 @@ export const ScoreFactory = factory
     const mId = (await Module.query()).map((m) => m.id)
 
     return {
-      score_type_id: faker.helpers.arrayElement(scoreType),
-      class_student_id: faker.helpers.arrayElement(csIds),
-      module_id: faker.helpers.arrayElement(mId),
+      scoreTypeId: faker.helpers.arrayElement(scoreType),
+      classStudentId: faker.helpers.arrayElement(csIds),
+      moduleId: faker.helpers.arrayElement(mId),
       score: faker.number.int({ min: 55, max: 100 }),
       description: faker.helpers.arrayElement(['Tugas 1', 'Tugas 2', 'Tugas 3']),
     }

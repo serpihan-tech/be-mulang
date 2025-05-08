@@ -12,14 +12,20 @@ export default class extends BaseSchema {
         .references('id')
         .inTable('teachers')
         .onDelete('CASCADE')
-      table
-        .integer('schedule_id')
-        .unsigned()
-        .references('id')
-        .inTable('schedules')
-        .onDelete('CASCADE')
+      table.integer('class_id').unsigned().references('id').inTable('classes').onDelete('CASCADE')
+      table.integer('module_id').unsigned().references('id').inTable('modules').onDelete('CASCADE')
       table.string('title').notNullable()
       table.text('content').notNullable()
+      table
+        .enum('category', [
+          'Akademik',
+          'Administrasi',
+          'Kegiatan Sekolah',
+          'Fasilitas',
+          'Prestasi',
+          'Informasi Umum',
+        ])
+        .defaultTo('Akademik')
       table.date('date').notNullable()
       table.text('files').notNullable()
       table.timestamp('created_at')

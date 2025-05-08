@@ -7,6 +7,7 @@ export default class extends BaseSchema {
     this.schema.createTable(this.tableName, (table) => {
       table.increments('id')
       table.string('name').notNullable()
+      table.integer('task_quota').defaultTo(1)
       table.integer('weight').notNullable()
       table.timestamp('created_at')
       table.timestamp('updated_at')

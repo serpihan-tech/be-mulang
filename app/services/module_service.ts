@@ -1,86 +1,189 @@
-import db from "@adonisjs/lucid/services/db";
-import ModuleContract from "../contracts/module_contract.js";
-import Module from "#models/module";
-import Teacher from "#models/teacher";
-import AcademicYear from "#models/academic_year";
+import db from '@adonisjs/lucid/services/db'
+import Module from '#models/module'
+import ModuleContract from '../contracts/module_contract.js'
+import { DateTime } from 'luxon'
+import AcademicYear from '#models/academic_year'
+import { cuid } from '@adonisjs/core/helpers'
+import app from '@adonisjs/core/services/app'
+import normalizeSearch from '../utils/normalize_search.js'
 
-export default class ModuleService {
-  async get(columns?: string[], id?: number): Promise<any> {
-    try {
-      if (id) {
-        const dataModule = await db.from('modules').where('id', id).select(columns ? columns : ['*'])
-        return dataModule
-      }
-      const modules = await db.from('modules').select(columns ? columns : ['*'])
-      return modules
+export default class ModuleService implements ModuleContract {
+  async getAll(params: any): Promise<any> {
+    const dataModule = await Module.query()
 
-    } catch (error) {
-      throw new Error("Method not implemented.");
-    }
+      .if(params.search && normalizeSearch(params.search) !== '', (query) => {
+        const search = normalizeSearch(params.search)
+        query.where((q) => {
+          q.where('modules.name', 'like', `%${search}%`)
+            .orWhereHas('teacher', (teacherQuery) => {
+              teacherQuery.where('name', 'like', `%${search}%`)
+            })
+            .orWhereHas('academicYear', (ay) => ay.where('name', 'like', `%${search}%`))
+        })
+      })
+
+      .if(params.namaMapel, (query) => {
+        query.where('name', params.namaMapel)
+      })
+
+      .if(params.tahunAjar, (query) => {
+        query.whereHas('academicYear', (ayQuery) => {
+          ayQuery.where('id', params.tahunAjar)
+        })
+      })
+
+      .if(params.nip, (query) => {
+        query.whereHas('teacher', (tQuery) => {
+          tQuery.where('nip', params.nip)
+        })
+      })
+
+      .if(params.sortBy === 'mapel', (query) => {
+        query.orderBy('modules.name', params.sortOrder || 'asc')
+      })
+      .if(params.sortBy === 'tahunAjar', (query) => {
+        query
+          .join('academic_years', 'modules.academic_year_id', 'academic_years.id')
+          .orderBy('academic_years.name', params.sortOrder || 'asc')
+          .select('modules.*')
+      })
+      .if(params.sortBy === 'guru', (query) => {
+        query
+          .join('teachers', 'modules.teacher_id', 'teachers.id')
+          .orderBy('teachers.name', params.sortOrder || 'asc')
+          .select('modules.*')
+      })
+
+      .preload('academicYear', (ay) =>
+        ay.select('id', 'name', 'dateStart', 'dateEnd', 'semester', 'status')
+      )
+      .preload('teacher', (t) => t.select('id', 'name', 'nip'))
+
+      .paginate(params.page || 1, params.limit || 10)
+
+    return dataModule
   }
 
-  async getByFilter(filter: any, page?: number, limit?: number, columns?: string[]): Promise<any> {
-    let { name = "", teacherNip = "", academicYear = "" } = filter
+  async getOne(id: any): Promise<any> {
+    const module = await Module.query().where('id', id).firstOrFail()
 
-    if (teacherNip) {
-      const teacher = await Teacher.query().where('nip', teacherNip).first()
-      teacherNip = teacher?.id || ""
-    }
-
-    if (academicYear) {
-      const academicYearModel = await AcademicYear.query().where('name', academicYear).first()
-      academicYear = academicYearModel?.id || ""
-    }
-
-    try {
-      const modules = await Module.query()
-      .if(name, (query) => {
-        query.where('name', 'like', `%${name}%`)
-      })
-      .if(teacherNip, (query) => {
-        query.where('teacher_id', teacherNip)
-      })
-      .if(academicYear, (query) => {
-        query.where('academic_year_id', academicYear)
-      })
-      .select(columns ? columns : ['*'])
-      .paginate((page||1), (limit||1))
-
-      return {modules, 
-        test: limit}
-    } catch (error) {
-      throw new Error("Method not implemented.");
-    }
+    return module
   }
+
   async create(data: any): Promise<any> {
-    const trx = await db.transaction()
-    try {
-      const modules = await Module.create(data, { client: trx })
-      await trx.commit()
-      return modules
-    } catch (error) {
-      throw new Error("Method not implemented.");
-    }
-  }
-  async update(data: any, id: number): Promise<any> {
-    const trx = await db.transaction()
-    try {
-      const modules = await Module.findOrFail(id, { client: trx })
-      modules.merge(data)
-      await modules.useTransaction(trx).save()
-      await trx.commit()
-      return modules
+    if (data.name && data.academic_year_id && data.teacher_id) {
+      const module = await Module.query()
+        .where('name', data.name)
+        .where('academic_year_id', data.academic_year_id)
 
-    } catch (error) {
-      throw new Error("Method not implemented.");
+      for (const m of module) {
+        if (
+          m.teacherId === data.teacher_id &&
+          m.academicYearId === data.academic_year_id &&
+          m.name === data.name
+        ) {
+          throw new Error('Mapel sudah ada')
+        }
+      }
     }
+
+    const modules = await Module.create({
+      name: data.name,
+      academicYearId: data.academic_year_id,
+      teacherId: data.teacher_id,
+    })
+
+    console.log(data)
+    if (data.thumbnail) {
+      const tn = data.thumbnail
+      console.log(tn)
+      const fileName = `${tn.clientName}`
+
+      // Pindahkan file hanya jika `profile_picture` ada dan valid
+      await tn.move(app.makePath('storage/uploads/modules-thumbnail'), {
+        name: fileName,
+        overwrite: true,
+      })
+
+      // Simpan path file ke dalam database
+      modules.thumbnail = `modules-thumbnail/${fileName}`
+    }
+
+    await modules.save()
+
+    return modules
   }
-  async delete(id: number): Promise<any> {
-    try {
-      const modules = await Module.findOrFail(id)
-      await modules.delete()
-    } catch (error) {
-      throw new Error("Method not implemented.");
+
+  async update(data: any, id: number): Promise<any> {
+    const modules = await Module.findOrFail(id)
+    modules.merge({
+      name: data.name ?? modules.name,
+      academicYearId: data.academic_year_id ?? modules.academicYearId,
+      teacherId: data.teacher_id ?? modules.teacherId,
+    })
+
+    if (data.thumbnail) {
+      const tn = data.thumbnail
+      console.log(tn)
+      const fileName = `${tn.clientName}`
+
+      // Pindahkan file hanya jika `profile_picture` ada dan valid
+      await tn.move(app.makePath('storage/uploads/modules-thumbnail'), {
+        name: fileName,
+      })
+
+      // Simpan path file ke dalam database
+      modules.thumbnail = `modules-thumbnail/${fileName}`
     }
+
+    await modules.save()
+
+    return modules
+  }
+
+  async delete(id: number): Promise<any> {
+    const modules = await Module.findOrFail(id)
+    const name = modules.name
+    await modules.delete()
+
+    return name
+  }
+
+  private async getActiveSemester() {
+    const now =
+      DateTime.now().setZone('Asia/Jakarta').toSQL() ??
+      new Date().toISOString().slice(0, 19).replace('T', ' ')
+    console.log(now)
+
+    return await AcademicYear.query()
+      .where('status', 1 || true)
+      .where('date_start', '<', now)
+      .where('date_end', '>', now)
+      .firstOrFail()
+  }
+
+  async getAllNames(data: any) {
+    // only return module's name
+    const academicYear = await this.getActiveSemester()
+
+    const modules = await Module.query()
+      .where('academic_year_id', data.tahunAjar ?? academicYear.id)
+      .orderBy('name', 'asc')
+      .distinct('name')
+
+    return modules
+  }
+
+  async listModules(params: any) {
+    // return module's name and teacher's
+    const activeAcademicYear = await this.getActiveSemester()
+    const yearId = params.tahunAjar ?? activeAcademicYear.id
+
+    const modules = await Module.query()
+      .select('id', 'name', 'academic_year_id', 'teacher_id')
+      .where('academic_year_id', yearId)
+      .preload('teacher', (t) => t.select('id', 'name'))
+
+    return modules
   }
 }

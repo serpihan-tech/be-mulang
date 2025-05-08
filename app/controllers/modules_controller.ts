@@ -1,64 +1,26 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import { inject } from '@adonisjs/core'
 import ModuleService from '#services/module_service'
-import { createModuleValidator, filterModuleValidator, updateModuleValidator } from '#validators/module'
+import { createModuleValidator, updateModuleValidator } from '#validators/module'
 
 @inject()
 export default class ModulesController {
   constructor(private moduleService: ModuleService) {}
-
   /**
    * Display a list of resource
    */
-  async index({response}: HttpContext) {
+  async index({ response, request }: HttpContext) {
     try {
-      const columns = ['name', 'teacher_id', 'academic_year_id']
-      const modules = await this.moduleService.get(columns)
+      const modules = await this.moduleService.getAll(request.all())
 
       return response.ok({
         message: 'Berhasil Mendapatkan Data Modul',
-        modules
+        modules,
       })
     } catch (error) {
-      throw response.send({
-        "error": {
-          ...error
-        }
-      }) 
+      throw response.status(error.status).send({ error })
     }
   }
-
-  async getByFilter({request, response}: HttpContext) {
-    const filter = {
-      name: request.input('name', null),
-      teacherNip: request.input('teacherNip', null),
-      academicYear: request.input('academicYear', null)
-    }
-    const page = request.input('page')
-    const limit = request.input('limit')
-
-    try {
-      const columns = ['name', 'teacher_id', 'academic_year_id']
-
-      const modules = await this.moduleService.getByFilter(filter, page, limit, columns)
-
-      return response.ok({
-        message: 'Berhasil Mendapatkan Data Modul',
-        modules
-      })
-    } catch (error) {
-      throw response.send({
-        "error": {
-          ...error
-        }
-      })
-    }
-  }
-
-  /**
-   * Display form to create a new record
-   */
-  async create({}: HttpContext) {}
 
   /**
    * Handle form submission for the create action
@@ -66,43 +28,67 @@ export default class ModulesController {
   async store({ request, response }: HttpContext) {
     try {
       await createModuleValidator.validate(request.all())
-      const module = await this.moduleService.create(request.all())
+      const data = request.all()
+
+      // Ambil file profile_picture dari request.file() secara terpisah
+      const tn = request.file('thumbnail')
+
+      if (tn) {
+        data.thumbnail = tn
+      }
+      const module = await this.moduleService.create(data)
 
       return response.created({
-        message: 'Modul Berhasil Dibuat',
-        module
+        message: 'Mapel Berhasil Dibuat',
+        module,
       })
-    }catch (error){
-      return  error
+    } catch (error) {
+      return response.badRequest({ error })
     }
   }
 
   /**
    * Show individual record
    */
-  async show({ params }: HttpContext) {}
-
-  /**
-   * Edit individual record
-   */
-  async edit({ params }: HttpContext) {
-    
+  async show({ params, response }: HttpContext) {
+    const id = params.id
+    try {
+      const module = await this.moduleService.getOne(id)
+      return response.ok({
+        message: 'Mapel Berhasil Ditampilkan',
+        module,
+      })
+    } catch (error) {
+      if (error.code === 'E_ROW_NOT_FOUND')
+        return response.notFound({ error: { message: 'ID Mapel Tidak Ditemukan' } })
+      return response.badRequest({ error: { message: error.message } })
+    }
   }
 
   /**
    * Handle form submission for the edit action
    */
   async update({ params, request, response }: HttpContext) {
-    const moduleId= params.id
+    const moduleId = params.id
     try {
       await updateModuleValidator.validate(request.all())
-      const module = await this.moduleService.update(request.all(), moduleId)
+      const data = request.all()
+
+      // Ambil file profile_picture dari request.file() secara terpisah
+      const tn = request.file('thumbnail')
+
+      if (tn) {
+        data.thumbnail = tn
+      }
+      const module = await this.moduleService.update(data, moduleId)
 
       return response.ok({
-        message: 'Modul Berhasil Diubah',
-        module
-      }) 
+        message: 'Mapel Berhasil Diubah',
+        module,
+      })
     } catch (error) {
+      if (error.code === 'E_ROW_NOT_FOUND')
+        return response.notFound({ error: { message: 'ID Mapel Tidak Ditemukan' } })
       return response.badRequest({ error })
     }
   }
@@ -112,13 +98,35 @@ export default class ModulesController {
    */
   async destroy({ params, response }: HttpContext) {
     try {
-      await this.moduleService.delete(params.id)
-  
+      const module: string = await this.moduleService.delete(params.id)
       return response.ok({
-        message: 'Modul Berhasil Dihapus'
+        message: `Mapel (${module}) Berhasil Dihapus`,
       })
     } catch (error) {
-      return response.notFound({ error: { message: 'ID Modul Tidak Ditemukan' } })
+      if (error.code === 'E_ROW_NOT_FOUND')
+        return response.notFound({ error: { message: 'ID Mapel Tidak Ditemukan' } })
+      return response.badRequest({ error: { message: error.message } })
+    }
+  }
+
+  async listNames({ request, response }: HttpContext) {
+    try {
+      const modules = await this.moduleService.getAllNames(request.all())
+      return response.ok({
+        message: 'Berhasil Mendapatkan Data Modul',
+        modules,
+      })
+    } catch (error) {
+      return response.badRequest({ error })
+    }
+  }
+
+  async listModules({ request, response }: HttpContext) {
+    try {
+      const modules = await this.moduleService.listModules(request.all())
+      return response.ok({ message: 'List Mapel Berhasil Ditemukan', modules })
+    } catch (error) {
+      return response.badRequest({ error: { message: error.message } })
     }
   }
 }

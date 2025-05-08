@@ -10,7 +10,11 @@ export default class TeachersController {
 
   async index({ request, response }: HttpContext) {
     try {
-      const teachers = await this.teacherService.index(request.input('page', 1))
+      const teachers = await this.teacherService.index(
+        request.all(),
+        request.input('page', 1),
+        request.input('limit')
+      )
       return response.ok({
         messsage: 'Berhasil Mendapatkan Data Semua Guru',
         teachers,
@@ -37,7 +41,16 @@ export default class TeachersController {
       await createUserValidator.validate(request.input('user'))
       await createTeacherValidator.validate(request.input('teacher'))
 
-      const teacher = await this.teacherService.create(request.all())
+      const data = request.all()
+
+      // Ambil file profile_picture dari request.file() secara terpisah
+      const profilePicture = request.file('teacher.profile_picture')
+
+      if (profilePicture) {
+        data.teacher.profile_picture = profilePicture
+      }
+
+      const teacher = await this.teacherService.create(data)
 
       return response.created({
         message: 'Guru Berhasil Ditambahkan',
@@ -53,12 +66,22 @@ export default class TeachersController {
       await updateUserValidator.validate(request.input('user'))
       await updateTeacherValidator.validate(request.input('teacher'))
 
-      const teacher = await this.teacherService.update(params.id, request.all())
+      const data = request.all()
+
+      // Ambil file profile_picture dari request.file() secara terpisah
+      const profilePicture = request.file('teacher.profile_picture')
+
+      if (profilePicture) {
+        data.teacher.profile_picture = profilePicture
+      }
+
+      const teacher = await this.teacherService.update(params.id, data)
       return response.ok({
         message: 'Data Guru Berhasil Diubah',
         teacher,
       })
     } catch (error) {
+      // console.error(error)
       return response.unprocessableEntity({ error })
     }
   }
@@ -71,6 +94,15 @@ export default class TeachersController {
       })
     } catch (error) {
       return response.notFound({ error: { message: 'ID Guru Tidak Ditemukan' } })
+    }
+  }
+
+  async getIdName({ response }: HttpContext) {
+    try {
+      const tc = await this.teacherService.getIdName()
+      return response.ok({ message: 'Data Guru Berhasil Didapatkan', teachers: tc })
+    } catch (error) {
+      return response.status(error.code).send({ error })
     }
   }
 }

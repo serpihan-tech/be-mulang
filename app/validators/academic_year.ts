@@ -3,7 +3,7 @@ import { messages } from '../utils/validation_message.js'
 
 export const createAcademicYearValidator = vine.compile(
   vine.object({
-    name: vine.string().trim().minLength(3).maxLength(255),
+    name: vine.string().trim().minLength(3).maxLength(100),
     date_start: vine.date(),
     date_end: vine.date().afterField('date_start'),
     semester: vine.enum(['ganjil', 'genap']),
@@ -13,11 +13,11 @@ export const createAcademicYearValidator = vine.compile(
 
 export const updateAcademicYearValidator = vine.compile(
   vine.object({
-    name: vine.string().trim().minLength(3).maxLength(255),
-    date_start: vine.date(),
-    date_end: vine.date().afterField('date_start'),
-    academic_year: vine.enum(['ganjil', 'genap']),
-    status: vine.boolean(),
+    name: vine.string().trim().minLength(3).maxLength(100).optional(),
+    date_start: vine.date().optional(),
+    date_end: vine.date().afterField('date_start').optional(),
+    semester: vine.enum(['ganjil', 'genap']).optional(),
+    status: vine.boolean().optional(),
   })
 )
 

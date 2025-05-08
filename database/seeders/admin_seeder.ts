@@ -7,11 +7,17 @@ export default class extends BaseSeeder {
     await Admin.createMany([
       {
         name: 'Admin Semarang (Gunungpati)',
-        user_id: 1,
+        userId: 1,
+        phone: '08123456789',
+        address: 'Jl. Gunungpati, Semarang',
+        profilePicture: 'https://via.placeholder.com/150',
       },
       {
         name: 'Admin Semarang',
-        user_id: 2,
+        userId: 2,
+        phone: '08654321098',
+        address: 'Gang Pemuda, Semarang',
+        profilePicture: 'https://via.placeholder.com/250',
       },
     ])
   }
