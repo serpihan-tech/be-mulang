@@ -144,7 +144,7 @@ export class AnnouncementByTeacherService implements AnnouncementByTeacherContra
             category: result.category,
             role: role?.role,
             date: result.date.toString(),
-            teacher: teacher.name,
+            from: teacher.name,
             module: mapel.name,
             class: kelas.name,
             files: filePath,
