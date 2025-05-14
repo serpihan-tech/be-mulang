@@ -283,6 +283,7 @@ export class AbsenceService implements AbsenceContract {
 
     const absences = await Absence.query()
       .whereIn('schedule_id', scheduleIds)
+      .orderBy('date', 'asc')
       .preload('classStudent', (cs) => cs.select(['id', 'student_id']))
 
     const groupedAbsences: {
@@ -300,9 +301,16 @@ export class AbsenceService implements AbsenceContract {
       ...new Set(absences.map((a) => a.date.toString()).filter((d): d is string => d !== null)),
     ]
 
+    console.log('dates', dates)
+    console.log('absences', absences)
     for (const date of dates) {
       const absenceOnDate = absences.filter((a) => a.date.toString() === date)
-
+      // console.log(
+      //   'absenceOnDate',
+      //   absences.filter((a) => a.date.toString() === date),
+      //   'date',
+      //   date
+      // )
       const scheduleId = absenceOnDate[0]?.scheduleId ?? 0
       const day = await Schedule.query()
         .where('id', scheduleId)
@@ -320,6 +328,8 @@ export class AbsenceService implements AbsenceContract {
         }
       })
 
+      // console.log('absencesForDate', absencesForDate)
+
       groupedAbsences.push({
         date,
         scheduleId,
@@ -327,6 +337,8 @@ export class AbsenceService implements AbsenceContract {
         absences: absencesForDate,
       })
     }
+
+    // console.log('groupedAbsences', groupedAbsences)
 
     return {
       students: studentList,
@@ -382,7 +394,7 @@ export class AbsenceService implements AbsenceContract {
       status: a.status,
       reason: a.reason,
     }))
-
+    console.log('absData date', absData.date)
     console.log(absData)
 
     const absences = await Absence.updateOrCreateMany(

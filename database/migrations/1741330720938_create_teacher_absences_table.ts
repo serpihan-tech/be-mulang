@@ -16,6 +16,8 @@ export default class extends BaseSchema {
       table.enum('status', ['Hadir', 'Izin', 'Sakit', 'Alfa']).notNullable()
       table.time('check_in_time')
       table.time('check_out_time')
+      table.text('in_photo').nullable()
+      table.text('out_photo').nullable()
       table.timestamp('created_at')
       table.timestamp('updated_at')
     })

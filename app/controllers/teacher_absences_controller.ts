@@ -40,7 +40,18 @@ export default class TeacherAbsencesController {
   async store({ request, response }: HttpContext) {
     try {
       const data = request.all()
+      const inPhoto = request.file('in_photo')
+      const outPhoto = request.file('out_photo')
 
+      if (inPhoto) {
+        data.in_photo = inPhoto
+      }
+
+      if (outPhoto) {
+        data.out_photo = outPhoto
+      }
+
+      console.log(data)
       await createTeacherAbsenceValidator.validate(data)
 
       const teacherAbsence = await this.teacherAbsenceService.create(data)
@@ -58,6 +69,11 @@ export default class TeacherAbsencesController {
   async update({ request, params, response }: HttpContext) {
     try {
       const data = request.all()
+      const selfie = request.file('latest_photo')
+
+      if (selfie) {
+        data.latest_photo = selfie
+      }
 
       await updateTeacherAbsenceValidator.validate(data)
       const teacherAbsence = await this.teacherAbsenceService.update(params.id, data)

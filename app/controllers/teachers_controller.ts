@@ -38,9 +38,6 @@ export default class TeachersController {
 
   async store({ request, response }: HttpContext) {
     try {
-      await createUserValidator.validate(request.input('user'))
-      await createTeacherValidator.validate(request.input('teacher'))
-
       const data = request.all()
 
       // Ambil file profile_picture dari request.file() secara terpisah
@@ -49,6 +46,9 @@ export default class TeachersController {
       if (profilePicture) {
         data.teacher.profile_picture = profilePicture
       }
+
+      await createUserValidator.validate(data.user)
+      await createTeacherValidator.validate(data.teacher)
 
       const teacher = await this.teacherService.create(data)
 
@@ -63,9 +63,6 @@ export default class TeachersController {
 
   async update({ params, request, response }: HttpContext) {
     try {
-      await updateUserValidator.validate(request.input('user'))
-      await updateTeacherValidator.validate(request.input('teacher'))
-
       const data = request.all()
 
       // Ambil file profile_picture dari request.file() secara terpisah
@@ -74,6 +71,9 @@ export default class TeachersController {
       if (profilePicture) {
         data.teacher.profile_picture = profilePicture
       }
+
+      await updateUserValidator.validate(data.user)
+      await updateTeacherValidator.validate(data.teacher)
 
       const teacher = await this.teacherService.update(params.id, data)
       return response.ok({

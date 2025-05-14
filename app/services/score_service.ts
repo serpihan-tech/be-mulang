@@ -56,9 +56,17 @@ export default class ScoreService {
       .if(params.mapel, (q) =>
         q
           .if(Array.isArray(params.mapel), (p) => p.whereIn('module_id', paramsMapel))
-          .if(!Array.isArray(params.mapel), (p) => p.where('module_id', params.mapel))
+          .if(!Array.isArray(params.mapel), (p) => p.where('module_id', paramsMapel))
       )
       .orderBy('module_id', 'asc')
+
+    const arrays = score.map((s) => {
+      return { cs: s.classStudentId, ms: s.moduleId, st: s.classStudent.student.id }
+    })
+    const unique = arrays.filter(
+      (value, index, self) =>
+        index === self.findIndex((v) => v.cs === value.cs && v.ms === value.ms && v.st === value.st)
+    )
 
     const result = {
       semester: {
@@ -67,203 +75,222 @@ export default class ScoreService {
         semester: semester.semester,
         status: semester.status,
       },
-      data: score.reduce(
-        (acc, curr) => {
-          const index = acc.findIndex(
-            (item) =>
-              item.module.id === curr.module.id &&
-              item.student.id === curr.classStudent.student.id &&
-              item.classStudentId === curr.classStudent.id
-          )
-          if (index === -1) {
-            let groupedResult: any = {
-              classStudentId: curr.classStudent.id,
-              module: {
-                id: curr.module.id,
-                name: curr.module.name,
-              },
-              student: {
-                id: curr.classStudent.student.id,
-                name: curr.classStudent.student.name,
-                nis: curr.classStudent.student.studentDetail.nis,
-              },
-              theClass: {
-                id: curr.classStudent.class.id,
-                name: curr.classStudent.class.name,
-              },
-              scores: {
-                totalList: [
-                  {
-                    score: curr.score,
-                    scoreType: {
-                      id: curr.scoreType.id,
-                      name: curr.scoreType.name,
+      meta: {
+        total: unique.length,
+        perPage: Number(params.limit) || 10,
+        currentPage: Number(params.page) || 1,
+        lastPage: Math.ceil(unique.length / (Number(params.limit) || 10)),
+        firstPage: 1,
+        firstPageUrl: '/?page=1',
+        lastPageUrl: `/?page=${Math.ceil(unique.length / (Number(params.limit) || 10))}`,
+        nextPageUrl:
+          Number(params.page) + 1 <= Math.ceil(unique.length / (Number(params.limit) || 10))
+            ? `/?page=${Number(params.page) + 1}`
+            : null,
+        previousPageUrl: Number(params.page) - 1 > 0 ? `/?page=${Number(params.page) - 1}` : null,
+      },
+      data: score
+        .reduce(
+          (acc, curr) => {
+            const index = acc.findIndex(
+              (item) =>
+                item.module.id === curr.module.id &&
+                item.student.id === curr.classStudent.student.id &&
+                item.classStudentId === curr.classStudent.id
+            )
+            if (index === -1) {
+              let groupedResult: any = {
+                classStudentId: curr.classStudent.id || null,
+                module: {
+                  id: curr.module.id || null,
+                  name: curr.module.name || null,
+                },
+                student: {
+                  id: curr.classStudent.student.id || null,
+                  name: curr.classStudent.student.name || null,
+                  nis: curr.classStudent.student.studentDetail.nis || null,
+                },
+                theClass: {
+                  id: curr.classStudent.class.id || null,
+                  name: curr.classStudent.class.name || null,
+                },
+                scores: {
+                  totalList: [
+                    {
+                      score: curr.score || null,
+                      scoreType: {
+                        id: curr.scoreType.id || null,
+                        name: curr.scoreType.name || null,
+                      },
                     },
+                  ],
+                  taskList: [],
+                  task: null,
+                  uts: null,
+                  uas: null,
+                  total: null,
+                },
+              }
+
+              if (curr.scoreType.id === 2) {
+                groupedResult.scores.uts = curr.score
+              } else if (curr.scoreType.id === 3) {
+                groupedResult.scores.uas = curr.score
+              } else if (curr.scoreType.id === 1) {
+                groupedResult.scores.taskList.push({
+                  score: curr.score,
+                  scoreType: {
+                    id: curr.scoreType.id,
+                    name: curr.scoreType.name,
                   },
-                ],
-                taskList: [],
-                task: null,
-                uts: null,
-                uas: null,
-                total: null,
-              },
-            }
+                })
+              }
 
-            if (curr.scoreType.id === 2) {
-              groupedResult.scores.uts = curr.score
-            } else if (curr.scoreType.id === 3) {
-              groupedResult.scores.uas = curr.score
-            } else if (curr.scoreType.id === 1) {
-              groupedResult.scores.taskList.push({
+              if (groupedResult.scores.taskList.length > 0) {
+                groupedResult.scores.task =
+                  groupedResult.scores.taskList.reduce(
+                    (acc2: any, curr2: any) => acc2 + curr2.score,
+                    0
+                  ) / scoreTypes.filter((item) => item.id === 1)[0].taskQuota
+              }
+
+              if (groupedResult.scores.totalList.length > 0) {
+                const taskTotalSum: any = {
+                  score:
+                    groupedResult.scores.totalList
+                      .filter((task: any) => task.scoreType.id === 1)
+                      .reduce((sum: number, val: { score: number }) => sum + val.score, 0) || 0,
+                  weight: scoreTypes.filter((item) => item.id === 1)[0].weight,
+                }
+
+                const utsTotalSum: any = {
+                  score:
+                    groupedResult.scores.totalList
+                      .filter((task: any) => task.scoreType.id === 2)
+                      .reduce((sum: number, val: { score: number }) => sum + val.score, 0) || 0,
+                  weight: scoreTypes.filter((item) => item.id === 2)[0].weight,
+                }
+
+                const uasTotalSum: any = {
+                  score:
+                    groupedResult.scores.totalList
+                      .filter((task: any) => task.scoreType.id === 3)
+                      .reduce((sum: number, val: { score: number }) => sum + val.score, 0) || 0,
+                  weight: scoreTypes.filter((item) => item.id === 3)[0].weight,
+                }
+
+                groupedResult.scores.total =
+                  (taskTotalSum.score / scoreTypes.filter((st) => st.id === 1)[0].taskQuota) *
+                    (taskTotalSum.weight / 100) +
+                  (utsTotalSum.score * (utsTotalSum.weight / 100) +
+                    uasTotalSum.score * (uasTotalSum.weight / 100))
+
+                groupedResult.scores.total = Number(groupedResult.scores.total.toFixed(2))
+              }
+
+              acc.push(groupedResult)
+            } else {
+              let groupedResult: any = acc[index]
+              acc[index].scores?.totalList.push({
                 score: curr.score,
                 scoreType: {
                   id: curr.scoreType.id,
                   name: curr.scoreType.name,
                 },
               })
-            }
-
-            if (groupedResult.scores.taskList.length > 0) {
-              groupedResult.scores.task =
-                groupedResult.scores.taskList.reduce(
-                  (acc2: any, curr2: any) => acc2 + curr2.score,
-                  0
-                ) / scoreTypes.filter((item) => item.id === 1)[0].taskQuota
-            }
-
-            if (groupedResult.scores.totalList.length > 0) {
-              const taskTotalSum: any = {
-                score:
-                  groupedResult.scores.totalList
-                    .filter((task: any) => task.scoreType.id === 1)
-                    .reduce((sum: number, val: { score: number }) => sum + val.score, 0) || 0,
-                weight: scoreTypes.filter((item) => item.id === 1)[0].weight,
+              if (curr.scoreType.id === 2) {
+                groupedResult.scores.uts = curr.score
+              } else if (curr.scoreType.id === 3) {
+                groupedResult.scores.uas = curr.score
+              } else if (curr.scoreType.id === 1) {
+                groupedResult.scores.taskList.push({
+                  score: curr.score,
+                  scoreType: {
+                    id: curr.scoreType.id,
+                    name: curr.scoreType.name,
+                  },
+                })
               }
 
-              const utsTotalSum: any = {
-                score:
-                  groupedResult.scores.totalList
-                    .filter((task: any) => task.scoreType.id === 2)
-                    .reduce((sum: number, val: { score: number }) => sum + val.score, 0) || 0,
-                weight: scoreTypes.filter((item) => item.id === 2)[0].weight,
+              if (groupedResult.scores.taskList.length > 0) {
+                groupedResult.scores.task =
+                  groupedResult.scores.taskList.reduce(
+                    (acc2: any, curr2: any) => acc2 + curr2.score,
+                    0
+                  ) / scoreTypes.filter((item) => item.id === 1)[0].taskQuota
               }
 
-              const uasTotalSum: any = {
-                score:
-                  groupedResult.scores.totalList
-                    .filter((task: any) => task.scoreType.id === 3)
-                    .reduce((sum: number, val: { score: number }) => sum + val.score, 0) || 0,
-                weight: scoreTypes.filter((item) => item.id === 3)[0].weight,
+              if (groupedResult.scores.totalList.length > 0) {
+                const taskTotalSum: any = {
+                  score:
+                    groupedResult.scores.totalList
+                      .filter((task: any) => task.scoreType.id === 1)
+                      .reduce((sum: number, val: { score: number }) => sum + val.score, 0) || 0,
+                  weight: scoreTypes.filter((item) => item.id === 1)[0].weight,
+                }
+
+                const utsTotalSum: any = {
+                  score:
+                    groupedResult.scores.totalList
+                      .filter((task: any) => task.scoreType.id === 2)
+                      .reduce((sum: number, val: { score: number }) => sum + val.score, 0) || 0,
+                  weight: scoreTypes.filter((item) => item.id === 2)[0].weight,
+                }
+
+                const uasTotalSum: any = {
+                  score:
+                    groupedResult.scores.totalList
+                      .filter((task: any) => task.scoreType.id === 3)
+                      .reduce((sum: number, val: { score: number }) => sum + val.score, 0) || 0,
+                  weight: scoreTypes.filter((item) => item.id === 3)[0].weight,
+                }
+
+                groupedResult.scores.total =
+                  (taskTotalSum.score / scoreTypes.filter((st) => st.id === 1)[0].taskQuota) *
+                    (taskTotalSum.weight / 100) +
+                  (utsTotalSum.score * (utsTotalSum.weight / 100) +
+                    uasTotalSum.score * (uasTotalSum.weight / 100))
+
+                groupedResult.scores.total = Number(groupedResult.scores.total.toFixed(2))
               }
-
-              groupedResult.scores.total =
-                (taskTotalSum.score / scoreTypes.filter((st) => st.id === 1)[0].taskQuota) *
-                  (taskTotalSum.weight / 100) +
-                (utsTotalSum.score * (utsTotalSum.weight / 100) +
-                  uasTotalSum.score * (uasTotalSum.weight / 100))
-
-              groupedResult.scores.total = Number(groupedResult.scores.total.toFixed(2))
             }
-
-            acc.push(groupedResult)
-          } else {
-            let groupedResult: any = acc[index]
-            acc[index].scores?.totalList.push({
-              score: curr.score,
-              scoreType: {
-                id: curr.scoreType.id,
-                name: curr.scoreType.name,
-              },
-            })
-            if (curr.scoreType.id === 2) {
-              groupedResult.scores.uts = curr.score
-            } else if (curr.scoreType.id === 3) {
-              groupedResult.scores.uas = curr.score
-            } else if (curr.scoreType.id === 1) {
-              groupedResult.scores.taskList.push({
-                score: curr.score,
-                scoreType: {
-                  id: curr.scoreType.id,
-                  name: curr.scoreType.name,
-                },
-              })
+            return acc
+          },
+          [] as {
+            classStudentId: number | null
+            module: {
+              id: number | null
+              name: string | null
             }
-
-            if (groupedResult.scores.taskList.length > 0) {
-              groupedResult.scores.task =
-                groupedResult.scores.taskList.reduce(
-                  (acc2: any, curr2: any) => acc2 + curr2.score,
-                  0
-                ) / scoreTypes.filter((item) => item.id === 1)[0].taskQuota
+            student: {
+              id: number | null
+              name: string | null
+              nis: string | null
             }
-
-            if (groupedResult.scores.totalList.length > 0) {
-              const taskTotalSum: any = {
-                score:
-                  groupedResult.scores.totalList
-                    .filter((task: any) => task.scoreType.id === 1)
-                    .reduce((sum: number, val: { score: number }) => sum + val.score, 0) || 0,
-                weight: scoreTypes.filter((item) => item.id === 1)[0].weight,
-              }
-
-              const utsTotalSum: any = {
-                score:
-                  groupedResult.scores.totalList
-                    .filter((task: any) => task.scoreType.id === 2)
-                    .reduce((sum: number, val: { score: number }) => sum + val.score, 0) || 0,
-                weight: scoreTypes.filter((item) => item.id === 2)[0].weight,
-              }
-
-              const uasTotalSum: any = {
-                score:
-                  groupedResult.scores.totalList
-                    .filter((task: any) => task.scoreType.id === 3)
-                    .reduce((sum: number, val: { score: number }) => sum + val.score, 0) || 0,
-                weight: scoreTypes.filter((item) => item.id === 3)[0].weight,
-              }
-
-              groupedResult.scores.total =
-                (taskTotalSum.score / scoreTypes.filter((st) => st.id === 1)[0].taskQuota) *
-                  (taskTotalSum.weight / 100) +
-                (utsTotalSum.score * (utsTotalSum.weight / 100) +
-                  uasTotalSum.score * (uasTotalSum.weight / 100))
-
-              groupedResult.scores.total = Number(groupedResult.scores.total.toFixed(2))
+            theClass: {
+              id: number | null
+              name: string | null
             }
-          }
-          return acc
-        },
-        [] as {
-          classStudentId: number
-          module: {
-            id: number
-            name: string
-          }
-          student: {
-            id: number
-            name: string
-            nis: string
-          }
-          theClass: {
-            id: number
-            name: string
-          }
-          scores: {
-            taskList: {
-              score: number | any
-              scoreType: { id: number; name: string }
-            }[]
-            task: null | any
-            uts: null | any
-            uas: null | any
-            totalList: {
-              score: number | any
-              scoreType: { id: number; name: string }
-            }[]
-            total: null | any
-          }
-        }[]
-      ),
+            scores: {
+              taskList: {
+                score: number | null
+                scoreType: { id: number | null; name: string | null }
+              }[]
+              task: null | any
+              uts: null | any
+              uas: null | any
+              totalList: {
+                score: number | any
+                scoreType: { id: number | null; name: string | null }
+              }[]
+              total: null | any
+            }
+          }[]
+        ) // page and limit
+        .slice(
+          (Number(params.page || 1) - 1) * Number(params.limit || 10),
+          Number(params.page || 1) * Number(params.limit || 10)
+        ),
     }
 
     return result

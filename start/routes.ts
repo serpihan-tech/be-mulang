@@ -30,7 +30,10 @@ const RoomsController = () => import('#controllers/rooms_controller')
 
 import { middleware } from '#start/kernel'
 import transmit from '@adonisjs/transmit/services/main'
-import app from '@adonisjs/core/services/app' 
+import app from '@adonisjs/core/services/app'
+// untuk get media / file dari storage
+import { join, normalize } from 'node:path'
+import { existsSync } from 'node:fs'
 
 transmit.registerRoutes()
 
@@ -48,11 +51,24 @@ router.post('/check-role', [AuthController, 'checkRole']).as('auth.check-role')
 
 // * GET MEDIA / FILE FROM SERVER STORAGE ---------------
 
-router.get('file/:folder/:filename', async ({ params, response }) => { 
-    const filePath = app.makePath(`storage/uploads/${params.folder}`, params.filename)
+router.get('file/*', async ({ params, response }) => {
+  const pathSegments = params['*'] // array: ['teacher-absences', '2025-05-15', 'check-in-photos', 'foto.png']
+  const relativePath = pathSegments.join('/') // gabung jadi string: "teacher-absences/2025-05-15/check-in-photos/foto.png"
 
-    return response.download(filePath)
+  const basePath = app.makePath('storage/uploads')
+  const safePath = normalize(join(basePath, relativePath))
+
+  if (!safePath.startsWith(basePath)) {
+    return response.unauthorized('Invalid path access')
+  }
+
+  if (!existsSync(safePath)) {
+    return response.notFound('File not found')
+  }
+
+  return response.download(safePath)
 })
+
 
 
 router.group(() => {

@@ -3,6 +3,8 @@ import TeacherAbsence from '#models/teacher_absence'
 import { DateTime } from 'luxon'
 // import db from '@adonisjs/lucid/services/db'
 import TeacherAbsenceContract from '../contracts/teacher_absence_contract.js'
+import db from '@adonisjs/lucid/services/db'
+import app from '@adonisjs/core/services/app'
 
 export class TeacherAbsenceService implements TeacherAbsenceContract {
   async getAll(params: any): Promise<any> {
@@ -70,9 +72,65 @@ export class TeacherAbsenceService implements TeacherAbsenceContract {
   }
 
   async create(data: any): Promise<Object> {
-    const teacherAbsence = await TeacherAbsence.create(data)
+    const trx = await db.transaction()
+    try {
+      const teacherAbsence = await TeacherAbsence.create(
+        {
+          teacherId: data.teacher_id,
+          date: data.date,
+          status: data.status,
+          checkInTime: data.check_in,
+          checkOutTime: data.check_out,
+        },
+        { client: trx }
+      )
 
-    return teacherAbsence
+      if (data.in_photo) {
+        const latestPhoto = data.in_photo
+        const teacher = await Teacher.query().where('id', 3).firstOrFail()
+        const teacherName = teacher.name.toLowerCase().replace(/\s/g, '-')
+
+        const fileName = `${teacherName}.${data.date}.${latestPhoto.extname}`
+
+        await latestPhoto.move(
+          app.makePath(`storage/uploads/teacher-absences/${data.date}/check-in-photos`),
+          {
+            name: fileName,
+            overwrite: true,
+          }
+        )
+
+        // Simpan path file ke dalam database
+        teacherAbsence.inPhoto = `teacher-absences/${data.date}/check-in-photos/${fileName}`
+      }
+
+      if (data.out_photo) {
+        const latestPhoto = data.out_photo
+        const teacher = await Teacher.query().where('id', 3).firstOrFail()
+        const teacherName = teacher.name.toLowerCase().replace(/\s/g, '-')
+
+        const fileName = `${teacherName}.${data.date}.${latestPhoto.extname}`
+
+        await latestPhoto.move(
+          app.makePath(`storage/uploads/teacher-absences/${data.date}/check-out-photos`),
+          {
+            name: fileName,
+            overwrite: true,
+          }
+        )
+
+        // Simpan path file ke dalam database
+        teacherAbsence.outPhoto = `teacher-absences/${data.date}/check-out-photos/${fileName}`
+      }
+
+      await teacherAbsence.save()
+      await trx.commit()
+
+      return teacherAbsence
+    } catch (error) {
+      await trx.rollback()
+      throw error
+    }
   }
 
   async update(teacherAbsenceId: number, data: any): Promise<Object> {
