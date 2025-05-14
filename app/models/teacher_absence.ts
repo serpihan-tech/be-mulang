@@ -22,6 +22,9 @@ export default class TeacherAbsence extends BaseModel {
   @column()
   declare checkOutTime: string
 
+  @column()
+  declare latestPhoto: string
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 
