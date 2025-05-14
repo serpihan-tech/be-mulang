@@ -511,15 +511,16 @@ export default class ScoreService {
           const taskTotalSum: any = {
             score:
               module.scores.totalList
-                .filter((task: any) => task.sTid === 1)
-                .reduce((sum: number, val: { score: number }) => sum + val.score, 0) || 0,
+                .filter((task: any) => task.scoreType.id === 1)
+                .reduce((sum: number, val: { score: number }) => sum + val.score, 0) /
+                scoreTypes.filter((item) => item.id === 1)[0].taskQuota || 0,
             weight: scoreTypes.filter((item) => item.id === 1)[0].weight,
           }
 
           const utsTotalSum: any = {
             score:
               module.scores.totalList
-                .filter((task: any) => task.sTid === 2)
+                .filter((task: any) => task.scoreType.id === 2)
                 .reduce((sum: number, val: { score: number }) => sum + val.score, 0) || 0,
             weight: scoreTypes.filter((item) => item.id === 2)[0].weight,
           }
@@ -527,22 +528,22 @@ export default class ScoreService {
           const uasTotalSum: any = {
             score:
               module.scores.totalList
-                .filter((task: any) => task.sTid === 3)
+                .filter((task: any) => task.scoreType.id === 3)
                 .reduce((sum: number, val: { score: number }) => sum + val.score, 0) || 0,
             weight: scoreTypes.filter((item) => item.id === 3)[0].weight,
           }
 
           module.scores.total =
-            (taskTotalSum.score / taskLength) * (taskTotalSum.weight / 100) +
-            (utsTotalSum.score * (utsTotalSum.weight / 100) +
-              uasTotalSum.score * (uasTotalSum.weight / 100))
+            taskTotalSum.score * (taskTotalSum.weight / 100) +
+            utsTotalSum.score * (utsTotalSum.weight / 100) +
+            uasTotalSum.score * (uasTotalSum.weight / 100)
 
           module.scores.total = Number(module.scores.total.toFixed(2))
         }
       })
     })
 
-    return result
+    return groupedResult
   }
 
   async getMyScoring(params: any, user: any) {
