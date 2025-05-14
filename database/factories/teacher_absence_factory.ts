@@ -20,6 +20,8 @@ export const TeacherAbsenceFactory = factory
       status: status,
       checkInTime: CheckIn.toFormat('HH:mm:ss'),
       checkOutTime: CheckOut.toFormat('HH:mm:ss'),
+      inPhoto: faker.image.avatar(),
+      outPhoto: faker.image.avatar(),
     }
   })
   .build()
