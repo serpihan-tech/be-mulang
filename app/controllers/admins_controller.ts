@@ -30,8 +30,6 @@ export default class AdminsController {
 
   async store({ request, response }: HttpContext) {
     try {
-      await createUserValidator.validate(request.input('user'))
-      await createAdminValidator.validate(request.input('admin'))
       const data = request.all()
 
       // Ambil file profile_picture dari request.file() secara terpisah
@@ -40,6 +38,9 @@ export default class AdminsController {
       if (profilePicture) {
         data.admin.profile_picture = profilePicture
       }
+
+      await createUserValidator.validate(data.user)
+      await createAdminValidator.validate(data.admin)
 
       const admin = await this.adminService.create(data)
       return response.created({ message: 'Admin Berhasil Ditambahkan', admin })
@@ -50,9 +51,6 @@ export default class AdminsController {
 
   async update({ params, request, response }: HttpContext) {
     try {
-      await updateUserValidator.validate(request.input('user'))
-      await updateAdminValidator.validate(request.input('admin'))
-
       const data = request.all()
 
       // Ambil file profile_picture dari request.file() secara terpisah
@@ -61,6 +59,9 @@ export default class AdminsController {
       if (profilePicture) {
         data.admin.profile_picture = profilePicture
       }
+
+      await updateUserValidator.validate(data.user)
+      await updateAdminValidator.validate(data.admin)
 
       const admin = await this.adminService.update(params.id, data)
       return response.ok({ message: 'Admin Berhasil Diubah', admin })
