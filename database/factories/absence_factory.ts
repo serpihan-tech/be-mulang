@@ -22,6 +22,8 @@ export const AbsenceFactory = factory
     ])
     const reason = status === Status.IZIN ? faker.lorem.sentence() : ''
 
+    const description = faker.lorem.sentence()
+
     // Generate tanggal acak dalam 1 tahun terakhir hingga hari ini
     const randomDays = faker.number.int({ min: 0, max: 365 })
     const date = DateTime.now().minus({ days: randomDays }).toFormat('yyyy-MM-dd')
@@ -31,6 +33,7 @@ export const AbsenceFactory = factory
       scheduleId: faker.helpers.arrayElement(scheduleIds),
       status: status,
       reason: reason,
+      description: description,
       date: date,
     }
   })

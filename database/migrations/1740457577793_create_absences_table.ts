@@ -20,6 +20,7 @@ export default class extends BaseSchema {
         .onDelete('CASCADE')
       table.string('reason').nullable()
       table.enum('status', ['Hadir', 'Izin', 'Sakit', 'Alfa']).notNullable()
+      table.string('description').checkLength('<=', 255).nullable()
       table.date('date').notNullable()
       table.timestamp('created_at')
       table.timestamp('updated_at')
