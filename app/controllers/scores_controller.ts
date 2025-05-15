@@ -131,11 +131,9 @@ export default class ScoresController {
 
   async getOwnScores({ auth, response, request }: HttpContext) {
     const user = auth.user
-    console.log(user)
     try {
-      const data = request.all()
       if (user) {
-        const result = await this.scroreService.getOwnScores(user)
+        const result = await this.scroreService.getOwnScores(user, request.all())
         return response.ok({
           message: 'Data rekap nilai siswa berhasil ditemukan',
           result,
