@@ -79,8 +79,8 @@ export class TeacherAbsenceService implements TeacherAbsenceContract {
           teacherId: data.teacher_id,
           date: data.date,
           status: data.status,
-          checkInTime: data.check_in,
-          checkOutTime: data.check_out,
+          checkInTime: data.check_in_time,
+          checkOutTime: data.check_out_time,
         },
         { client: trx }
       )
@@ -134,9 +134,64 @@ export class TeacherAbsenceService implements TeacherAbsenceContract {
   }
 
   async update(teacherAbsenceId: number, data: any): Promise<Object> {
-    const teacherAbsence = await TeacherAbsence.query().where('id', teacherAbsenceId).firstOrFail()
+    const trx = await db.transaction()
 
-    return await teacherAbsence.merge(data).save()
+    try {
+      const teacherAbsence = await TeacherAbsence.query({ client: trx })
+        .where('id', teacherAbsenceId)
+        .firstOrFail()
+
+      await teacherAbsence
+        .merge({
+          teacherId: data.teacher_id,
+          date: data.date,
+          status: data.status,
+          checkInTime: data.check_in_time,
+          checkOutTime: data.check_out_time,
+        })
+        .save()
+
+      const teacher = await Teacher.query().where('id', data.teacher_id).firstOrFail()
+      const teacherName = teacher.name.toLowerCase().replace(/\s/g, '-')
+
+      if (data.in_photo) {
+        const latestPhoto = data.in_photo
+        const fileName = `${teacherName}.${data.date}.${latestPhoto.extname}`
+
+        await latestPhoto.move(
+          app.makePath(`storage/uploads/teacher-absences/${data.date}/check-in-photos`),
+          {
+            name: fileName,
+            overwrite: true,
+          }
+        )
+
+        teacherAbsence.inPhoto = `teacher-absences/${data.date}/check-in-photos/${fileName}`
+      }
+
+      if (data.out_photo) {
+        const latestPhoto = data.out_photo
+        const fileName = `${teacherName}.${data.date}.${latestPhoto.extname}`
+
+        await latestPhoto.move(
+          app.makePath(`storage/uploads/teacher-absences/${data.date}/check-out-photos`),
+          {
+            name: fileName,
+            overwrite: true,
+          }
+        )
+
+        teacherAbsence.outPhoto = `teacher-absences/${data.date}/check-out-photos/${fileName}`
+      }
+
+      await teacherAbsence.save()
+      await trx.commit()
+
+      return teacherAbsence
+    } catch (error) {
+      await trx.rollback()
+      throw error
+    }
   }
 
   async delete(teacherAbsenceId: number): Promise<void> {
