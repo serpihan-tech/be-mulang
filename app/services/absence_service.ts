@@ -290,6 +290,7 @@ export class AbsenceService implements AbsenceContract {
       date: string
       scheduleId: number
       day: string
+      description: string
       absences: Array<{
         classStudentId: number
         status: string | null
@@ -312,6 +313,7 @@ export class AbsenceService implements AbsenceContract {
       //   date
       // )
       const scheduleId = absenceOnDate[0]?.scheduleId ?? 0
+      const description = absenceOnDate[0]?.description ?? ''
       const day = await Schedule.query()
         .where('id', scheduleId)
         .firstOrFail()
@@ -334,6 +336,7 @@ export class AbsenceService implements AbsenceContract {
         date,
         scheduleId,
         day,
+        description,
         absences: absencesForDate,
       })
     }
@@ -386,11 +389,13 @@ export class AbsenceService implements AbsenceContract {
   async massAbsences(data: any): Promise<any> {
     const date = new Date(data.date)
     const scheduleId = Number(data.scheduleId)
+    const description = data.description
 
     const absData = data.absences.map((a: any) => ({
       date,
       scheduleId: scheduleId,
       classStudentId: a.classStudentId,
+      description: description,
       status: a.status,
       reason: a.reason,
     }))
