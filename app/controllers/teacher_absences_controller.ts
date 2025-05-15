@@ -40,11 +40,17 @@ export default class TeacherAbsencesController {
   async store({ request, response }: HttpContext) {
     try {
       const data = request.all()
-      const selfie = request.file('latest_photo')
+      const inPhoto = request.file('in_photo')
+      const outPhoto = request.file('out_photo')
 
-      if (selfie) {
-        data.latest_photo = selfie
+      if (inPhoto) {
+        data.in_photo = inPhoto
       }
+
+      if (outPhoto) {
+        data.out_photo = outPhoto
+      }
+
       console.log(data)
       await createTeacherAbsenceValidator.validate(data)
 

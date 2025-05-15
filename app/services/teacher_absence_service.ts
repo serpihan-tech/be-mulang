@@ -85,22 +85,46 @@ export class TeacherAbsenceService implements TeacherAbsenceContract {
         { client: trx }
       )
 
-      if (data.latest_photo) {
-        const latestPhoto = data.latest_photo
+      if (data.in_photo) {
+        const latestPhoto = data.in_photo
         const teacher = await Teacher.query().where('id', 3).firstOrFail()
+        const teacherName = teacher.name.toLowerCase().replace(/\s/g, '-')
 
-        const fileName = `${teacher.name}.${data.date}.${latestPhoto.extname}`
+        const fileName = `${teacherName}.${data.date}.${latestPhoto.extname}`
 
-        await latestPhoto.move(app.makePath(`storage/uploads/teacher-absences/${data.date}`), {
-          name: fileName,
-          overwrite: true,
-        })
+        await latestPhoto.move(
+          app.makePath(`storage/uploads/teacher-absences/${data.date}/check-in-photos`),
+          {
+            name: fileName,
+            overwrite: true,
+          }
+        )
 
         // Simpan path file ke dalam database
-        teacherAbsence.latestPhoto = `teacher-absences/${data.date}/${fileName}`
+        teacherAbsence.inPhoto = `teacher-absences/${data.date}/check-in-photos/${fileName}`
+      }
+
+      if (data.out_photo) {
+        const latestPhoto = data.out_photo
+        const teacher = await Teacher.query().where('id', 3).firstOrFail()
+        const teacherName = teacher.name.toLowerCase().replace(/\s/g, '-')
+
+        const fileName = `${teacherName}.${data.date}.${latestPhoto.extname}`
+
+        await latestPhoto.move(
+          app.makePath(`storage/uploads/teacher-absences/${data.date}/check-out-photos`),
+          {
+            name: fileName,
+            overwrite: true,
+          }
+        )
+
+        // Simpan path file ke dalam database
+        teacherAbsence.outPhoto = `teacher-absences/${data.date}/check-out-photos/${fileName}`
       }
 
       await teacherAbsence.save()
+      await trx.commit()
 
       return teacherAbsence
     } catch (error) {

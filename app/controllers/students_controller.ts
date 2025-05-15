@@ -48,11 +48,6 @@ export default class StudentsController {
 
   async store({ request, response }: HttpContext) {
     try {
-      await createUserValidator.validate(request.input('user'))
-      await createStudentValidator.validate(request.input('student'))
-      await createStudentDetailValidator.validate(request.input('student_detail'))
-      await createClassStudentValidator.validate(request.input('class_student'))
-
       const student = await this.studentsService.create(request.all())
 
       const data = request.all()
@@ -63,6 +58,11 @@ export default class StudentsController {
       if (profilePicture) {
         data.student_detail.profile_picture = profilePicture
       }
+
+      await createUserValidator.validate(data.user)
+      await createStudentValidator.validate(data.student)
+      await createStudentDetailValidator.validate(data.student_detail)
+      await createClassStudentValidator.validate(data.class_student)
 
       return response.created({
         message: 'Murid Berhasil Ditambahkan',
@@ -86,11 +86,6 @@ export default class StudentsController {
         })
       }
 
-      await updateUserValidator.validate(request.input('user'))
-      await updateStudentValidator.validate(request.input('student'))
-      await updateStudentDetailValidator.validate(request.input('student_detail'))
-      await updateClassStudentValidator.validate(request.input('class_student'))
-
       const data = request.all()
 
       // Ambil file profile_picture dari request.file() secara terpisah
@@ -99,6 +94,11 @@ export default class StudentsController {
       if (profilePicture) {
         data.student_detail.profile_picture = profilePicture
       }
+
+      await updateUserValidator.validate(data.user)
+      await updateStudentValidator.validate(data.student)
+      await updateStudentDetailValidator.validate(data.student_detail)
+      await updateClassStudentValidator.validate(data.class_student)
 
       const student = await this.studentsService.update(params.id, data)
       return response.ok({ message: 'Murid Berhasil Diupdate', student })
