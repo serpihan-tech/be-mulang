@@ -135,53 +135,53 @@ export class TeacherAbsenceService implements TeacherAbsenceContract {
 
   async update(teacherAbsenceId: number, data: any): Promise<Object> {
     const trx = await db.transaction()
+    const teacherAbsence = await TeacherAbsence.query().where('id', teacherAbsenceId).firstOrFail()
+
+    // console.log('dateInput : ', teacherAbsence.date)
 
     try {
-      const teacherAbsence = await TeacherAbsence.query({ client: trx })
-        .where('id', teacherAbsenceId)
-        .firstOrFail()
-
+      console.log('teacherAbsence : ', teacherAbsence)
       await teacherAbsence
         .merge({
-          teacherId: data.teacher_id,
-          date: data.date,
+          date: data.date ?? teacherAbsence.date,
           status: data.status,
           checkInTime: data.check_in_time,
           checkOutTime: data.check_out_time,
         })
         .save()
 
-      const teacher = await Teacher.query().where('id', data.teacher_id).firstOrFail()
+      const teacher = await Teacher.query().where('id', teacherAbsence.teacherId).firstOrFail()
       const teacherName = teacher.name.toLowerCase().replace(/\s/g, '-')
+      const dateInput = data.date ?? teacherAbsence.date.toISOString().split('T')[0]
 
       if (data.in_photo) {
         const latestPhoto = data.in_photo
-        const fileName = `${teacherName}.${data.date}.${latestPhoto.extname}`
+        const fileName = `${teacherName}.${dateInput}.${latestPhoto.extname}`
 
         await latestPhoto.move(
-          app.makePath(`storage/uploads/teacher-absences/${data.date}/check-in-photos`),
+          app.makePath(`storage/uploads/teacher-absences/${dateInput}/check-in-photos`),
           {
             name: fileName,
             overwrite: true,
           }
         )
 
-        teacherAbsence.inPhoto = `teacher-absences/${data.date}/check-in-photos/${fileName}`
+        teacherAbsence.inPhoto = `teacher-absences/${dateInput}/check-in-photos/${fileName}`
       }
 
       if (data.out_photo) {
         const latestPhoto = data.out_photo
-        const fileName = `${teacherName}.${data.date}.${latestPhoto.extname}`
+        const fileName = `${teacherName}.${dateInput}.${latestPhoto.extname}`
 
         await latestPhoto.move(
-          app.makePath(`storage/uploads/teacher-absences/${data.date}/check-out-photos`),
+          app.makePath(`storage/uploads/teacher-absences/${dateInput}/check-out-photos`),
           {
             name: fileName,
             overwrite: true,
           }
         )
 
-        teacherAbsence.outPhoto = `teacher-absences/${data.date}/check-out-photos/${fileName}`
+        teacherAbsence.outPhoto = `teacher-absences/${dateInput}/check-out-photos/${fileName}`
       }
 
       await teacherAbsence.save()

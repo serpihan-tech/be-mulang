@@ -14,8 +14,8 @@ export default class DashboardController {
     private teacherDashboardService: TeacherDashboardService
   ) {}
 
-  async indexAdmin(ctx: HttpContext, sId: number | undefined) {
-    const data = await this.adminDashboardService.dashboardAdmin(ctx, sId)
+  async indexAdmin({}: HttpContext, sId: number | undefined) {
+    const data = await this.adminDashboardService.dashboardAdmin(sId)
     return {
       message: 'Success Data Dashboard Admin + Chart',
       data: data,
@@ -59,6 +59,17 @@ export default class DashboardController {
         return await this.indexTeacher({ auth, response } as HttpContext)
       default:
         return response.unauthorized({ error: { message: 'Anda Harus Login Terlebih Dahulu' } })
+    }
+  }
+
+  async chartAbsencesForAdmins({ request, response }: HttpContext) {
+    try {
+      const params: string = request.all().toString()
+
+      const data = await this.adminDashboardService.chartAbsencesForAdmins(params)
+      return response.ok({ message: 'Berhasil Mendapatkan Data Chart Absensi', data })
+    } catch (error) {
+      return response.badRequest({ error })
     }
   }
 }

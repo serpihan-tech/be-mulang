@@ -1,4 +1,3 @@
-import { HttpContext } from '@adonisjs/core/http'
 import { DateTime } from 'luxon'
 import db from '@adonisjs/lucid/services/db'
 
@@ -7,7 +6,7 @@ export default class AdminDashboardService {
   /**
    *@returns total siswa yang BELUM lulus
    */
-  async getAllStudents({}: HttpContext, _sId?: number) {
+  async getAllStudents(_sId?: number) {
     _sId = this.academic_yearId
 
     const query = db
@@ -27,7 +26,7 @@ export default class AdminDashboardService {
   /**
    * @return total guru
    */
-  async getAllTeachers({}: HttpContext) {
+  async getAllTeachers() {
     const teacherCount = await db
       .from('teachers') //
       .count('* as total')
@@ -38,7 +37,7 @@ export default class AdminDashboardService {
   /**
    * @return total mata pelajaran
    */
-  async getAllModules({}: HttpContext, _sId?: number) {
+  async getAllModules(_sId?: number) {
     _sId = this.academic_yearId
 
     const module = db.from('modules') //
@@ -55,7 +54,7 @@ export default class AdminDashboardService {
   /**
    * @return total alumni / yang SUDAH lulus
    */
-  async getAlumni({}: HttpContext) {
+  async getAlumni() {
     const alumniCount = await db
       .from('students')
       .where('is_graduate', true) // hanya siswa lulus
@@ -78,7 +77,7 @@ export default class AdminDashboardService {
    *               alfa: 5
    *           ]
    */
-  async getAbsenceByWeek({}: HttpContext, _sId?: number) {
+  async getAbsenceByWeek(_sId?: number) {
     _sId = this.academic_yearId
 
     const startOfWeek = DateTime.local().startOf('week')
@@ -136,7 +135,7 @@ export default class AdminDashboardService {
    *
    * @returns semua academic_year
    */
-  async getAllAcademicYears({}: HttpContext) {
+  async getAllAcademicYears() {
     const academicYears = await db.from('academic_years').select('id', 'name')
 
     return academicYears
@@ -147,17 +146,21 @@ export default class AdminDashboardService {
    * @param ctx
    * @returns total siswa, total guru, total mapel, total alumni, dan absensi
    */
-  async dashboardAdmin(ctx: HttpContext, _sId?: number) {
+  async dashboardAdmin(_sId?: number) {
     this.academic_yearId = _sId
     const data = {
-      total_students: await this.getAllStudents(ctx, this.academic_yearId),
-      total_teachers: await this.getAllTeachers(ctx),
-      total_modules: await this.getAllModules(ctx, this.academic_yearId),
-      total_alumni: await this.getAlumni(ctx),
-      absences: await this.getAbsenceByWeek(ctx, this.academic_yearId),
-      academic_years: await this.getAllAcademicYears(ctx),
+      total_students: await this.getAllStudents(this.academic_yearId),
+      total_teachers: await this.getAllTeachers(),
+      total_modules: await this.getAllModules(this.academic_yearId),
+      total_alumni: await this.getAlumni(),
+      absences: await this.getAbsenceByWeek(this.academic_yearId),
+      academic_years: await this.getAllAcademicYears(),
     }
 
     return data
+  }
+
+  async chartAbsencesForAdmins(params?: string) {
+    return 'test'
   }
 }

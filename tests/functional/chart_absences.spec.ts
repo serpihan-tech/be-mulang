@@ -4,7 +4,7 @@ import { DateTime } from 'luxon'
 import AcademicYear from '#models/academic_year'
 
 async function getAbsenceData(startDate: DateTime, endDate: DateTime) {
-  const range = []
+  const range: string[] = []
   let cursor = startDate
 
   while (cursor <= endDate) {
@@ -14,10 +14,10 @@ async function getAbsenceData(startDate: DateTime, endDate: DateTime) {
     cursor = cursor.plus({ days: 1 })
   }
 
-  const siswaHadir: number[] = []
-  const siswaTidakHadir: number[] = []
-  const guruHadir: number[] = []
-  const guruTidakHadir: number[] = []
+  const siswaHadir: { date: string; value: number }[] = []
+  const siswaTidakHadir: { date: string; value: number }[] = []
+  const guruHadir: { date: string; value: number }[] = []
+  const guruTidakHadir: { date: string; value: number }[] = []
 
   for (const date of range) {
     const siswaHadirCount = await db
@@ -44,10 +44,10 @@ async function getAbsenceData(startDate: DateTime, endDate: DateTime) {
       .where('status', '!=', 'Hadir')
       .count('* as total')
 
-    siswaHadir.push(Number(siswaHadirCount[0].total))
-    siswaTidakHadir.push(Number(siswaTidakHadirCount[0].total))
-    guruHadir.push(Number(guruHadirCount[0].total))
-    guruTidakHadir.push(Number(guruTidakHadirCount[0].total))
+    siswaHadir.push({ date, value: Number(siswaHadirCount[0].total) })
+    siswaTidakHadir.push({ date, value: Number(siswaTidakHadirCount[0].total) })
+    guruHadir.push({ date, value: Number(guruHadirCount[0].total) })
+    guruTidakHadir.push({ date, value: Number(guruTidakHadirCount[0].total) })
   }
 
   return {
@@ -66,23 +66,20 @@ test.group('Chart absences', () => {
   test('generate absence data with filters', async ({ assert }) => {
     const now = DateTime.local()
 
-    // Filter Mingguan (Senin - Minggu)
-    const startOfWeek = now.startOf('week').plus({ days: 1 }) // Senin
-    const endOfWeek = startOfWeek.plus({ days: 6 }) // Minggu
-
+    // Mingguan (Senin - Minggu)
+    const startOfWeek = now.startOf('week').plus({ days: 1 })
+    const endOfWeek = startOfWeek.plus({ days: 6 })
     const mingguan = await getAbsenceData(startOfWeek, endOfWeek)
 
-    // Filter Bulanan (Tanggal 1 - akhir bulan)
+    // Bulanan (Tanggal 1 - akhir bulan)
     const startOfMonth = now.startOf('month')
     const endOfMonth = now.endOf('month')
-
     const bulanan = await getAbsenceData(startOfMonth, endOfMonth)
 
-    // Filter Semester (dari AcademicYear aktif)
+    // Semester (dari academic year aktif)
     const semesterAktif = await AcademicYear.query().where('status', true).firstOrFail()
     const startOfSemester = DateTime.fromISO(semesterAktif.dateStart.toISOString())
     const endOfSemester = DateTime.fromISO(semesterAktif.dateEnd.toISOString())
-
     const semester = await getAbsenceData(startOfSemester, endOfSemester)
 
     const data = {
@@ -91,7 +88,7 @@ test.group('Chart absences', () => {
       semester,
     }
 
-    console.info(data.semester.siswa.hadir)
+    console.info('Contoh data mingguan:', data.semester.siswa)
 
     assert.isArray(data.mingguan.siswa.hadir)
     assert.isArray(data.bulanan.guru.tidakHadir)
