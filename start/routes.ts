@@ -37,6 +37,9 @@ import { existsSync } from 'node:fs'
 
 transmit.registerRoutes()
 
+// test API Server
+router.get('/say-hi', () => `Copyright @copy; ${new Date().getFullYear()} - ${process.env.APP_NAME} by CV Serpihan Tech Solutions`)
+
 router.post('/user/create', [UserController, 'create']).as('user.create') // TODO: Tambah Middleware Auth
 router.post('/login', [AuthController, 'login']).as('auth.login')
 
