@@ -109,19 +109,21 @@ export class AnnouncementByTeacherService implements AnnouncementByTeacherContra
           content: data.content,
           category: 'Akademik',
           date: data.date,
-          files: filePath,
         },
         { client: trx }
       )
-
-      await trx.commit()
 
       if (file) {
         await file.move(app.makePath('storage/uploads/announcement-teachers'), {
           name: tempFilePath,
           overwrite: true,
         })
+
+        result.files = filePath
       }
+
+      await result.useTransaction(trx).save()
+      await trx.commit()
 
       const resultDate = DateTime.fromISO(result.date.toString()).setZone('Asia/Jakarta').toSQL()
       console.log('resultDate : ', resultDate, 'this.now : ', this.now)
@@ -147,7 +149,7 @@ export class AnnouncementByTeacherService implements AnnouncementByTeacherContra
             from: teacher.name,
             module: mapel.name,
             class: kelas.name,
-            files: filePath,
+            files: result.files,
             senderPicture: teacher.profilePicture,
             senderEmail: teacher.user.email,
           },
