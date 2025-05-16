@@ -76,8 +76,13 @@ router.group(() => {
     router.post('change-password', [UserController, 'changePassword'])
 
     router.post('/logout', [AuthController, 'logout']).as('auth.logout')
-    router.get('/dashboard', [DashboardController, 'index'])
-    
+
+    // dashboard
+    router.group(() => {
+        router.get('/', [DashboardController, 'index'])
+        router.get('/chart-absences', [DashboardController, 'chartAbsencesForAdmins']).use(middleware.role(['admin']))    
+    }).prefix('/dashboard')
+
     // Untuk admin
     router.group(() => {
         router.get('/', [AdminsController, 'index']).use(middleware.role(['admin']))

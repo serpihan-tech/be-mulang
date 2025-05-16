@@ -64,7 +64,7 @@ export default class DashboardController {
 
   async chartAbsencesForAdmins({ request, response }: HttpContext) {
     try {
-      const params: string = request.all().toString()
+      const params = request.all()
 
       const data = await this.adminDashboardService.chartAbsencesForAdmins(params)
       return response.ok({ message: 'Berhasil Mendapatkan Data Chart Absensi', data })
