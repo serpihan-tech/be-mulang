@@ -46,14 +46,25 @@ export class AnnouncementByAdminService
       search = '',
       sortOrder = 'desc',
       sortBy = 'date',
-      madeBy = [],
-      category = [],
+      dibuatOleh = [],
+      kategori = [],
       date = '',
     } = params
 
-    let subQuery = db
+    const subQuery = db
       .from('announcement_by_admins')
-      .select('id', 'title', 'content', 'date', 'category', 'files', db.raw(`'Admin' as madeBy`))
+      .select(
+        'id',
+        'title',
+        'content',
+        'date',
+        'category',
+        'files',
+        'target_roles',
+        db.raw('NULL as class_id'),
+        db.raw('NULL as module_id'),
+        db.raw(`'Admin' as madeBy`)
+      )
       .unionAll([
         db
           .from('announcement_by_teachers')
@@ -64,6 +75,9 @@ export class AnnouncementByAdminService
             'date',
             'category',
             'files',
+            db.raw('NULL as target_roles'),
+            'class_id',
+            'module_id',
             db.raw(`'Teacher' as madeBy`)
           ),
       ])
@@ -71,35 +85,48 @@ export class AnnouncementByAdminService
 
     let query = db.from(subQuery).select('*')
 
-    // Filter berdasarkan search (Title / Content)
+    // Filtering
     if (search) {
       query.where((qb) => {
         qb.where('title', 'like', `%${search}%`).orWhere('content', 'like', `%${search}%`)
       })
     }
 
-    // Filter berdasarkan madeBy (Admin/Teacher)
-    if (Array.isArray(madeBy) && madeBy.length > 0) {
-      query.whereIn('madeBy', madeBy)
+    // console.log('dibuatOleh', madeBy)
+    if (Array.isArray(dibuatOleh) && dibuatOleh.length > 0) {
+      query.whereIn('madeBy', dibuatOleh)
     }
 
-    // Filter berdasarkan kategori
-    if (Array.isArray(category) && category.length > 0) {
-      query.whereIn('category', category)
+    if (Array.isArray(kategori) && kategori.length > 0) {
+      query.whereIn('category', kategori)
     }
 
-    // Filter berdasarkan tanggal
     if (date) {
       query.where('date', '=', date)
     }
-    // if (endDate) {
-    //   query.where('date', '<=', endDate)
-    // }
 
-    // Sorting
-    query.orderBy(sortBy, sortOrder)
+    switch (sortBy) {
+      case 'tanggal':
+        query.orderBy('date', sortOrder)
+        break
+      case 'judul':
+        query.orderBy('title', sortOrder)
+        break
+      case 'deskripsi':
+        query.orderBy('content', sortOrder)
+        break
+      case 'kategori':
+        query.orderBy('category', sortOrder)
+        break
+      case 'dibuatOleh':
+        query.orderBy('madeBy', sortOrder)
+        break
+      default:
+        query.orderBy('date', sortOrder)
+        break
+    }
 
-    return query.paginate(page, limit)
+    return await query.paginate(page, limit)
   }
 
   async getAll(page: number, limit?: number, role?: string, data?: any, user?: User): Promise<any> {

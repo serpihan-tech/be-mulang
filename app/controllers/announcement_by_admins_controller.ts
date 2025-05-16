@@ -16,8 +16,8 @@ export default class AnnouncementByAdminsController {
         search: request.input('search', ''),
         sortOrder: request.input('sortOrder', 'desc'),
         sortBy: request.input('sortBy', 'date'),
-        madeBy: request.qs().madeBy ? [].concat(request.qs().madeBy) : [],
-        category: request.qs().kategori ? [].concat(request.qs().kategori) : [],
+        dibuatOleh: request.qs().dibuatOleh ? [].concat(request.qs().dibuatOleh) : [],
+        kategori: request.qs().kategori ? [].concat(request.qs().kategori) : [],
         date: request.input('tanggal', ''),
       }
 
