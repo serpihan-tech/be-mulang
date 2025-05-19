@@ -107,6 +107,7 @@ export class AnnouncementByTeacherService implements AnnouncementByTeacherContra
           moduleId: Number(data.module_id) || data.module_id,
           title: data.title,
           content: data.content,
+          files: filePath,
           category: 'Akademik',
           date: data.date,
         },
@@ -118,11 +119,9 @@ export class AnnouncementByTeacherService implements AnnouncementByTeacherContra
           name: tempFilePath,
           overwrite: true,
         })
-
-        result.files = filePath
       }
 
-      await result.useTransaction(trx).save()
+      // await result.useTransaction(trx).save()
       await trx.commit()
 
       const resultDate = DateTime.fromISO(result.date.toString()).setZone('Asia/Jakarta').toSQL()

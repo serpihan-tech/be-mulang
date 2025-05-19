@@ -55,8 +55,8 @@ router.post('/check-role', [AuthController, 'checkRole']).as('auth.check-role')
 // * GET MEDIA / FILE FROM SERVER STORAGE ---------------
 
 router.get('file/*', async ({ params, response }) => {
-  const pathSegments = params['*'] // array: ['teacher-absences', '2025-05-15', 'check-in-photos', 'foto.png']
-  const relativePath = pathSegments.join('/') // gabung jadi string: "teacher-absences/2025-05-15/check-in-photos/foto.png"
+  const pathSegments = params['*'].map((seg: string) => decodeURIComponent(seg))
+  const relativePath = pathSegments.join('/')
 
   const basePath = app.makePath('storage/uploads')
   const safePath = normalize(join(basePath, relativePath))
@@ -71,6 +71,7 @@ router.get('file/*', async ({ params, response }) => {
 
   return response.download(safePath)
 })
+
 
 
 
