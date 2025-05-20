@@ -138,7 +138,9 @@ export class AnnouncementByAdminService
       adminId = user.admin.id
     }
 
-    const query = AnnouncementByAdmin.query().preload('admin', (admin) => admin.preload('user'))
+    const query = AnnouncementByAdmin.query()
+      .where('date', '<=', this.now)
+      .preload('admin', (admin) => admin.preload('user'))
 
     if (adminId !== undefined) {
       query.where('admin_id', adminId)
@@ -185,7 +187,7 @@ export class AnnouncementByAdminService
     return announcement
   }
 
-  async create(data: any, adminId: number): Promise<Object> {
+  async create(data: any, adminId: number): Promise<Object | undefined> {
     const trx = await db.transaction()
 
     const file = data.files
@@ -241,9 +243,9 @@ export class AnnouncementByAdminService
             senderEmail: admin.user.email,
           },
         })
+      } else {
+        return ann
       }
-
-      return ann
     } catch (error) {
       await trx.rollback()
       throw error

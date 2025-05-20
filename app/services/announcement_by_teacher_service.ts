@@ -153,9 +153,9 @@ export class AnnouncementByTeacherService implements AnnouncementByTeacherContra
             senderEmail: teacher.user.email,
           },
         })
+      } else {
+        return result
       }
-
-      return result
     } catch (error) {
       await trx.rollback()
       throw error
