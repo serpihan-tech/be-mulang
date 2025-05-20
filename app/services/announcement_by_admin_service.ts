@@ -149,7 +149,7 @@ export class AnnouncementByAdminService
     }
 
     if (data?.noPaginate) {
-      const announcements = await query.orderBy('date', 'desc')
+      const announcements = await query.orderBy('date', 'desc').orderBy('created_at', 'desc')
 
       const results = await Promise.all(
         announcements.map(async (ann) => {
@@ -168,6 +168,8 @@ export class AnnouncementByAdminService
             date: ann.date.toISOString(),
             senderPicture: admin?.profilePicture,
             senderEmail: userAdmin.email,
+            createdAt: ann.createdAt.toString(),
+            updatedAt: ann.updatedAt.toString(),
           }
         })
       )

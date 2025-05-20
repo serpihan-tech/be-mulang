@@ -22,6 +22,7 @@ export class AnnouncementByTeacherService implements AnnouncementByTeacherContra
       .preload('teacher', (teacher) => teacher.select('id', 'name', 'profilePicture'))
       .preload('class', (cl) => cl.preload('teacher', (tc) => tc.select('id', 'name')))
       .preload('module', (m) => m.select('id', 'name'))
+      .where('date', '<=', this.now)
 
     if (params.tanggal) {
       query.where('date', params.tanggal)
@@ -59,7 +60,10 @@ export class AnnouncementByTeacherService implements AnnouncementByTeacherContra
     }
 
     if (params.noPaginate) {
-      const data = await query.preload('teacher', (t) => t.preload('user'))
+      const data = await query
+        .orderBy('date', 'desc')
+        .orderBy('created_at', 'desc')
+        .preload('teacher', (t) => t.preload('user'))
 
       return data.map((item) => ({
         id: `74${item.id}`,
