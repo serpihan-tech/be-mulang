@@ -96,6 +96,7 @@ export class AbsenceService implements AbsenceContract {
         'absences.status',
         'absences.reason',
         'absences.date',
+        'absences.description',
         'students.name as student_name',
         'student_details.nisn as nisn',
         'student_details.nis as nis',
