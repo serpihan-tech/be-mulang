@@ -93,6 +93,8 @@ export class AnnouncementByTeacherService implements AnnouncementByTeacherContra
         moduleName: item.module?.name ?? null,
         className: item.class?.name ?? null,
         files: item.files,
+        createdAt: item.createdAt.toString(),
+        updatedAt: item.updatedAt.toString(),
       }))
     } else {
       const announcement = await query.paginate(params.page || 1, params.limit || 10)
