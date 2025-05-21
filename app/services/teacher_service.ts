@@ -4,6 +4,12 @@ import UserContract from '../contracts/user_contract.js'
 import User from '#models/user'
 import { cuid } from '@adonisjs/core/helpers'
 import app from '@adonisjs/core/services/app'
+import ClassStudent from '#models/class_student'
+import Schedule from '#models/schedule'
+import AcademicYear from '#models/academic_year'
+import { DateTime } from 'luxon'
+import { unlink } from 'node:fs/promises'
+import { join as joinPath } from 'node:path'
 
 export default class TeacherService implements UserContract {
   async index(params: any, page?: number, limit?: number): Promise<any> {
@@ -139,7 +145,53 @@ export default class TeacherService implements UserContract {
   }
 
   async delete(id: number): Promise<any> {
-    const student = await Teacher.query().where('id', id).preload('user').firstOrFail()
-    return await student?.user.delete()
+    const teacher = await Teacher.query().where('id', id).preload('user').firstOrFail()
+    const { profilePicture } = teacher
+
+    const UPLOADS_PATH = app.makePath('storage/uploads') // D:\...\storage\uploads
+
+    if (profilePicture) {
+      const fullInPhotoPath = joinPath(UPLOADS_PATH, profilePicture)
+      // console.log('Full inPhoto path:', fullInPhotoPath)
+      await unlink(fullInPhotoPath)
+    }
+
+    return await teacher?.user.delete()
+  }
+
+  async getCountStudentsAndClasses(teacherId: number): Promise<any> {
+    const activeSemester = await this.getActiveSemester()
+    const schedules = await Schedule.query().whereHas('module', (m) =>
+      m.where('teacher_id', teacherId).where('academic_year_id', activeSemester.id)
+    )
+
+    const classIds = schedules.map((item) => item.classId)
+    const uniqueClassIds = [...new Set(classIds)]
+    const totalClasses = uniqueClassIds.length
+
+    console.log('uniqueClassIds : ', uniqueClassIds)
+    console.log('classIds : ', classIds)
+    const studentsCount = await ClassStudent.query()
+      .where('academic_year_id', activeSemester.id)
+      .whereIn('class_id', uniqueClassIds)
+      .countDistinct('student_id as total_students')
+
+    return {
+      totalClasses,
+      totalStudents: Number(studentsCount[0].$extras.total_students),
+    }
+  }
+
+  private async getActiveSemester() {
+    const now =
+      DateTime.now().setZone('Asia/Jakarta').toSQL() ??
+      new Date().toISOString().slice(0, 19).replace('T', ' ')
+    console.log(now)
+
+    return await AcademicYear.query()
+      .where('status', 1 || true)
+      .where('date_start', '<', now)
+      .where('date_end', '>', now)
+      .firstOrFail()
   }
 }

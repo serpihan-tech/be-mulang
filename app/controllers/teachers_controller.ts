@@ -102,7 +102,19 @@ export default class TeachersController {
       const tc = await this.teacherService.getIdName()
       return response.ok({ message: 'Data Guru Berhasil Didapatkan', teachers: tc })
     } catch (error) {
-      return response.status(error.code).send({ error })
+      return response.status(error.code).send({ error: { message: error.message } })
+    }
+  }
+
+  async getCountStudentsAndClasses({ auth, response }: HttpContext) {
+    try {
+      const user = auth.getUserOrFail()
+      await user.load('teacher')
+
+      const data = await this.teacherService.getCountStudentsAndClasses(user.teacher.id)
+      return response.ok({ message: 'Data untuk Guru Berhasil Didapatkan', data })
+    } catch (error) {
+      return response.badRequest({ error: { message: error.message } })
     }
   }
 }
