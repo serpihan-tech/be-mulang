@@ -106,12 +106,14 @@ export default class TeachersController {
     }
   }
 
-  async getCountStudentsAndClasses({ auth, response }: HttpContext) {
+  async getCountStudentsAndClasses({ auth, request, response }: HttpContext) {
     try {
       const user = auth.getUserOrFail()
       await user.load('teacher')
 
-      const data = await this.teacherService.getCountStudentsAndClasses(user.teacher.id)
+      const params = request.all()
+
+      const data = await this.teacherService.getCountStudentsAndClasses(user.teacher.id, params)
       return response.ok({ message: 'Data untuk Guru Berhasil Didapatkan', data })
     } catch (error) {
       return response.badRequest({ error: { message: error.message } })

@@ -159,10 +159,12 @@ export default class TeacherService implements UserContract {
     return await teacher?.user.delete()
   }
 
-  async getCountStudentsAndClasses(teacherId: number): Promise<any> {
+  async getCountStudentsAndClasses(teacherId: number, params?: any): Promise<any> {
     const activeSemester = await this.getActiveSemester()
+    const tahunAjar = params.tahunAjar ?? activeSemester.id
+
     const schedules = await Schedule.query().whereHas('module', (m) =>
-      m.where('teacher_id', teacherId).where('academic_year_id', activeSemester.id)
+      m.where('teacher_id', teacherId).where('academic_year_id', tahunAjar)
     )
 
     const classIds = schedules.map((item) => item.classId)
@@ -172,7 +174,7 @@ export default class TeacherService implements UserContract {
     console.log('uniqueClassIds : ', uniqueClassIds)
     console.log('classIds : ', classIds)
     const studentsCount = await ClassStudent.query()
-      .where('academic_year_id', activeSemester.id)
+      .where('academic_year_id', tahunAjar)
       .whereIn('class_id', uniqueClassIds)
       .countDistinct('student_id as total_students')
 
