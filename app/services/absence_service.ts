@@ -123,6 +123,7 @@ export class AbsenceService implements AbsenceContract {
             .orWhere('student_details.nis', 'like', `%${params.search}%`)
             .orWhere('classes.name', 'like', `%${params.search}%`)
             .orWhere('absences.status', 'like', `%${params.search}%`)
+            .orWhere('absences.description', 'like', `%${params.search}%`)
             .orWhere('absences.reason', 'like', `%${params.search}%`)
             .orWhere('modules.name', 'like', `%${params.search}%`)
         })
@@ -158,6 +159,9 @@ export class AbsenceService implements AbsenceContract {
     }
     if (params.sortBy === 'mapel') {
       absencesQuery.orderBy('modules.name', params.sortOrder || 'asc')
+    }
+    if (params.sortBy === 'deskripsi') {
+      absencesQuery.orderBy('absences.description', params.sortOrder || 'asc')
     }
 
     absencesQuery
