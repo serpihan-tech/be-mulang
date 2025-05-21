@@ -3,6 +3,8 @@ import User from '#models/user'
 import { cuid } from '@adonisjs/core/helpers'
 import app from '@adonisjs/core/services/app'
 import db from '@adonisjs/lucid/services/db'
+import { unlink } from 'node:fs/promises'
+import { join as joinPath } from 'node:path'
 
 export class AdminService {
   async getAll() {
@@ -95,6 +97,16 @@ export class AdminService {
   async delete(id: number) {
     const admin = await Admin.query().where('id', id).firstOrFail()
     const user = await admin.related('user').query().firstOrFail()
+
+    const { profilePicture } = admin
+
+    const UPLOADS_PATH = app.makePath('storage/uploads') // D:\...\storage\uploads
+
+    if (profilePicture) {
+      const fullInPhotoPath = joinPath(UPLOADS_PATH, profilePicture)
+      // console.log('Full inPhoto path:', fullInPhotoPath)
+      await unlink(fullInPhotoPath)
+    }
 
     await user.delete()
   }

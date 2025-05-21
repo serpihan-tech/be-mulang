@@ -7,12 +7,13 @@ import {
   AnnouncementContract,
 } from '../contracts/announcement_contract.js'
 import User from '#models/user'
-import { cuid } from '@adonisjs/core/helpers'
 import Admin from '#models/admin'
 // import AnnouncementByTeacher from '#models/announcement_by_teacher'
 // import { DateTime } from 'luxon'
 import db from '@adonisjs/lucid/services/db'
 import { DateTime } from 'luxon'
+import { join as joinPath } from 'node:path'
+import { unlink } from 'node:fs/promises'
 
 // type AnnouncementQueryParams = {
 //   page?: number
@@ -299,6 +300,16 @@ export class AnnouncementByAdminService
 
   async delete(id: number): Promise<void> {
     const announcement = await AnnouncementByAdmin.query().where('id', id).firstOrFail()
+    const { files } = announcement
+
+    const UPLOADS_PATH = app.makePath('storage/uploads') // D:\...\storage\uploads
+
+    if (files) {
+      const fullInPhotoPath = joinPath(UPLOADS_PATH, files)
+      // console.log('Full inPhoto path:', fullInPhotoPath)
+      await unlink(fullInPhotoPath)
+    }
+
     await announcement.delete()
   }
 }

@@ -12,6 +12,8 @@ import Class from '#models/class'
 import { cuid } from '@adonisjs/core/helpers'
 import app from '@adonisjs/core/services/app'
 import { DateTime } from 'luxon'
+import { unlink } from 'node:fs/promises'
+import { join as joinPath } from 'node:path'
 
 export default class StudentsService implements StudentContract, UserContract {
   private async getActiveSemester() {
@@ -349,8 +351,18 @@ export default class StudentsService implements StudentContract, UserContract {
   }
 
   async delete(id: number): Promise<any> {
-    const student = await Student.query().where('id', id).firstOrFail()
+    const student = await Student.query().where('id', id).preload('studentDetail').firstOrFail()
     const name = student.name
+
+    const { profilePicture } = student.studentDetail
+
+    const UPLOADS_PATH = app.makePath('storage/uploads') // D:\...\storage\uploads
+
+    if (profilePicture) {
+      const fullInPhotoPath = joinPath(UPLOADS_PATH, profilePicture)
+      // console.log('Full inPhoto path:', fullInPhotoPath)
+      await unlink(fullInPhotoPath)
+    }
 
     await User.query().where('id', student.userId).delete()
 

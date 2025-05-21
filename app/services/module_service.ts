@@ -1,11 +1,11 @@
-import db from '@adonisjs/lucid/services/db'
 import Module from '#models/module'
 import ModuleContract from '../contracts/module_contract.js'
 import { DateTime } from 'luxon'
 import AcademicYear from '#models/academic_year'
-import { cuid } from '@adonisjs/core/helpers'
 import app from '@adonisjs/core/services/app'
 import normalizeSearch from '../utils/normalize_search.js'
+import { join as joinPath } from 'node:path'
+import { unlink } from 'node:fs/promises'
 
 export default class ModuleService implements ModuleContract {
   async getAll(params: any): Promise<any> {
@@ -147,6 +147,16 @@ export default class ModuleService implements ModuleContract {
   async delete(id: number): Promise<any> {
     const modules = await Module.findOrFail(id)
     const name = modules.name
+    const { thumbnail } = modules
+
+    const UPLOADS_PATH = app.makePath('storage/uploads') // D:\...\storage\uploads
+
+    if (thumbnail) {
+      const fullInPhotoPath = joinPath(UPLOADS_PATH, thumbnail)
+      // console.log('Full inPhoto path:', fullInPhotoPath)
+      await unlink(fullInPhotoPath)
+    }
+
     await modules.delete()
 
     return name

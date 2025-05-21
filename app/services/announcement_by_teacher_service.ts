@@ -3,13 +3,13 @@ import db from '@adonisjs/lucid/services/db'
 import { AnnouncementByTeacherContract } from '../contracts/announcement_contract.js'
 import transmit from '@adonisjs/transmit/services/main'
 import Class from '#models/class'
-import Schedule from '#models/schedule'
 import Module from '#models/module'
 import User from '#models/user'
 import Teacher from '#models/teacher'
 import { DateTime } from 'luxon'
-import { title } from 'node:process'
 import app from '@adonisjs/core/services/app'
+import { unlink } from 'node:fs/promises'
+import { join as joinPath } from 'node:path'
 
 export class AnnouncementByTeacherService implements AnnouncementByTeacherContract {
   protected now =
@@ -225,6 +225,16 @@ export class AnnouncementByTeacherService implements AnnouncementByTeacherContra
 
   async delete(id: number): Promise<any> {
     const result = await AnnouncementByTeacher.findOrFail(id)
+    const { files } = result
+
+    const UPLOADS_PATH = app.makePath('storage/uploads') // D:\...\storage\uploads
+
+    if (files) {
+      const fullInPhotoPath = joinPath(UPLOADS_PATH, files)
+      // console.log('Full inPhoto path:', fullInPhotoPath)
+      await unlink(fullInPhotoPath)
+    }
+
     await result.delete()
     return result
   }

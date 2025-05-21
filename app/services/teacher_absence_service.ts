@@ -5,6 +5,8 @@ import { DateTime } from 'luxon'
 import TeacherAbsenceContract from '../contracts/teacher_absence_contract.js'
 import db from '@adonisjs/lucid/services/db'
 import app from '@adonisjs/core/services/app'
+import { unlink } from 'node:fs/promises'
+import { join as joinPath } from 'node:path'
 
 export class TeacherAbsenceService implements TeacherAbsenceContract {
   async getAll(params: any): Promise<any> {
@@ -196,6 +198,21 @@ export class TeacherAbsenceService implements TeacherAbsenceContract {
 
   async delete(teacherAbsenceId: number): Promise<void> {
     const teacherAbsence = await TeacherAbsence.query().where('id', teacherAbsenceId).firstOrFail()
+    const { inPhoto, outPhoto } = teacherAbsence
+
+    const UPLOADS_PATH = app.makePath('storage/uploads') // D:\...\storage\uploads
+
+    if (inPhoto) {
+      const fullInPhotoPath = joinPath(UPLOADS_PATH, inPhoto)
+      // console.log('Full inPhoto path:', fullInPhotoPath)
+      await unlink(fullInPhotoPath)
+    }
+
+    if (outPhoto) {
+      const fullOutPhotoPath = joinPath(UPLOADS_PATH, outPhoto)
+      // console.log('Full outPhoto path:', fullOutPhotoPath)
+      await unlink(fullOutPhotoPath)
+    }
 
     await teacherAbsence.delete()
   }
