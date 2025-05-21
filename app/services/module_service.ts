@@ -9,8 +9,11 @@ import normalizeSearch from '../utils/normalize_search.js'
 
 export default class ModuleService implements ModuleContract {
   async getAll(params: any): Promise<any> {
-    const dataModule = await Module.query()
+    const mapels = Array.isArray(params.namaMapel)
+      ? params.namaMapel.map((m: string) => (m ?? '').toString().trim())
+      : [(params.namaMapel ?? '').toString().trim()]
 
+    const dataModule = await Module.query()
       .if(params.search && normalizeSearch(params.search) !== '', (query) => {
         const search = normalizeSearch(params.search)
         query.where((q) => {
@@ -23,7 +26,7 @@ export default class ModuleService implements ModuleContract {
       })
 
       .if(params.namaMapel, (query) => {
-        query.where('name', params.namaMapel)
+        query.whereIn('name', mapels)
       })
 
       .if(params.tahunAjar, (query) => {
