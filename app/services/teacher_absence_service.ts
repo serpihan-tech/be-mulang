@@ -201,15 +201,15 @@ export class TeacherAbsenceService implements TeacherAbsenceContract {
   }
 
   async presenceToday(teacherId: number) {
-    const now = new Date()
-    now.setHours(7, 0, 0, 0)
+    const now = DateTime.local().toISODate()
 
-    console.log('presenceToday : ', now)
+    // console.log('presenceToday : ', now)
     const teacherAbsence = await TeacherAbsence.query()
       .where('teacher_id', teacherId)
       .where('date', now)
       .first()
 
+    // console.log('teacherAbsence : ', teacherAbsence)
     return teacherAbsence
   }
 }
