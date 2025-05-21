@@ -50,7 +50,7 @@ export const updateTeacherAbsenceValidator = vine.compile(
         extnames: ['jpg', 'png', 'jpeg'],
       })
       .optional()
-      .requiredWhen('status', '=', 'Hadir')
+      // .requiredWhen('status', '=', 'Hadir')
       .nullable(),
     out_photo: vine
       .file({
