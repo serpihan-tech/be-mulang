@@ -43,18 +43,33 @@ export class AnnouncementByTeacherService implements AnnouncementByTeacherContra
     }
 
     switch (params.sortBy) {
+      case 'judul':
+        query.orderBy('title', params.sortOrder || 'asc')
+        break
+      case 'deskripsi':
+        query.orderBy('content', params.sortOrder || 'asc')
+        break
+      case 'tanggal':
+        query.orderBy('date', params.sortOrder || 'asc')
+        break
+      case 'mapel':
+        query
+          .join('modules', 'announcement_by_teachers.module_id', 'modules.id')
+          .orderBy('modules.name', params.sortOrder || 'asc')
+          .select('announcement_by_teachers.*') // biar kolom aman
+        break
       case 'kelas':
         query
           .join('classes', 'announcement_by_teachers.class_id', 'classes.id')
           .orderBy('classes.name', params.sortOrder || 'asc')
           .select('announcement_by_teachers.*') // biar kolom aman
         break
-      case 'guru':
-        query
-          .join('teachers', 'announcement_by_teachers.teacher_id', 'teachers.id')
-          .orderBy('teachers.name', params.sortOrder || 'asc')
-          .select('announcement_by_teachers.*')
-        break
+      // case 'guru':
+      //   query
+      //     .join('teachers', 'announcement_by_teachers.teacher_id', 'teachers.id')
+      //     .orderBy('teachers.name', params.sortOrder || 'asc')
+      //     .select('announcement_by_teachers.*')
+      //   break
       default:
         query.orderBy(params.sortBy || 'id', params.sortOrder || 'asc')
     }
@@ -155,6 +170,8 @@ export class AnnouncementByTeacherService implements AnnouncementByTeacherContra
             files: result.files,
             senderPicture: teacher.profilePicture,
             senderEmail: teacher.user.email,
+            createdAt: result.createdAt.toString(),
+            updatedAt: result.updatedAt.toString(),
           },
         })
       } else {

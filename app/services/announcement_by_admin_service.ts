@@ -63,22 +63,25 @@ export class AnnouncementByAdminService
         'target_roles',
         db.raw('NULL as class_id'),
         db.raw('NULL as module_id'),
-        db.raw(`'Admin' as madeBy`)
+        db.raw(`'Admin' as madeBy`),
+        db.raw('NULL as teacher_name')
       )
       .unionAll([
         db
           .from('announcement_by_teachers')
+          .leftJoin('teachers', 'announcement_by_teachers.teacher_id', 'teachers.id')
           .select(
-            'id',
-            'title',
-            'content',
-            'date',
-            'category',
-            'files',
+            'announcement_by_teachers.id',
+            'announcement_by_teachers.title',
+            'announcement_by_teachers.content',
+            'announcement_by_teachers.date',
+            'announcement_by_teachers.category',
+            'announcement_by_teachers.files',
             db.raw('NULL as target_roles'),
-            'class_id',
-            'module_id',
-            db.raw(`'Teacher' as madeBy`)
+            'announcement_by_teachers.class_id',
+            'announcement_by_teachers.module_id',
+            db.raw(`'Teacher' as madeBy`),
+            'teachers.name as teacher_name'
           ),
       ])
       .as('subQuery')
@@ -243,6 +246,8 @@ export class AnnouncementByAdminService
             date: ann.date.toString(),
             senderPicture: admin.profilePicture,
             senderEmail: admin.user.email,
+            createdAt: ann.createdAt.toString(),
+            updatedAt: ann.updatedAt.toString(),
           },
         })
       } else {
