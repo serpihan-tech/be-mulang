@@ -168,6 +168,7 @@ export class AnnouncementByAdminService
             role: roleName?.role,
             files: ann.files,
             content: ann.content,
+            targetRoles: ann.targetRoles,
             category: ann.category,
             date: ann.date.toISOString(),
             senderPicture: admin?.profilePicture,
@@ -251,7 +252,7 @@ export class AnnouncementByAdminService
             updatedAt: ann.updatedAt.toString(),
           },
         })
-      } else {
+
         return ann
       }
     } catch (error) {

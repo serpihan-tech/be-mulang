@@ -6,19 +6,44 @@ import Class from '#models/class'
 import Module from '#models/module'
 import User from '#models/user'
 import Teacher from '#models/teacher'
+import ClassStudent from '#models/class_student'
 import { DateTime } from 'luxon'
 import app from '@adonisjs/core/services/app'
 import { unlink } from 'node:fs/promises'
 import { join as joinPath } from 'node:path'
+import AcademicYear from '#models/academic_year'
 
 export class AnnouncementByTeacherService implements AnnouncementByTeacherContract {
   protected now =
     DateTime.now().setZone('Asia/Jakarta').toFormat('yyyy-MM-dd 00:00:00.000 +07:00') ?? // DateTime.now().setZone('Asia/Jakarta').toSQL() ??
     new Date().toISOString().slice(0, 19).replace('T', ' ')
 
+  private async getActiveSemester() {
+    const now =
+      DateTime.now().setZone('Asia/Jakarta').toSQL() ??
+      new Date().toISOString().slice(0, 19).replace('T', ' ')
+    console.log(now)
+
+    return await AcademicYear.query()
+      .where('status', 1 || true)
+      .where('date_start', '<', now)
+      .where('date_end', '>', now)
+      .firstOrFail()
+  }
+
   async getAll(params: any, role?: string): Promise<any> {
+    const activeSemester = await this.getActiveSemester()
+    let cs: any
+    if (role === 'student') {
+      cs = await ClassStudent.query()
+        .where('student_id', params.student_id)
+        .where('academic_year_id', activeSemester.id)
+        .first()
+    }
+
     const query = AnnouncementByTeacher.query()
       .if(role === 'teacher', (q) => q.where('teacher_id', params.teacher_id))
+      .if(role === 'student' && cs, (q) => q.where('class_id', cs.class_id))
       .preload('teacher', (teacher) => teacher.select('id', 'name', 'profilePicture'))
       .preload('class', (cl) => cl.preload('teacher', (tc) => tc.select('id', 'name')))
       .preload('module', (m) => m.select('id', 'name'))
@@ -176,7 +201,7 @@ export class AnnouncementByTeacherService implements AnnouncementByTeacherContra
             updatedAt: result.updatedAt.toString(),
           },
         })
-      } else {
+
         return result
       }
     } catch (error) {
@@ -194,7 +219,7 @@ export class AnnouncementByTeacherService implements AnnouncementByTeacherContra
     try {
       const result = await AnnouncementByTeacher.findOrFail(id)
 
-      if (file) {
+      if (file !== null) {
         filePath = `announcement-teachers/${new Date().getTime()}_${file.clientName}`
         tempFilePath = `${new Date().getTime()}_${file.clientName}`
 
