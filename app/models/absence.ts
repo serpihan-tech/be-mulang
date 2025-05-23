@@ -31,6 +31,9 @@ export default class Absence extends BaseModel {
   @column()
   declare status: Status
 
+  @column()
+  declare description: string
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 

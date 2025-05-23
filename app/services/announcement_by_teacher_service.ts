@@ -3,25 +3,51 @@ import db from '@adonisjs/lucid/services/db'
 import { AnnouncementByTeacherContract } from '../contracts/announcement_contract.js'
 import transmit from '@adonisjs/transmit/services/main'
 import Class from '#models/class'
-import Schedule from '#models/schedule'
 import Module from '#models/module'
 import User from '#models/user'
 import Teacher from '#models/teacher'
+import ClassStudent from '#models/class_student'
 import { DateTime } from 'luxon'
-import { title } from 'node:process'
 import app from '@adonisjs/core/services/app'
+import { unlink } from 'node:fs/promises'
+import { join as joinPath } from 'node:path'
+import AcademicYear from '#models/academic_year'
 
 export class AnnouncementByTeacherService implements AnnouncementByTeacherContract {
   protected now =
     DateTime.now().setZone('Asia/Jakarta').toFormat('yyyy-MM-dd 00:00:00.000 +07:00') ?? // DateTime.now().setZone('Asia/Jakarta').toSQL() ??
     new Date().toISOString().slice(0, 19).replace('T', ' ')
 
+  private async getActiveSemester() {
+    const now =
+      DateTime.now().setZone('Asia/Jakarta').toSQL() ??
+      new Date().toISOString().slice(0, 19).replace('T', ' ')
+    console.log(now)
+
+    return await AcademicYear.query()
+      .where('status', 1 || true)
+      .where('date_start', '<', now)
+      .where('date_end', '>', now)
+      .firstOrFail()
+  }
+
   async getAll(params: any, role?: string): Promise<any> {
+    const activeSemester = await this.getActiveSemester()
+    let cs: any
+    if (role === 'student') {
+      cs = await ClassStudent.query()
+        .where('student_id', params.student_id)
+        .where('academic_year_id', activeSemester.id)
+        .first()
+    }
+
     const query = AnnouncementByTeacher.query()
       .if(role === 'teacher', (q) => q.where('teacher_id', params.teacher_id))
+      .if(role === 'student' && cs, (q) => q.where('class_id', cs.class_id))
       .preload('teacher', (teacher) => teacher.select('id', 'name', 'profilePicture'))
       .preload('class', (cl) => cl.preload('teacher', (tc) => tc.select('id', 'name')))
       .preload('module', (m) => m.select('id', 'name'))
+      .where('date', '<=', this.now)
 
     if (params.tanggal) {
       query.where('date', params.tanggal)
@@ -42,24 +68,42 @@ export class AnnouncementByTeacherService implements AnnouncementByTeacherContra
     }
 
     switch (params.sortBy) {
+      case 'judul':
+        query.orderBy('title', params.sortOrder || 'asc')
+        break
+      case 'deskripsi':
+        query.orderBy('content', params.sortOrder || 'asc')
+        break
+      case 'tanggal':
+        query.orderBy('date', params.sortOrder || 'asc')
+        break
+      case 'mapel':
+        query
+          .join('modules', 'announcement_by_teachers.module_id', 'modules.id')
+          .orderBy('modules.name', params.sortOrder || 'asc')
+          .select('announcement_by_teachers.*') // biar kolom aman
+        break
       case 'kelas':
         query
           .join('classes', 'announcement_by_teachers.class_id', 'classes.id')
           .orderBy('classes.name', params.sortOrder || 'asc')
           .select('announcement_by_teachers.*') // biar kolom aman
         break
-      case 'guru':
-        query
-          .join('teachers', 'announcement_by_teachers.teacher_id', 'teachers.id')
-          .orderBy('teachers.name', params.sortOrder || 'asc')
-          .select('announcement_by_teachers.*')
-        break
+      // case 'guru':
+      //   query
+      //     .join('teachers', 'announcement_by_teachers.teacher_id', 'teachers.id')
+      //     .orderBy('teachers.name', params.sortOrder || 'asc')
+      //     .select('announcement_by_teachers.*')
+      //   break
       default:
         query.orderBy(params.sortBy || 'id', params.sortOrder || 'asc')
     }
 
     if (params.noPaginate) {
-      const data = await query.preload('teacher', (t) => t.preload('user'))
+      const data = await query
+        .orderBy('date', 'desc')
+        .orderBy('created_at', 'desc')
+        .preload('teacher', (t) => t.preload('user'))
 
       return data.map((item) => ({
         id: `74${item.id}`,
@@ -74,6 +118,8 @@ export class AnnouncementByTeacherService implements AnnouncementByTeacherContra
         moduleName: item.module?.name ?? null,
         className: item.class?.name ?? null,
         files: item.files,
+        createdAt: item.createdAt.toString(),
+        updatedAt: item.updatedAt.toString(),
       }))
     } else {
       const announcement = await query.paginate(params.page || 1, params.limit || 10)
@@ -107,14 +153,12 @@ export class AnnouncementByTeacherService implements AnnouncementByTeacherContra
           moduleId: Number(data.module_id) || data.module_id,
           title: data.title,
           content: data.content,
+          files: filePath,
           category: 'Akademik',
           date: data.date,
-          files: filePath,
         },
         { client: trx }
       )
-
-      await trx.commit()
 
       if (file) {
         await file.move(app.makePath('storage/uploads/announcement-teachers'), {
@@ -122,6 +166,9 @@ export class AnnouncementByTeacherService implements AnnouncementByTeacherContra
           overwrite: true,
         })
       }
+
+      // await result.useTransaction(trx).save()
+      await trx.commit()
 
       const resultDate = DateTime.fromISO(result.date.toString()).setZone('Asia/Jakarta').toSQL()
       console.log('resultDate : ', resultDate, 'this.now : ', this.now)
@@ -147,14 +194,16 @@ export class AnnouncementByTeacherService implements AnnouncementByTeacherContra
             from: teacher.name,
             module: mapel.name,
             class: kelas.name,
-            files: filePath,
+            files: result.files,
             senderPicture: teacher.profilePicture,
             senderEmail: teacher.user.email,
+            createdAt: result.createdAt.toString(),
+            updatedAt: result.updatedAt.toString(),
           },
         })
-      }
 
-      return result
+        return result
+      }
     } catch (error) {
       await trx.rollback()
       throw error
@@ -170,7 +219,7 @@ export class AnnouncementByTeacherService implements AnnouncementByTeacherContra
     try {
       const result = await AnnouncementByTeacher.findOrFail(id)
 
-      if (file) {
+      if (file !== null) {
         filePath = `announcement-teachers/${new Date().getTime()}_${file.clientName}`
         tempFilePath = `${new Date().getTime()}_${file.clientName}`
 
@@ -201,6 +250,16 @@ export class AnnouncementByTeacherService implements AnnouncementByTeacherContra
 
   async delete(id: number): Promise<any> {
     const result = await AnnouncementByTeacher.findOrFail(id)
+    const { files } = result
+
+    const UPLOADS_PATH = app.makePath('storage/uploads') // D:\...\storage\uploads
+
+    if (files) {
+      const fullInPhotoPath = joinPath(UPLOADS_PATH, files)
+      // console.log('Full inPhoto path:', fullInPhotoPath)
+      await unlink(fullInPhotoPath)
+    }
+
     await result.delete()
     return result
   }

@@ -34,6 +34,8 @@ export default class AnnouncementSchedules {
           date: an.date.toISOString(),
           senderPicture: admin.profilePicture,
           senderEmail: admin.user.email,
+          createdAt: an.createdAt.toString(),
+          updatedAt: an.updatedAt.toString(),
         },
       })
     }
@@ -61,6 +63,8 @@ export default class AnnouncementSchedules {
           date: an.date.toISOString(),
           senderPicture: teacher.profilePicture,
           senderEmail: teacher.user.email,
+          createdAt: an.createdAt.toString(),
+          updatedAt: an.updatedAt.toString(),
         },
       })
     }

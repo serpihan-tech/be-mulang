@@ -74,7 +74,7 @@ export default class AnnouncementByTeachersController {
         announcement,
       }
     } catch (error) {
-      return response.badRequest({ error: { message: error.message } })
+      return response.badRequest({ error })
     }
   }
 

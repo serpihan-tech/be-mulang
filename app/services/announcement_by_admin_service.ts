@@ -7,12 +7,13 @@ import {
   AnnouncementContract,
 } from '../contracts/announcement_contract.js'
 import User from '#models/user'
-import { cuid } from '@adonisjs/core/helpers'
 import Admin from '#models/admin'
 // import AnnouncementByTeacher from '#models/announcement_by_teacher'
 // import { DateTime } from 'luxon'
 import db from '@adonisjs/lucid/services/db'
 import { DateTime } from 'luxon'
+import { join as joinPath } from 'node:path'
+import { unlink } from 'node:fs/promises'
 
 // type AnnouncementQueryParams = {
 //   page?: number
@@ -46,60 +47,90 @@ export class AnnouncementByAdminService
       search = '',
       sortOrder = 'desc',
       sortBy = 'date',
-      madeBy = [],
-      category = [],
+      dibuatOleh = [],
+      kategori = [],
       date = '',
     } = params
 
-    let subQuery = db
+    const subQuery = db
       .from('announcement_by_admins')
-      .select('id', 'title', 'content', 'date', 'category', 'files', db.raw(`'Admin' as madeBy`))
+      .select(
+        'id',
+        'title',
+        'content',
+        'date',
+        'category',
+        'files',
+        'target_roles',
+        db.raw('NULL as class_id'),
+        db.raw('NULL as module_id'),
+        db.raw(`'Admin' as madeBy`),
+        db.raw('NULL as teacher_name')
+      )
       .unionAll([
         db
           .from('announcement_by_teachers')
+          .leftJoin('teachers', 'announcement_by_teachers.teacher_id', 'teachers.id')
           .select(
-            'id',
-            'title',
-            'content',
-            'date',
-            'category',
-            'files',
-            db.raw(`'Teacher' as madeBy`)
+            'announcement_by_teachers.id',
+            'announcement_by_teachers.title',
+            'announcement_by_teachers.content',
+            'announcement_by_teachers.date',
+            'announcement_by_teachers.category',
+            'announcement_by_teachers.files',
+            db.raw('NULL as target_roles'),
+            'announcement_by_teachers.class_id',
+            'announcement_by_teachers.module_id',
+            db.raw(`'Teacher' as madeBy`),
+            'teachers.name as teacher_name'
           ),
       ])
       .as('subQuery')
 
     let query = db.from(subQuery).select('*')
 
-    // Filter berdasarkan search (Title / Content)
+    // Filtering
     if (search) {
       query.where((qb) => {
         qb.where('title', 'like', `%${search}%`).orWhere('content', 'like', `%${search}%`)
       })
     }
 
-    // Filter berdasarkan madeBy (Admin/Teacher)
-    if (Array.isArray(madeBy) && madeBy.length > 0) {
-      query.whereIn('madeBy', madeBy)
+    // console.log('dibuatOleh', madeBy)
+    if (Array.isArray(dibuatOleh) && dibuatOleh.length > 0) {
+      query.whereIn('madeBy', dibuatOleh)
     }
 
-    // Filter berdasarkan kategori
-    if (Array.isArray(category) && category.length > 0) {
-      query.whereIn('category', category)
+    if (Array.isArray(kategori) && kategori.length > 0) {
+      query.whereIn('category', kategori)
     }
 
-    // Filter berdasarkan tanggal
     if (date) {
       query.where('date', '=', date)
     }
-    // if (endDate) {
-    //   query.where('date', '<=', endDate)
-    // }
 
-    // Sorting
-    query.orderBy(sortBy, sortOrder)
+    switch (sortBy) {
+      case 'tanggal':
+        query.orderBy('date', sortOrder)
+        break
+      case 'judul':
+        query.orderBy('title', sortOrder)
+        break
+      case 'deskripsi':
+        query.orderBy('content', sortOrder)
+        break
+      case 'kategori':
+        query.orderBy('category', sortOrder)
+        break
+      case 'dibuatOleh':
+        query.orderBy('madeBy', sortOrder)
+        break
+      default:
+        query.orderBy('date', sortOrder)
+        break
+    }
 
-    return query.paginate(page, limit)
+    return await query.paginate(page, limit)
   }
 
   async getAll(page: number, limit?: number, role?: string, data?: any, user?: User): Promise<any> {
@@ -111,7 +142,9 @@ export class AnnouncementByAdminService
       adminId = user.admin.id
     }
 
-    const query = AnnouncementByAdmin.query().preload('admin', (admin) => admin.preload('user'))
+    const query = AnnouncementByAdmin.query()
+      .where('date', '<=', this.now)
+      .preload('admin', (admin) => admin.preload('user'))
 
     if (adminId !== undefined) {
       query.where('admin_id', adminId)
@@ -120,7 +153,7 @@ export class AnnouncementByAdminService
     }
 
     if (data?.noPaginate) {
-      const announcements = await query.orderBy('date', 'desc')
+      const announcements = await query.orderBy('date', 'desc').orderBy('created_at', 'desc')
 
       const results = await Promise.all(
         announcements.map(async (ann) => {
@@ -135,10 +168,13 @@ export class AnnouncementByAdminService
             role: roleName?.role,
             files: ann.files,
             content: ann.content,
+            targetRoles: ann.targetRoles,
             category: ann.category,
             date: ann.date.toISOString(),
             senderPicture: admin?.profilePicture,
             senderEmail: userAdmin.email,
+            createdAt: ann.createdAt.toString(),
+            updatedAt: ann.updatedAt.toString(),
           }
         })
       )
@@ -158,7 +194,7 @@ export class AnnouncementByAdminService
     return announcement
   }
 
-  async create(data: any, adminId: number): Promise<Object> {
+  async create(data: any, adminId: number): Promise<Object | undefined> {
     const trx = await db.transaction()
 
     const file = data.files
@@ -212,11 +248,13 @@ export class AnnouncementByAdminService
             date: ann.date.toString(),
             senderPicture: admin.profilePicture,
             senderEmail: admin.user.email,
+            createdAt: ann.createdAt.toString(),
+            updatedAt: ann.updatedAt.toString(),
           },
         })
-      }
 
-      return ann
+        return ann
+      }
     } catch (error) {
       await trx.rollback()
       throw error
@@ -263,6 +301,16 @@ export class AnnouncementByAdminService
 
   async delete(id: number): Promise<void> {
     const announcement = await AnnouncementByAdmin.query().where('id', id).firstOrFail()
+    const { files } = announcement
+
+    const UPLOADS_PATH = app.makePath('storage/uploads') // D:\...\storage\uploads
+
+    if (files) {
+      const fullInPhotoPath = joinPath(UPLOADS_PATH, files)
+      // console.log('Full inPhoto path:', fullInPhotoPath)
+      await unlink(fullInPhotoPath)
+    }
+
     await announcement.delete()
   }
 }

@@ -12,6 +12,8 @@ import Class from '#models/class'
 import { cuid } from '@adonisjs/core/helpers'
 import app from '@adonisjs/core/services/app'
 import { DateTime } from 'luxon'
+import { unlink } from 'node:fs/promises'
+import { join as joinPath } from 'node:path'
 
 export default class StudentsService implements StudentContract, UserContract {
   private async getActiveSemester() {
@@ -349,8 +351,18 @@ export default class StudentsService implements StudentContract, UserContract {
   }
 
   async delete(id: number): Promise<any> {
-    const student = await Student.query().where('id', id).firstOrFail()
+    const student = await Student.query().where('id', id).preload('studentDetail').firstOrFail()
     const name = student.name
+
+    const { profilePicture } = student.studentDetail
+
+    const UPLOADS_PATH = app.makePath('storage/uploads') // D:\...\storage\uploads
+
+    if (profilePicture) {
+      const fullInPhotoPath = joinPath(UPLOADS_PATH, profilePicture)
+      // console.log('Full inPhoto path:', fullInPhotoPath)
+      await unlink(fullInPhotoPath)
+    }
 
     await User.query().where('id', student.userId).delete()
 
@@ -372,12 +384,17 @@ export default class StudentsService implements StudentContract, UserContract {
   /**
    * Mengambil jadwal pelajaran berdasarkan studentId.
    */
-  async getSchedule(studentId: number): Promise<any[]> {
+  async getSchedule(studentId: number, params?: any): Promise<any[]> {
     if (!studentId) throw new Error('ID siswa tidak ditemukan')
+
+    const activeSemester = params.tahunAjar ? params.tahunAjar : await this.getActiveSemester()
 
     const classStudent = await ClassStudent.query()
       .where('student_id', studentId)
       .select('class_id', 'academic_year_id')
+      .whereHas('academicYear', (ay) => {
+        ay.where('id', activeSemester.id)
+      })
       .preload('academicYear')
       .preload('class')
       .first()

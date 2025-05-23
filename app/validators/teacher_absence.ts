@@ -16,10 +16,13 @@ export const createTeacherAbsenceValidator = vine.compile(
       .optional()
       // .requiredWhen('status', '=', 'Hadir')
       .nullable(),
-    in_photo: vine.file({
-      size: '5mb',
-      extnames: ['jpg', 'png', 'jpeg'],
-    }),
+    in_photo: vine
+      .file({
+        size: '5mb',
+        extnames: ['jpg', 'png', 'jpeg'],
+      })
+      .optional()
+      .requiredWhen('status', '=', 'Hadir'),
     out_photo: vine
       .file({
         size: '5mb',
@@ -47,6 +50,7 @@ export const updateTeacherAbsenceValidator = vine.compile(
         extnames: ['jpg', 'png', 'jpeg'],
       })
       .optional()
+      // .requiredWhen('status', '=', 'Hadir')
       .nullable(),
     out_photo: vine
       .file({

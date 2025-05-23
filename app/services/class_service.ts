@@ -156,7 +156,8 @@ export class ClassService implements ClassContract {
         'schedules.class_id',
         'schedules.module_id',
         'classes.name as class_name',
-        'modules.name as module_name'
+        'modules.name as module_name',
+        'modules.thumbnail'
       )
       .join('modules', 'schedules.module_id', 'modules.id')
       .join('classes', 'schedules.class_id', 'classes.id')
@@ -181,6 +182,7 @@ export class ClassService implements ClassContract {
           className: item.class_name,
           moduleName: item.module_name,
           totalStudents: classData?.$extras.total_students || 0,
+          thumbnail: item.thumbnail,
         }
       })
     )

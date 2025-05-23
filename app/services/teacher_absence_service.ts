@@ -5,6 +5,8 @@ import { DateTime } from 'luxon'
 import TeacherAbsenceContract from '../contracts/teacher_absence_contract.js'
 import db from '@adonisjs/lucid/services/db'
 import app from '@adonisjs/core/services/app'
+import { unlink } from 'node:fs/promises'
+import { join as joinPath } from 'node:path'
 
 export class TeacherAbsenceService implements TeacherAbsenceContract {
   async getAll(params: any): Promise<any> {
@@ -79,8 +81,8 @@ export class TeacherAbsenceService implements TeacherAbsenceContract {
           teacherId: data.teacher_id,
           date: data.date,
           status: data.status,
-          checkInTime: data.check_in,
-          checkOutTime: data.check_out,
+          checkInTime: data.check_in_time,
+          checkOutTime: data.check_out_time,
         },
         { client: trx }
       )
@@ -134,27 +136,97 @@ export class TeacherAbsenceService implements TeacherAbsenceContract {
   }
 
   async update(teacherAbsenceId: number, data: any): Promise<Object> {
+    const trx = await db.transaction()
     const teacherAbsence = await TeacherAbsence.query().where('id', teacherAbsenceId).firstOrFail()
 
-    return await teacherAbsence.merge(data).save()
+    // console.log('dateInput : ', teacherAbsence.date)
+
+    try {
+      console.log('teacherAbsence : ', teacherAbsence)
+      await teacherAbsence
+        .merge({
+          date: data.date ?? teacherAbsence.date,
+          status: data.status,
+          checkInTime: data.check_in_time,
+          checkOutTime: data.check_out_time,
+        })
+        .save()
+
+      const teacher = await Teacher.query().where('id', teacherAbsence.teacherId).firstOrFail()
+      const teacherName = teacher.name.toLowerCase().replace(/\s/g, '-')
+      const dateInput = data.date ?? teacherAbsence.date.toISOString().split('T')[0]
+
+      if (data.in_photo) {
+        const latestPhoto = data.in_photo
+        const fileName = `${teacherName}.${dateInput}.${latestPhoto.extname}`
+
+        await latestPhoto.move(
+          app.makePath(`storage/uploads/teacher-absences/${dateInput}/check-in-photos`),
+          {
+            name: fileName,
+            overwrite: true,
+          }
+        )
+
+        teacherAbsence.inPhoto = `teacher-absences/${dateInput}/check-in-photos/${fileName}`
+      }
+
+      if (data.out_photo) {
+        const latestPhoto = data.out_photo
+        const fileName = `${teacherName}.${dateInput}.${latestPhoto.extname}`
+
+        await latestPhoto.move(
+          app.makePath(`storage/uploads/teacher-absences/${dateInput}/check-out-photos`),
+          {
+            name: fileName,
+            overwrite: true,
+          }
+        )
+
+        teacherAbsence.outPhoto = `teacher-absences/${dateInput}/check-out-photos/${fileName}`
+      }
+
+      await teacherAbsence.save()
+      await trx.commit()
+
+      return teacherAbsence
+    } catch (error) {
+      await trx.rollback()
+      throw error
+    }
   }
 
   async delete(teacherAbsenceId: number): Promise<void> {
     const teacherAbsence = await TeacherAbsence.query().where('id', teacherAbsenceId).firstOrFail()
+    const { inPhoto, outPhoto } = teacherAbsence
+
+    const UPLOADS_PATH = app.makePath('storage/uploads') // D:\...\storage\uploads
+
+    if (inPhoto) {
+      const fullInPhotoPath = joinPath(UPLOADS_PATH, inPhoto)
+      // console.log('Full inPhoto path:', fullInPhotoPath)
+      await unlink(fullInPhotoPath)
+    }
+
+    if (outPhoto) {
+      const fullOutPhotoPath = joinPath(UPLOADS_PATH, outPhoto)
+      // console.log('Full outPhoto path:', fullOutPhotoPath)
+      await unlink(fullOutPhotoPath)
+    }
 
     await teacherAbsence.delete()
   }
 
   async presenceToday(teacherId: number) {
-    const now = new Date()
-    now.setHours(7, 0, 0, 0)
+    const now = DateTime.local().toISODate()
 
-    console.log('presenceToday : ', now)
+    // console.log('presenceToday : ', now)
     const teacherAbsence = await TeacherAbsence.query()
       .where('teacher_id', teacherId)
       .where('date', now)
       .first()
 
+    // console.log('teacherAbsence : ', teacherAbsence)
     return teacherAbsence
   }
 }

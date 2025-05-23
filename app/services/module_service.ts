@@ -1,16 +1,19 @@
-import db from '@adonisjs/lucid/services/db'
 import Module from '#models/module'
 import ModuleContract from '../contracts/module_contract.js'
 import { DateTime } from 'luxon'
 import AcademicYear from '#models/academic_year'
-import { cuid } from '@adonisjs/core/helpers'
 import app from '@adonisjs/core/services/app'
 import normalizeSearch from '../utils/normalize_search.js'
+import { join as joinPath } from 'node:path'
+import { unlink } from 'node:fs/promises'
 
 export default class ModuleService implements ModuleContract {
   async getAll(params: any): Promise<any> {
-    const dataModule = await Module.query()
+    const mapels = Array.isArray(params.namaMapel)
+      ? params.namaMapel.map((m: string) => (m ?? '').toString().trim())
+      : [(params.namaMapel ?? '').toString().trim()]
 
+    const dataModule = await Module.query()
       .if(params.search && normalizeSearch(params.search) !== '', (query) => {
         const search = normalizeSearch(params.search)
         query.where((q) => {
@@ -23,7 +26,7 @@ export default class ModuleService implements ModuleContract {
       })
 
       .if(params.namaMapel, (query) => {
-        query.where('name', params.namaMapel)
+        query.whereIn('name', mapels)
       })
 
       .if(params.tahunAjar, (query) => {
@@ -144,6 +147,16 @@ export default class ModuleService implements ModuleContract {
   async delete(id: number): Promise<any> {
     const modules = await Module.findOrFail(id)
     const name = modules.name
+    const { thumbnail } = modules
+
+    const UPLOADS_PATH = app.makePath('storage/uploads') // D:\...\storage\uploads
+
+    if (thumbnail) {
+      const fullInPhotoPath = joinPath(UPLOADS_PATH, thumbnail)
+      // console.log('Full inPhoto path:', fullInPhotoPath)
+      await unlink(fullInPhotoPath)
+    }
+
     await modules.delete()
 
     return name

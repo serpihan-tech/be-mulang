@@ -144,9 +144,9 @@ export default class StudentsController {
   /**
    * Mengambil jadwal pelajaran berdasarkan studentId.
    */
-  async getSchedule({ params, response }: HttpContext) {
+  async getSchedule({ request, params, response }: HttpContext) {
     try {
-      const schedule = await this.studentsService.getSchedule(params.studentId)
+      const schedule = await this.studentsService.getSchedule(params.studentId, request.all())
       return response.ok({
         message: 'Data Jadwal Berhasil Ditemukan',
         schedule,

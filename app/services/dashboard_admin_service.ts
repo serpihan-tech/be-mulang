@@ -1,13 +1,13 @@
-import { HttpContext } from '@adonisjs/core/http'
-import { DateTime } from 'luxon'
 import db from '@adonisjs/lucid/services/db'
+import { DateTime } from 'luxon'
+import AcademicYear from '#models/academic_year'
 
 export default class AdminDashboardService {
   private academic_yearId: number | undefined
   /**
    *@returns total siswa yang BELUM lulus
    */
-  async getAllStudents({}: HttpContext, _sId?: number) {
+  async getAllStudents(_sId?: number) {
     _sId = this.academic_yearId
 
     const query = db
@@ -27,7 +27,7 @@ export default class AdminDashboardService {
   /**
    * @return total guru
    */
-  async getAllTeachers({}: HttpContext) {
+  async getAllTeachers() {
     const teacherCount = await db
       .from('teachers') //
       .count('* as total')
@@ -38,7 +38,7 @@ export default class AdminDashboardService {
   /**
    * @return total mata pelajaran
    */
-  async getAllModules({}: HttpContext, _sId?: number) {
+  async getAllModules(_sId?: number) {
     _sId = this.academic_yearId
 
     const module = db.from('modules') //
@@ -55,7 +55,7 @@ export default class AdminDashboardService {
   /**
    * @return total alumni / yang SUDAH lulus
    */
-  async getAlumni({}: HttpContext) {
+  async getAlumni() {
     const alumniCount = await db
       .from('students')
       .where('is_graduate', true) // hanya siswa lulus
@@ -78,7 +78,7 @@ export default class AdminDashboardService {
    *               alfa: 5
    *           ]
    */
-  async getAbsenceByWeek({}: HttpContext, _sId?: number) {
+  async getAbsenceByWeek(_sId?: number) {
     _sId = this.academic_yearId
 
     const startOfWeek = DateTime.local().startOf('week')
@@ -136,7 +136,7 @@ export default class AdminDashboardService {
    *
    * @returns semua academic_year
    */
-  async getAllAcademicYears({}: HttpContext) {
+  async getAllAcademicYears() {
     const academicYears = await db.from('academic_years').select('id', 'name')
 
     return academicYears
@@ -147,17 +147,148 @@ export default class AdminDashboardService {
    * @param ctx
    * @returns total siswa, total guru, total mapel, total alumni, dan absensi
    */
-  async dashboardAdmin(ctx: HttpContext, _sId?: number) {
+  async dashboardAdmin(_sId?: number) {
     this.academic_yearId = _sId
     const data = {
-      total_students: await this.getAllStudents(ctx, this.academic_yearId),
-      total_teachers: await this.getAllTeachers(ctx),
-      total_modules: await this.getAllModules(ctx, this.academic_yearId),
-      total_alumni: await this.getAlumni(ctx),
-      absences: await this.getAbsenceByWeek(ctx, this.academic_yearId),
-      academic_years: await this.getAllAcademicYears(ctx),
+      total_students: await this.getAllStudents(this.academic_yearId),
+      total_teachers: await this.getAllTeachers(),
+      total_modules: await this.getAllModules(this.academic_yearId),
+      total_alumni: await this.getAlumni(),
+      absences: await this.getAbsenceByWeek(this.academic_yearId),
+      academic_years: await this.getAllAcademicYears(),
     }
 
     return data
+  }
+
+  async chartAbsencesForAdmins(params?: any) {
+    const now = DateTime.local()
+    // Minggu aktif berakhir di hari Jumat (2) atau Sabtu (1)
+    const lastDayOfWeek = 2 // Jumat
+
+    const activeSemester = await this.getActiveSemester()
+
+    const timePeriod: string = params.periode
+    const academicYearId: number = params.tahunAjar ?? activeSemester?.id
+
+    let result = {}
+
+    if (timePeriod === 'minggu') {
+      // Mingguan (Senin - Minggu)
+      const startOfWeek = now.startOf('week')
+      const endOfWeek = now.endOf('week').minus({ days: lastDayOfWeek })
+
+      result = await this.getAbsencesData(startOfWeek, endOfWeek)
+    } else if (timePeriod === 'bulan') {
+      // Bulanan (Tanggal 1 - akhir bulan)
+      const startOfMonth = now.startOf('month')
+      const endOfMonth = now.endOf('month')
+
+      // console.log('startOfMonth', startOfMonth)
+      result = await this.getAbsencesData(startOfMonth, endOfMonth)
+    } else if (timePeriod === 'semester') {
+      // Semester (dari academic year aktif)
+      const semester = await AcademicYear.query().where('id', academicYearId).firstOrFail()
+
+      const startOfSemester = DateTime.fromJSDate(semester.dateStart)
+      const endOfSemester = DateTime.fromJSDate(semester.dateEnd)
+
+      console.log('startOfSemester', startOfSemester)
+
+      result = await this.getAbsencesData(startOfSemester, endOfSemester)
+    }
+
+    // console.log('params', params)
+    // console.log('now', now)
+    // --- log : ---
+    // now DateTime { ts: 2025-05-16T22:34:39.390+07:00, zone: Asia/Bangkok, locale: en-US }
+
+    return result
+  }
+
+  // for chartAbsencesForAdmins
+  private async getAbsencesData(startDate: DateTime, endDate: DateTime): Promise<Object> {
+    // Format ISO
+    const start = startDate.toISODate()!
+    const end = endDate.toISODate()!
+
+    // console.log('start', start)
+    // console.log('end', end)
+    // --- log : ---
+    // start 2025-05-01
+    // end 2025-05-31
+
+    const siswaAbsences = await db
+      .from('absences')
+      .select('date', 'status')
+      .whereBetween('date', [start, end])
+
+    const guruAbsences = await db
+      .from('teacher_absences')
+      .select('date', 'status')
+      .whereBetween('date', [start, end])
+
+    const siswaHadirMap = new Map<string, number>()
+    const siswaTidakHadirMap = new Map<string, number>()
+    const guruHadirMap = new Map<string, number>()
+    const guruTidakHadirMap = new Map<string, number>()
+
+    for (const absen of siswaAbsences) {
+      const date = DateTime.fromJSDate(absen.date).toISODate()! // Konversi ke ISO string (YYYY-MM-DD)
+      if (absen.status === 'Hadir') {
+        siswaHadirMap.set(date, (siswaHadirMap.get(date) || 0) + 1)
+      } else {
+        siswaTidakHadirMap.set(date, (siswaTidakHadirMap.get(date) || 0) + 1)
+      }
+    }
+
+    for (const absen of guruAbsences) {
+      const date = DateTime.fromJSDate(absen.date).toISODate()!
+      if (absen.status === 'Hadir') {
+        guruHadirMap.set(date, (guruHadirMap.get(date) || 0) + 1)
+      } else {
+        guruTidakHadirMap.set(date, (guruTidakHadirMap.get(date) || 0) + 1)
+      }
+    }
+
+    // Generate semua tanggal
+    const range: string[] = []
+    let cursor = startDate
+    while (cursor <= endDate) {
+      const isoDate = cursor.toISODate()
+      if (isoDate) range.push(isoDate)
+      cursor = cursor.plus({ days: 1 })
+    }
+
+    const siswaHadir = range.map((date) => ({ date, value: siswaHadirMap.get(date) || 0 }))
+    const siswaTidakHadir = range.map((date) => ({
+      date,
+      value: siswaTidakHadirMap.get(date) || 0,
+    }))
+    const guruHadir = range.map((date) => ({ date, value: guruHadirMap.get(date) || 0 }))
+    const guruTidakHadir = range.map((date) => ({ date, value: guruTidakHadirMap.get(date) || 0 }))
+
+    return {
+      siswa: {
+        hadir: siswaHadir,
+        tidakHadir: siswaTidakHadir,
+      },
+      guru: {
+        hadir: guruHadir,
+        tidakHadir: guruTidakHadir,
+      },
+    }
+  }
+
+  private async getActiveSemester() {
+    const now =
+      DateTime.now().setZone('Asia/Jakarta').toSQL() ??
+      new Date().toISOString().slice(0, 19).replace('T', ' ')
+
+    return await AcademicYear.query()
+      .where('status', 1 || true)
+      .where('date_start', '<', now)
+      .where('date_end', '>', now)
+      .first()
   }
 }

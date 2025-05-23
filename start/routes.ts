@@ -37,6 +37,9 @@ import { existsSync } from 'node:fs'
 
 transmit.registerRoutes()
 
+// test API Server
+router.get('/say-hi', () => `Copyright @copy; ${new Date().getFullYear()} - ${process.env.APP_NAME} by CV Serpihan Tech Solutions`)
+
 router.post('/user/create', [UserController, 'create']).as('user.create') // TODO: Tambah Middleware Auth
 router.post('/login', [AuthController, 'login']).as('auth.login')
 
@@ -52,8 +55,8 @@ router.post('/check-role', [AuthController, 'checkRole']).as('auth.check-role')
 // * GET MEDIA / FILE FROM SERVER STORAGE ---------------
 
 router.get('file/*', async ({ params, response }) => {
-  const pathSegments = params['*'] // array: ['teacher-absences', '2025-05-15', 'check-in-photos', 'foto.png']
-  const relativePath = pathSegments.join('/') // gabung jadi string: "teacher-absences/2025-05-15/check-in-photos/foto.png"
+  const pathSegments = params['*'].map((seg: string) => decodeURIComponent(seg))
+  const relativePath = pathSegments.join('/')
 
   const basePath = app.makePath('storage/uploads')
   const safePath = normalize(join(basePath, relativePath))
@@ -71,13 +74,19 @@ router.get('file/*', async ({ params, response }) => {
 
 
 
+
 router.group(() => {
     // Ganti password user
     router.post('change-password', [UserController, 'changePassword'])
 
     router.post('/logout', [AuthController, 'logout']).as('auth.logout')
-    router.get('/dashboard', [DashboardController, 'index'])
-    
+
+    // dashboard
+    router.group(() => {
+        router.get('/', [DashboardController, 'index'])
+        router.get('/chart-absences', [DashboardController, 'chartAbsencesForAdmins']).use(middleware.role(['admin']))    
+    }).prefix('/dashboard')
+
     // Untuk admin
     router.group(() => {
         router.get('/', [AdminsController, 'index']).use(middleware.role(['admin']))
@@ -102,6 +111,7 @@ router.group(() => {
     // Untuk teachers   
     router.group(() => {
         router.get('/id-name', [TeacherController, 'getIdName'])
+        router.get('/classes-n-students', [TeacherController, 'getCountStudentsAndClasses']).use(middleware.role(['teacher']))
         router.get('/', [TeacherController, 'index'])
         router.post('/', [TeacherController, 'store']).use(middleware.role(['admin']))
         router.get('/:id', [TeacherController, 'show'])
@@ -175,8 +185,8 @@ router.group(() => {
         router.get('/', [AnnouncementByTeachers, 'index'])
         router.get('/:id', [AnnouncementByTeachers, 'show'])
         router.post('/', [AnnouncementByTeachers, 'store']).use(middleware.role(['teacher']))
-        router.patch('/:id', [AnnouncementByTeachers, 'update']).use(middleware.role(['teacher']))
-        router.delete('/:id', [AnnouncementByTeachers, 'destroy']).use(middleware.role(['teacher']))
+        router.patch('/:id', [AnnouncementByTeachers, 'update']).use(middleware.role(['teacher', 'admin']))
+        router.delete('/:id', [AnnouncementByTeachers, 'destroy']).use(middleware.role(['teacher', 'admin']))
     }).prefix('/announcements/teachers')
 
     // Announcements By Teachers
