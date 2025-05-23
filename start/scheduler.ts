@@ -12,6 +12,7 @@ import AnnouncementSchedules from '../app/schedules/announcement_schedules.js'
 scheduler
   .call(async () => {
     try {
+      console.log(`Running Schedules at ${new Date().toLocaleString()} ....`)
       await AnnouncementSchedules.postAnnouncementByAdmin()
       await AnnouncementSchedules.postAnnouncementByTeacher()
     } catch (error) {
