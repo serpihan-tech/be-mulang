@@ -3,7 +3,7 @@ export default interface SchoolCalendarContract {
    * Mengambil semua Data, sepertinya tidak perlu filter,
    * karena hanya akan digunakan di kalender
    */
-  getAll(): Promise<any>
+  getAll(params: any): Promise<any>
 
   getOne(id: number): Promise<Object>
 
