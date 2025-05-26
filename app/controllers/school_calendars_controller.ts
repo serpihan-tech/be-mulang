@@ -10,7 +10,9 @@ export default class SchoolCalendarsController {
 
   async index({ request, response }: HttpContext) {
     try {
-      const schoolCalendars = await this.schoolCalendarService.getAll()
+      const data = request.all()
+
+      const schoolCalendars = await this.schoolCalendarService.getAll(data)
       return response.ok({ message: 'Kalender Sekolah Berhasil Ditemukan', schoolCalendars })
     } catch (error) {
       return response.badRequest({ error: { message: error.message } })
