@@ -19,10 +19,16 @@ export default class AnnouncementByTeachersController {
       // console.log('index, announcement teacher : role = ', role.role)
 
       let teacher
+      let student
       let data = request.all()
       if (role.role === 'teacher') {
         teacher = await user.related('teacher').query().firstOrFail()
         data = { ...data, teacher_id: teacher.id }
+      }
+
+      if (role.role === 'student') {
+        student = await user.related('student').query().firstOrFail()
+        data = { ...data, student_id: student.id }
       }
 
       const announcements = await this.announcementService.getAll(data, role.role)

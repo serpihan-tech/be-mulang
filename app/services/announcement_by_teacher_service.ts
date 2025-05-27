@@ -33,17 +33,22 @@ export class AnnouncementByTeacherService implements AnnouncementByTeacherContra
 
   async getAll(params: any, role?: string): Promise<any> {
     const activeSemester = await this.getActiveSemester()
+    console.log('activeSemester : ', activeSemester)
+    console.log('params : ', params, 'role : ', role)
     let cs: any
     if (role === 'student') {
+      console.log('params.student_id : ', params.student_id)
       cs = await ClassStudent.query()
         .where('student_id', params.student_id)
         .where('academic_year_id', activeSemester.id)
         .first()
     }
 
+    console.log('class student : ', cs)
+
     const query = AnnouncementByTeacher.query()
       .if(role === 'teacher', (q) => q.where('teacher_id', params.teacher_id))
-      .if(role === 'student' && cs, (q) => q.where('class_id', cs.class_id))
+      .if(role === 'student' && cs, (q) => q.where('class_id', cs.classId))
       .preload('teacher', (teacher) => teacher.select('id', 'name', 'profilePicture'))
       .preload('class', (cl) => cl.preload('teacher', (tc) => tc.select('id', 'name')))
       .preload('module', (m) => m.select('id', 'name'))
@@ -122,7 +127,9 @@ export class AnnouncementByTeacherService implements AnnouncementByTeacherContra
         updatedAt: item.updatedAt.toString(),
       }))
     } else {
-      const announcement = await query.paginate(params.page || 1, params.limit || 10)
+      const announcement = await query
+        .orderBy('created_at', 'desc')
+        .paginate(params.page || 1, params.limit || 10)
       return announcement
     }
   }

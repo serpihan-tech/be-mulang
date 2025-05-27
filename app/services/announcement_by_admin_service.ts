@@ -65,7 +65,9 @@ export class AnnouncementByAdminService
         db.raw('NULL as class_id'),
         db.raw('NULL as module_id'),
         db.raw(`'Admin' as madeBy`),
-        db.raw('NULL as teacher_name')
+        db.raw('NULL as teacher_name'),
+        'announcement_by_admins.created_at',
+        'announcement_by_admins.updated_at'
       )
       .unionAll([
         db
@@ -82,12 +84,14 @@ export class AnnouncementByAdminService
             'announcement_by_teachers.class_id',
             'announcement_by_teachers.module_id',
             db.raw(`'Teacher' as madeBy`),
-            'teachers.name as teacher_name'
+            'teachers.name as teacher_name',
+            'announcement_by_teachers.created_at',
+            'announcement_by_teachers.updated_at'
           ),
       ])
       .as('subQuery')
 
-    let query = db.from(subQuery).select('*')
+    let query = db.from(subQuery).where('date', '<=', this.now).select('*')
 
     // Filtering
     if (search) {
@@ -130,6 +134,7 @@ export class AnnouncementByAdminService
         break
     }
 
+    query.orderBy('created_at', 'desc')
     return await query.paginate(page, limit)
   }
 
@@ -183,7 +188,7 @@ export class AnnouncementByAdminService
     }
 
     // Default paginate
-    const announcement = await query.paginate(page, perPage)
+    const announcement = await query.orderBy('created_at', 'desc').paginate(page, perPage)
 
     return announcement
   }

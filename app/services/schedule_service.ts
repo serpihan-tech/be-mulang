@@ -125,18 +125,19 @@ export class ScheduleService implements ScheduleContract {
     return await schedule.delete()
   }
 
-  async TeachersSchedule(teacherId: number): Promise<any[]> {
+  async TeachersSchedule(teacherId: number, params?: any): Promise<any[]> {
     const activeAcademicYear = await this.activeSemester()
+    const activeAcademicYearId = params.tahunAjar ?? activeAcademicYear.id
     const classes = await Schedule.query()
       .select('id', 'days', 'class_id', 'module_id', 'room_id', 'start_time', 'end_time')
       .whereHas('module', (query) => {
         query.where('teacher_id', teacherId).andWhereHas('academicYear', (ay) => {
-          ay.where('status', 1).andWhere('id', activeAcademicYear.id)
+          ay.where('status', 1).andWhere('id', activeAcademicYearId)
         })
       })
       .preload('class', (c) => {
         c.withCount('classStudent', (cs) =>
-          cs.as('total_students').where('academic_year_id', activeAcademicYear.id)
+          cs.as('total_students').where('academic_year_id', activeAcademicYearId)
         )
       })
       .preload('module', (m) => {
