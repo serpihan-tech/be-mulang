@@ -389,7 +389,7 @@ export default class StudentsService implements StudentContract, UserContract {
 
     const activeAcademicYear = await this.getActiveSemester()
     const activeSemesterId = params.tahunAjar ? params.tahunAjar : activeAcademicYear.id
-
+    console.log('activeSemesterId', activeSemesterId)
     const classStudent = await ClassStudent.query()
       .where('student_id', studentId)
       .select('class_id', 'academic_year_id')
@@ -400,7 +400,7 @@ export default class StudentsService implements StudentContract, UserContract {
       .preload('class')
       .first()
 
-    if (!classStudent) throw new Error('Kelas siswa tidak ditemukan')
+    if (!classStudent) return []
 
     return await Schedule.query()
       .where('class_id', classStudent.classId)
@@ -415,7 +415,7 @@ export default class StudentsService implements StudentContract, UserContract {
    * Mengambil data presensi siswa berdasarkan student_id.
    * Presensi yang diambil hanya dari tahun ajar yang aktif.
    */
-  async getPresence(studentId: number) {
+  async getPresence(studentId: number, params?: any) {
     const student = await Student.query().where('id', studentId).firstOrFail()
 
     const activeAcademicYear = await this.getActiveSemester()
