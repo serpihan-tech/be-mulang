@@ -159,9 +159,9 @@ export default class StudentsController {
   /**
    * Mengambil data presensi siswa berdasarkan student_id.
    */
-  async getPresence({ params, response }: HttpContext) {
+  async getPresence({ params, request, response }: HttpContext) {
     try {
-      const presenceData = await this.studentsService.getPresence(params.studentId)
+      const presenceData = await this.studentsService.getPresence(params.studentId, request.all())
       return response.ok({
         message: 'Data Presensi Berhasil Ditemukan',
         presenceData,

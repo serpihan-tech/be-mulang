@@ -8,6 +8,7 @@ import hash from '@adonisjs/core/services/hash'
 import { randomBytes } from 'node:crypto'
 import { passwordValidator } from '#validators/user'
 import limiter from '@adonisjs/limiter/services/main'
+import Admin from '#models/admin'
 
 export default class ResetPasswordController {
   async sendOtp({ request, response }: HttpContext) {
@@ -22,11 +23,27 @@ export default class ResetPasswordController {
     })
 
     let user
+    let admin
 
     const executed = await sendOtpLimiter.attempt(key, async () => {
       // Find User by Email
-      user = await User.findBy('email', email)
-    
+      user = await User.query().where('email', email).firstOrFail()
+
+      const roleUser = await User.getRole(user)
+  
+      if ( roleUser.role === 'teacher' ) {
+        await user.load('teacher')
+      } else if ( roleUser.role === 'student' ) {
+        await user.load('student')
+      } else if ( roleUser.role === 'admin' ) {
+        await user.load('admin')
+      }
+
+      const availableIn = await sendOtpLimiter.availableIn(key)
+      const exp = `${Math.ceil(availableIn / 60)} menit`
+
+      admin = await Admin.query().where('id', 1).preload('user').firstOrFail()
+
       if (!user) {
         return response.badRequest({ error: { message: 'Email Tidak Ditemukan' } })
       }
@@ -40,7 +57,7 @@ export default class ResetPasswordController {
       await user.save()
     
       // Send Email (Async)
-      mail.send(new ResetPasswordENotification(user, otp)).catch(console.error)
+      mail.send(new ResetPasswordENotification(user, otp, admin, exp)).catch(console.error)
 
       return true
     })

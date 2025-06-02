@@ -169,7 +169,13 @@ export default class AdminDashboardService {
     const activeSemester = await this.getActiveSemester()
 
     const timePeriod: string = params.periode
-    const academicYearId: number = params.tahunAjar ?? activeSemester?.id
+    let tahunAjar: number | undefined
+
+    if (timePeriod === 'semester' && params.tahunAjar) {
+      tahunAjar = params.tahunAjar
+    }
+
+    const academicYearId: number | undefined = tahunAjar ?? activeSemester?.id
 
     let result = {}
 
@@ -188,7 +194,7 @@ export default class AdminDashboardService {
       result = await this.getAbsencesData(startOfMonth, endOfMonth)
     } else if (timePeriod === 'semester') {
       // Semester (dari academic year aktif)
-      const semester = await AcademicYear.query().where('id', academicYearId).firstOrFail()
+      const semester = await AcademicYear.query().where('id', Number(academicYearId)).firstOrFail()
 
       const startOfSemester = DateTime.fromJSDate(semester.dateStart)
       const endOfSemester = DateTime.fromJSDate(semester.dateEnd)
