@@ -19,7 +19,7 @@ const mailConfig = defineConfig({
         user: env.get('SMTP_USERNAME', ''), // Pastikan selalu string
         pass: env.get('SMTP_PASSWORD', ''), // Pastikan selalu string
       },
-      secure: false,
+      secure: true,
     }),
   },
 })
