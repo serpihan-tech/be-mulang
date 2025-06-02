@@ -387,13 +387,14 @@ export default class StudentsService implements StudentContract, UserContract {
   async getSchedule(studentId: number, params?: any): Promise<any[]> {
     if (!studentId) throw new Error('ID siswa tidak ditemukan')
 
-    const activeSemester = params.tahunAjar ? params.tahunAjar : await this.getActiveSemester()
+    const activeAcademicYear = await this.getActiveSemester()
+    const activeSemesterId = params.tahunAjar ? params.tahunAjar : activeAcademicYear.id
 
     const classStudent = await ClassStudent.query()
       .where('student_id', studentId)
       .select('class_id', 'academic_year_id')
       .whereHas('academicYear', (ay) => {
-        ay.where('id', activeSemester.id)
+        ay.where('id', activeSemesterId)
       })
       .preload('academicYear')
       .preload('class')

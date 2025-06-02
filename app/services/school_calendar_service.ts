@@ -6,7 +6,7 @@ export class SchoolCalendarService implements SchoolCalendarContract {
     const sortBy = params.sortBy
     const sortOrder = params.sortOrder
 
-    const sc = await SchoolCalendar.query()
+    const sc = SchoolCalendar.query()
       .if(params.search, (query) =>
         query
           .where('description', 'like', `%${params.search}%`)
@@ -17,9 +17,13 @@ export class SchoolCalendarService implements SchoolCalendarContract {
       .if(sortBy === 'tanggalMulai', (qs) => qs.orderBy('date_start', sortOrder || 'asc'))
       .if(sortBy === 'tanggalSelesai', (qs) => qs.orderBy('date_end', sortOrder || 'asc'))
 
-      .paginate(Number(params.page) || 1, Number(params.limit) || 10)
+    if (params.noPaginate) {
+      return await sc
+    } else {
+      await sc.paginate(Number(params.page) || 1, Number(params.limit) || 10)
 
-    return sc
+      return sc
+    }
   }
   async getOne(id: number): Promise<Object> {
     const sc = await SchoolCalendar.query().where('id', id).firstOrFail()
