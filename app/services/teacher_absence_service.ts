@@ -15,47 +15,59 @@ export class TeacherAbsenceService implements TeacherAbsenceContract {
 
     const tanggal = DateTime.fromISO(params.tanggal).toISODate() ?? now
     console.log('tanggal guru absensi : ', tanggal)
-    const teacherAbsence = await Teacher.query()
 
+    const teacherAbsence = await Teacher.query()
       .leftJoin('teacher_absences', (join) => {
         join.on('teacher_absences.teacher_id', '=', 'teachers.id')
         join.andOnVal('teacher_absences.date', '=', tanggal)
       })
 
+      // 🔍 FILTER: search by name/NIP
       .if(params.search, (query) =>
         query
           .where('teachers.name', 'like', `%${params.search}%`)
           .orWhere('teachers.nip', 'like', `%${params.search}%`)
       )
 
+      // 🔍 FILTER: specific NIP
       .if(params.nip && params.nip !== '', (query) =>
         query.where('teachers.nip', 'like', `%${params.nip}%`)
       )
 
+      // SELECT: teacher + check_in_time sebagai kolom agregat
+      .select('teachers.*')
+      .select(db.raw('MAX(teacher_absences.check_in_time) as check_in_time')) // untuk sorting jamMasuk
+      .select(db.raw('MAX(teacher_absences.check_out_time) as check_out_time')) // opsional jika ingin sorting jamPulang
+      .select(db.raw('MAX(teacher_absences.status) as status')) // opsional jika ingin sorting status
+
+      // GROUP BY: agar sesuai ONLY_FULL_GROUP_BY
+      .groupBy('teachers.id')
+
+      // 🧭 SORTING
       .if(params.sortBy === 'nama', (query) =>
         query.orderBy('teachers.name', params.sortOrder || 'asc')
       )
       .if(params.sortBy === 'nip', (query) =>
         query.orderBy('teachers.nip', params.sortOrder || 'asc')
       )
-
-      .if(params.sortBy === 'status', (query) =>
-        query.orderBy('teacher_absences.status', params.sortOrder || 'asc')
-      )
+      .if(params.sortBy === 'status', (query) => query.orderBy('status', params.sortOrder || 'asc'))
       .if(params.sortBy === 'jamMasuk', (query) =>
-        query.orderBy('teacher_absences.check_in_time', params.sortOrder || 'asc')
+        query.orderBy('check_in_time', params.sortOrder || 'asc')
       )
       .if(params.sortBy === 'jamPulang', (query) =>
-        query.orderBy('teacher_absences.check_out_time', params.sortOrder || 'asc')
+        query.orderBy('check_out_time', params.sortOrder || 'asc')
       )
 
-      .select('teachers.*')
-      .groupBy('teachers.id')
+      // 📦 RELASI preload user dan latestAbsence
       .preload('user', (u) => u.select('email'))
       .preload('latestAbsence', (ab) => {
-        ab.where('date', tanggal).if(params.status, (query) => query.where('status', params.status))
+        ab.where('date', tanggal)
+        if (params.status) {
+          ab.where('status', params.status)
+        }
       })
 
+      // PAGINATION
       .paginate(params.page || 1, params.limit || 10)
 
     // console.log(await TeacherAbsence.query().where('id', 12).firstOrFail())
