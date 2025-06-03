@@ -3,6 +3,7 @@ import { inject } from '@adonisjs/core'
 import TeacherService from '#services/teacher_service'
 import { createUserValidator, updateUserValidator } from '#validators/user'
 import { createTeacherValidator, updateTeacherValidator } from '#validators/teacher'
+import User from '#models/user'
 
 @inject()
 export default class TeachersController {
@@ -115,6 +116,30 @@ export default class TeachersController {
 
       const data = await this.teacherService.getCountStudentsAndClasses(user.teacher.id, params)
       return response.ok({ message: 'Data untuk Guru Berhasil Didapatkan', data })
+    } catch (error) {
+      return response.badRequest({ error: { message: error.message } })
+    }
+  }
+
+  async exportExcel({ auth, request, response }: HttpContext) {
+    try {
+      const user = auth.getUserOrFail()
+      await user.load('admin')
+
+      const userRole = await User.getRole(user)
+      if (userRole.role !== 'admin') {
+        return response.forbidden({ error: { message: 'Anda Tidak Memiliki Akses Untuk Hal Ini' } })
+      }
+
+      const data = await this.teacherService.downloadExcel(request.all(), user)
+
+      response.header(
+        'Content-Type',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      )
+      response.header('Content-Disposition', 'attachment; filename="teachers.xlsx"')
+
+      return response.send(data)
     } catch (error) {
       return response.badRequest({ error: { message: error.message } })
     }

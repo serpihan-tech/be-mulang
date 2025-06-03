@@ -10,6 +10,7 @@ import AcademicYear from '#models/academic_year'
 import { DateTime } from 'luxon'
 import { unlink } from 'node:fs/promises'
 import { join as joinPath } from 'node:path'
+import exceljs from 'exceljs'
 
 export default class TeacherService implements UserContract {
   async index(params: any, page?: number, limit?: number): Promise<any> {
@@ -182,6 +183,152 @@ export default class TeacherService implements UserContract {
       totalClasses,
       totalStudents: Number(studentsCount[0].$extras.total_students),
     }
+  }
+
+  async downloadExcel(params?: any, user?: User): Promise<Buffer> {
+    const teachersPaginated = await this.index(params)
+    const teachers: Teacher[] = teachersPaginated.all()
+
+    // console.log('teacher : ', teachers)
+
+    const workbook = new exceljs.Workbook()
+
+    workbook.creator = 'Serpihan Mulang'
+    workbook.lastModifiedBy = `${user?.email}` || 'Serpihan Mulang'
+    workbook.created = DateTime.now().setZone('Asia/Jakarta').toJSDate()
+    workbook.modified = DateTime.now().setZone('Asia/Jakarta').toJSDate()
+    workbook.lastPrinted = DateTime.now().setZone('Asia/Jakarta').toJSDate()
+    workbook.properties.date1904 = true
+
+    workbook.views = [
+      {
+        x: 0,
+        y: 0,
+        width: 10000,
+        height: 20000,
+        firstSheet: 0,
+        activeTab: 1,
+        visibility: 'visible',
+      },
+    ]
+
+    const worksheet = workbook.addWorksheet(`data_guru_${DateTime.now().setZone('Asia/Jakarta')}`)
+    worksheet.columns = [
+      { header: 'ID', key: 'id', width: 5 },
+      { header: 'Nama', key: 'name', width: 20 },
+      { header: 'NIP', key: 'nip', width: 20 },
+      { header: 'No Telp', key: 'phone', width: 20 },
+      { header: 'Alamat', key: 'address', width: 30 },
+      { header: 'Agama', key: 'religion', width: 15 },
+      { header: 'Jenis Kelamin', key: 'gender', width: 10 },
+      { header: 'Tanggal Lahir', key: 'birth_date', width: 15 },
+      { header: 'Tempat Lahir', key: 'birth_place', width: 20 },
+      { header: 'Email', key: 'email', width: 30 },
+    ]
+
+    teachers.map((teacher, index) => {
+      worksheet.addRow({
+        id: index + 1,
+        name: teacher.name,
+        nip: teacher.nip,
+        phone: teacher.phone || '-',
+        address: teacher.address || '-',
+        religion: teacher.religion || '-',
+        gender: teacher.gender || '-',
+        birth_date: teacher.birthDate || '-',
+        birth_place: teacher.birthPlace || '-',
+        email: teacher.user.email || '-',
+      })
+    })
+
+    const idCol = worksheet.getColumn('id')
+    idCol.alignment = { horizontal: 'center', vertical: 'middle' }
+
+    const nameCol = worksheet.getColumn('name')
+    nameCol.alignment = { wrapText: true, vertical: 'middle' }
+    nameCol.width = 25.55
+
+    const phoneCol = worksheet.getColumn('phone')
+    phoneCol.alignment = { wrapText: true, horizontal: 'center', vertical: 'middle' }
+
+    const nipCol = worksheet.getColumn('nip')
+    nipCol.alignment = { wrapText: true, horizontal: 'center', vertical: 'middle' }
+    nipCol.width = 22
+
+    const addressCol = worksheet.getColumn('address')
+    addressCol.alignment = { wrapText: true }
+
+    const religionCol = worksheet.getColumn('religion')
+    religionCol.alignment = { horizontal: 'center', vertical: 'middle' }
+
+    const genderCol = worksheet.getColumn('gender')
+    genderCol.alignment = { horizontal: 'center', vertical: 'middle' }
+    genderCol.width = 17
+
+    const birthdateCol = worksheet.getColumn('birth_date')
+    birthdateCol.width = 24
+    birthdateCol.alignment = { horizontal: 'center', vertical: 'middle' }
+
+    const birthplaceCol = worksheet.getColumn('birth_place')
+    birthplaceCol.width = 20
+    birthplaceCol.alignment = { horizontal: 'center', vertical: 'middle' }
+
+    const emailCol = worksheet.getColumn('email')
+    emailCol.alignment = { wrapText: true, horizontal: 'center', vertical: 'middle' }
+    emailCol.width = 32
+
+    worksheet.addConditionalFormatting({
+      ref: 'A1:J1',
+      rules: [
+        {
+          type: 'expression',
+          priority: 1,
+          formulae: ['TRUE'],
+          style: {
+            fill: {
+              type: 'pattern',
+              pattern: 'solid',
+              fgColor: { argb: '0841E2' },
+              bgColor: { argb: '0841E2' },
+            },
+            font: {
+              name: 'Segoe UI Semibold',
+              size: 12,
+              bold: true,
+              color: { argb: 'FFFFFFFF' },
+            },
+            alignment: {
+              horizontal: 'center',
+            },
+          },
+        },
+      ],
+    })
+
+    worksheet.addConditionalFormatting({
+      ref: `A1:J${teachers.length + 1}`, // +1 karena ada header di baris 1
+      rules: [
+        {
+          type: 'expression',
+          priority: 1,
+          formulae: ['TRUE'], // ekspresi valid Excel yang selalu TRUE
+          style: {
+            border: {
+              top: { style: 'thin', color: { argb: '000000' } },
+              left: { style: 'thin', color: { argb: '000000' } },
+              bottom: { style: 'thin', color: { argb: '000000' } },
+              right: { style: 'thin', color: { argb: '000000' } },
+            },
+          },
+        },
+      ],
+    })
+
+    // Return buffer Excel (controller akan pakai ini)
+    const arrayBuffer = await workbook.xlsx.writeBuffer()
+    const buffer = Buffer.from(arrayBuffer)
+
+    return buffer
   }
 
   private async getActiveSemester() {

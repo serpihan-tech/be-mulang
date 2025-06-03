@@ -110,6 +110,7 @@ router.group(() => {
 
     // Untuk teachers   
     router.group(() => {
+        router.get('/export-excel', [TeacherController, 'exportExcel']).use(middleware.role(['admin']))
         router.get('/id-name', [TeacherController, 'getIdName'])
         router.get('/classes-n-students', [TeacherController, 'getCountStudentsAndClasses']).use(middleware.role(['teacher']))
         router.get('/', [TeacherController, 'index'])
