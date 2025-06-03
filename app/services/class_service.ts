@@ -24,7 +24,7 @@ export class ClassService implements ClassContract {
 
     const sortBy = params.sortBy
     const sortOrder = params.sortOrder
-    const semesterId = params.tahunAjar ? params.tahunAjar : activeSemester.id
+    const semesterId = params.tahunAjar ? Number(params.tahunAjar) : activeSemester.id
     console.log(params.tahunAjar)
     const theClass = await Class.query()
       .select('classes.id', 'classes.name', 'classes.teacher_id')

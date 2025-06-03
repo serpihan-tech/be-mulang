@@ -35,11 +35,10 @@ export default class StudentsService implements StudentContract, UserContract {
 
     const sortBy = params.sortBy
     const sortOrder = params.sortOrder
-    // console.log(params)
-    // console.log(Number(params.limit))
 
     const activeAcademicYear = await this.getActiveSemester()
-    console.log(activeAcademicYear.id, activeAcademicYear.name)
+    const activeAcademicYearId = params.tahunAjar ? Number(params.tahunAjar) : activeAcademicYear.id
+    console.log('activeAcademicYearId : ', activeAcademicYearId)
 
     const kelas = Array.isArray(params.kelas)
       ? params.kelas.map((k: string) => (k ?? '').toString().trim())
@@ -51,7 +50,7 @@ export default class StudentsService implements StudentContract, UserContract {
       .where('is_graduate', params.status || 0)
       .whereHas('classStudent', (cs) => {
         cs.whereHas('academicYear', (ay) => {
-          ay.where('status', 1).where('id', activeAcademicYear.id)
+          ay.where('id', activeAcademicYearId)
         })
 
         cs.preload('class')
@@ -85,14 +84,14 @@ export default class StudentsService implements StudentContract, UserContract {
       .if(sortBy === 'kelas', (query) => {
         query
           .whereHas('classStudent', (cs) => {
-            cs.where('academic_year_id', activeAcademicYear.id)
+            cs.where('academic_year_id', activeAcademicYearId)
           })
           .orderBy(
             db
               .from('class_students')
               .join('classes', 'class_students.class_id', 'classes.id')
               .whereRaw('class_students.student_id = students.id')
-              .where('class_students.academic_year_id', activeAcademicYear.id)
+              .where('class_students.academic_year_id', activeAcademicYearId)
               .select('classes.name')
               .limit(1),
             sortOrder || 'asc'
@@ -129,14 +128,14 @@ export default class StudentsService implements StudentContract, UserContract {
       .if(sortBy === 'tahunAjar', (query) => {
         query
           .whereHas('classStudent', (cs) => {
-            cs.where('academic_year_id', activeAcademicYear.id)
+            cs.where('academic_year_id', activeAcademicYearId)
           })
           .orderBy(
             db
               .from('class_students')
               .join('academic_years', 'class_students.academic_year_id', 'academic_years.id')
               .whereRaw('class_students.student_id = students.id')
-              .where('class_students.academic_year_id', activeAcademicYear.id)
+              .where('class_students.academic_year_id', activeAcademicYearId)
               .select('academic_years.name')
               .limit(1),
             sortOrder || 'asc'
@@ -151,7 +150,7 @@ export default class StudentsService implements StudentContract, UserContract {
       .if(params.tahunAjar, (query) => {
         query.whereHas('classStudent', (cs) => {
           cs.whereHas('academicYear', (ay) => {
-            ay.where('name', params.tahunAjar).where('id', activeAcademicYear.id)
+            ay.where('id', activeAcademicYearId)
           })
         })
       }) // TAHUN AJAR BY NAMANYA
@@ -159,7 +158,7 @@ export default class StudentsService implements StudentContract, UserContract {
       .preload('studentDetail')
       .preload('classStudent', (cs) => {
         cs.whereHas('academicYear', (ay) => {
-          ay.where('id', activeAcademicYear.id)
+          ay.where('id', activeAcademicYearId)
         })
         cs.preload('academicYear')
         cs.preload('class')
