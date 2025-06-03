@@ -20,9 +20,7 @@ export class SchoolCalendarService implements SchoolCalendarContract {
     if (params.noPaginate) {
       return await sc
     } else {
-      await sc.paginate(Number(params.page) || 1, Number(params.limit) || 10)
-
-      return sc
+      return await sc.paginate(Number(params.page) || 1, Number(params.limit) || 10)
     }
   }
   async getOne(id: number): Promise<Object> {
