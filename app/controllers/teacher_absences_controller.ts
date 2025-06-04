@@ -6,6 +6,7 @@ import {
   updateTeacherAbsenceValidator,
 } from '#validators/teacher_absence'
 import User from '#models/user'
+import { DateTime } from 'luxon'
 
 @inject()
 export default class TeacherAbsencesController {
@@ -122,6 +123,34 @@ export default class TeacherAbsencesController {
       return response.ok({ message: 'Sukses Mendapatkan Data Absensi', teacherAbsence })
     } catch (error) {
       return response.internalServerError({ error: { message: error.message } })
+    }
+  }
+
+  async exportExcel({ auth, request, response }: HttpContext) {
+    try {
+      const user = auth.getUserOrFail()
+      await user.load('admin')
+
+      const userRole = await User.getRole(user)
+      if (userRole.role !== 'admin') {
+        return response.forbidden({ error: { message: 'Anda Tidak Memiliki Akses Untuk Hal Ini' } })
+      }
+
+      const data = await this.teacherAbsenceService.downloadExcel(request.all(), user)
+      const now = DateTime.now().setZone('Asia/Jakarta').toFormat('yyyyMMdd_HHmmss')
+
+      response.header(
+        'Content-Type',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      )
+      response.header(
+        'Content-Disposition',
+        'attachment; filename="data_presensi_guru_' + now + '.xlsx"'
+      )
+
+      return response.send(data)
+    } catch (error) {
+      return response.badRequest({ error: { message: error.message } })
     }
   }
 }

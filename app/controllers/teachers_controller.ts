@@ -4,6 +4,7 @@ import TeacherService from '#services/teacher_service'
 import { createUserValidator, updateUserValidator } from '#validators/user'
 import { createTeacherValidator, updateTeacherValidator } from '#validators/teacher'
 import User from '#models/user'
+import { DateTime } from 'luxon'
 
 @inject()
 export default class TeachersController {
@@ -132,12 +133,13 @@ export default class TeachersController {
       }
 
       const data = await this.teacherService.downloadExcel(request.all(), user)
+      const now = DateTime.now().setZone('Asia/Jakarta').toFormat('yyyyMMdd_HHmmss')
 
       response.header(
         'Content-Type',
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
       )
-      response.header('Content-Disposition', 'attachment; filename="teachers.xlsx"')
+      response.header('Content-Disposition', 'attachment; filename="data_guru_' + now + '.xlsx"')
 
       return response.send(data)
     } catch (error) {

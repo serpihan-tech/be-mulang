@@ -212,7 +212,10 @@ export default class TeacherService implements UserContract {
       },
     ]
 
-    const worksheet = workbook.addWorksheet(`data_guru_${DateTime.now().setZone('Asia/Jakarta')}`)
+    const now = DateTime.now().setZone('Asia/Jakarta').toFormat('yyyyMMdd_HHmmss')
+    const worksheet = workbook.addWorksheet(`data_guru_${now}`)
+    worksheet.properties.defaultRowHeight = 21
+
     worksheet.columns = [
       { header: 'ID', key: 'id', width: 5 },
       { header: 'Nama', key: 'name', width: 20 },
@@ -228,7 +231,7 @@ export default class TeacherService implements UserContract {
 
     teachers.map((teacher, index) => {
       worksheet.addRow({
-        id: index + 1,
+        id: teacher.id,
         name: teacher.name,
         nip: teacher.nip,
         phone: teacher.phone || '-',
