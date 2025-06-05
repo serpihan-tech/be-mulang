@@ -214,7 +214,7 @@ export default class TeacherService implements UserContract {
 
     const now = DateTime.now().setZone('Asia/Jakarta').toFormat('yyyyMMdd_HHmmss')
     const worksheet = workbook.addWorksheet(`data_guru_${now}`)
-    worksheet.properties.defaultRowHeight = 21
+    worksheet.properties.defaultRowHeight = 39
 
     worksheet.columns = [
       { header: 'ID', key: 'id', width: 5 },

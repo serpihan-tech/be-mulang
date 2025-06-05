@@ -250,7 +250,7 @@ export class TeacherAbsenceService implements TeacherAbsenceContract {
     const teacherAbsences = teacherAbsencesPaginated.all()
 
     const workbook = new exceljs.Workbook()
-    console.log('teacherAbsences : ', teacherAbsences)
+    // console.log('teacherAbsences : ', teacherAbsences)
 
     workbook.creator = 'Serpihan Mulang'
     workbook.lastModifiedBy = `${user?.email}` || 'Serpihan Mulang'
@@ -295,7 +295,7 @@ export class TeacherAbsenceService implements TeacherAbsenceContract {
         style: { font: { bold: true }, alignment: { horizontal: 'center', vertical: 'middle' } },
       },
     ]
-    worksheet.properties.defaultRowHeight = 21.75
+    worksheet.properties.defaultRowHeight = 39
 
     teacherAbsences.forEach((teacherAbsence: any, index: number) => {
       const rowIndex = index + 2
