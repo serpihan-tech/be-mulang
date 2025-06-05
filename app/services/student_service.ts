@@ -14,6 +14,7 @@ import app from '@adonisjs/core/services/app'
 import { DateTime } from 'luxon'
 import { unlink } from 'node:fs/promises'
 import { join as joinPath } from 'node:path'
+import exceljs from 'exceljs'
 
 export default class StudentsService implements StudentContract, UserContract {
   private async getActiveSemester() {
@@ -486,5 +487,125 @@ export default class StudentsService implements StudentContract, UserContract {
     } catch (error) {
       throw error
     }
+  }
+
+  async downloadExcel(params?: any, user?: User): Promise<Buffer> {
+    const studentsPaginated = await this.index(params.page, params)
+    const students = studentsPaginated.all()
+
+    const workbook = new exceljs.Workbook()
+    console.log('students : ', students)
+
+    workbook.creator = 'Serpihan Mulang'
+    workbook.lastModifiedBy = `${user?.email}` || 'Serpihan Mulang'
+    workbook.created = DateTime.now().setZone('Asia/Jakarta').toJSDate()
+    workbook.modified = DateTime.now().setZone('Asia/Jakarta').toJSDate()
+    workbook.lastPrinted = DateTime.now().setZone('Asia/Jakarta').toJSDate()
+    workbook.properties.date1904 = true
+
+    workbook.views = [
+      {
+        x: 0,
+        y: 0,
+        width: 10000,
+        height: 20000,
+        firstSheet: 0,
+        activeTab: 1,
+        visibility: 'visible',
+      },
+    ]
+
+    const now = DateTime.now().setZone('Asia/Jakarta').toFormat('yyyyMMdd_HHmmss')
+    const worksheet = workbook.addWorksheet(`data_siswa_${now}`)
+
+    worksheet.columns = [
+      { header: 'ID Siswa', key: 'student_id', width: 9.8, style: { font: { bold: true } } },
+      { header: 'NIS', key: 'nis', width: 24, style: { font: { bold: true } } },
+      { header: 'NISN', key: 'nisn', width: 24, style: { font: { bold: true } } },
+      { header: 'Nama Lengkap', key: 'name', width: 35, style: { font: { bold: true } } },
+      { header: 'Email', key: 'email', width: 35, style: { font: { bold: true } } },
+      { header: 'Kelas', key: 'class_name', width: 20, style: { font: { bold: true } } },
+      { header: 'Jenis Kelamin', key: 'gender', width: 20, style: { font: { bold: true } } },
+      { header: 'Tahun Ajaran', key: 'academic_year', width: 22, style: { font: { bold: true } } },
+    ]
+    worksheet.properties.defaultRowHeight = 46
+
+    students.forEach((student: any) => {
+      const academicYear = student.classStudent?.[0]?.academicYear
+
+      worksheet.addRow({
+        student_id: student.id,
+        nis: student.studentDetail?.nis ?? '-',
+        nisn: student.studentDetail?.nisn ?? '-',
+        name: student.name ?? '-',
+        email: student.user?.email ?? '-',
+        class_name: student.classStudent[0]?.class?.name ?? '-',
+        gender: student.studentDetail?.gender ?? '-',
+        academic_year: academicYear
+          ? `${academicYear.name} ${academicYear.semester.charAt(0).toUpperCase()}${academicYear.semester.slice(1)}`
+          : '-',
+      })
+    })
+
+    const idCol = worksheet.getColumn('student_id')
+    idCol.alignment = { horizontal: 'center', vertical: 'middle' }
+
+    const nameCol = worksheet.getColumn('name')
+    nameCol.alignment = { vertical: 'middle', wrapText: true }
+
+    const nisCol = worksheet.getColumn('nis')
+    nisCol.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true }
+
+    const nisnCol = worksheet.getColumn('nisn')
+    nisnCol.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true }
+
+    const kelasCol = worksheet.getColumn('class_name')
+    kelasCol.alignment = { horizontal: 'center', vertical: 'middle' }
+    kelasCol.values = kelasCol.values.map((value: any, index: number) => {
+      if (index === 1 || typeof value !== 'string') return value
+      return value.toUpperCase()
+    })
+
+    const emailCol = worksheet.getColumn('email')
+    emailCol.alignment = { vertical: 'middle' }
+
+    const genderCol = worksheet.getColumn('gender')
+    genderCol.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true }
+
+    const academicYearCol = worksheet.getColumn('academic_year')
+    academicYearCol.alignment = { horizontal: 'center', vertical: 'middle' }
+
+    worksheet.addConditionalFormatting({
+      ref: 'A1:H1',
+      rules: [
+        {
+          type: 'expression',
+          priority: 1,
+          formulae: ['TRUE'],
+          style: {
+            fill: {
+              type: 'pattern',
+              pattern: 'solid',
+              fgColor: { argb: '0841E2' },
+              bgColor: { argb: '0841E2' },
+            },
+            font: {
+              name: 'Segoe UI Semibold',
+              size: 12,
+              bold: true,
+              color: { argb: 'FFFFFFFF' },
+            },
+            alignment: {
+              horizontal: 'center',
+            },
+          },
+        },
+      ],
+    })
+
+    const arrayBuffer = await workbook.xlsx.writeBuffer()
+    const buffer = Buffer.from(arrayBuffer)
+
+    return buffer
   }
 }

@@ -98,6 +98,7 @@ router.group(() => {
 
     // Untuk students
     router.group(() => {
+        router.get('/export-excel', [StudentsController, 'exportExcel']).use(middleware.role(['admin']))
         router.get('/', [StudentsController, 'index'])
         router.get('/:id', [StudentsController, 'show'])
         router.post('/', [StudentsController, 'store'])
@@ -258,5 +259,3 @@ router.group(() => {
 router.get('/cek-ip', async ({ request, response }) => {
     return response.ok({ ip: request.ip })
 }).use(middleware.ip('absen'))
-
-  
