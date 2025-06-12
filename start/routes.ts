@@ -34,6 +34,8 @@ import app from '@adonisjs/core/services/app'
 // untuk get media / file dari storage
 import { join, normalize } from 'node:path'
 import { existsSync } from 'node:fs'
+import Env from '#start/env'
+
 
 transmit.registerRoutes()
 
@@ -191,11 +193,6 @@ router.group(() => {
         router.delete('/:id', [AnnouncementByTeachers, 'destroy']).use(middleware.role(['teacher', 'admin']))
     }).prefix('/announcements/teachers')
 
-    // Announcements By Teachers
-    router.group(() => {
-        // TODO : Implementasi Fitur Teacher
-    })
-
     // Modules
     router.group(() => {
         router.get('/', [ModulesController, 'index'])
@@ -226,9 +223,28 @@ router.group(() => {
         router.get('/export-excel', [TeacherAbsenceController, 'exportExcel']).use(middleware.role(['admin']))
         router.get('/mine-today', [TeacherAbsenceController, 'getMineToday']).use(middleware.role(['teacher']))
         router.get('/', [TeacherAbsenceController, 'index'])
-        router.post('/', [TeacherAbsenceController, 'store']).use(middleware.imagecompressor())
+        if (Env.get('NODE_ENV') === 'production') {
+        router
+            .post('/', [TeacherAbsenceController, 'store'])
+            .use(middleware.imagecompressor())
+            .use(middleware.ip('absen'))
+        } else {
+        router
+            .post('/', [TeacherAbsenceController, 'store'])
+            .use(middleware.imagecompressor())
+        }
+
         router.get('/:id', [TeacherAbsenceController, 'show'])
-        router.patch('/:id', [TeacherAbsenceController, 'update']).use(middleware.imagecompressor())
+        if (Env.get('NODE_ENV') === 'production') {
+        router
+            .patch('/:id', [TeacherAbsenceController, 'update'])
+            .use(middleware.imagecompressor())
+            .use(middleware.ip('absen'))
+        } else {
+        router
+            .patch('/:id', [TeacherAbsenceController, 'update'])
+            .use(middleware.imagecompressor())
+        }
         router.delete('/:id', [TeacherAbsenceController, 'destroy'])
     }).prefix('/teacher-absences')
 
