@@ -98,6 +98,7 @@ router.group(() => {
 
     // Untuk students
     router.group(() => {
+        router.get('/export-excel', [StudentsController, 'exportExcel']).use(middleware.role(['admin']))
         router.get('/', [StudentsController, 'index'])
         router.get('/:id', [StudentsController, 'show'])
         router.post('/', [StudentsController, 'store'])
@@ -110,6 +111,7 @@ router.group(() => {
 
     // Untuk teachers   
     router.group(() => {
+        router.get('/export-excel', [TeacherController, 'exportExcel']).use(middleware.role(['admin']))
         router.get('/id-name', [TeacherController, 'getIdName'])
         router.get('/classes-n-students', [TeacherController, 'getCountStudentsAndClasses']).use(middleware.role(['teacher']))
         router.get('/', [TeacherController, 'index'])
@@ -220,11 +222,13 @@ router.group(() => {
 
     // Teacher Absences
     router.group(() => {
+        // router.get('/export-excel', [TeacherAbsenceController, 'exportExcel']).use(middleware.role(['teacher']))
+        router.get('/export-excel', [TeacherAbsenceController, 'exportExcel']).use(middleware.role(['admin']))
         router.get('/mine-today', [TeacherAbsenceController, 'getMineToday']).use(middleware.role(['teacher']))
         router.get('/', [TeacherAbsenceController, 'index'])
-        router.post('/', [TeacherAbsenceController, 'store'])
+        router.post('/', [TeacherAbsenceController, 'store']).use(middleware.imagecompressor())
         router.get('/:id', [TeacherAbsenceController, 'show'])
-        router.patch('/:id', [TeacherAbsenceController, 'update'])
+        router.patch('/:id', [TeacherAbsenceController, 'update']).use(middleware.imagecompressor())
         router.delete('/:id', [TeacherAbsenceController, 'destroy'])
     }).prefix('/teacher-absences')
 
@@ -255,5 +259,3 @@ router.group(() => {
 router.get('/cek-ip', async ({ request, response }) => {
     return response.ok({ ip: request.ip })
 }).use(middleware.ip('absen'))
-
-  
