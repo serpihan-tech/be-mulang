@@ -22,7 +22,6 @@ export default class CompressImageMiddleware {
         // Ganti tmpPath ke file hasil kompresi
         file.tmpPath = compressedPath
 
-        // Baru hapus file asli (bukan file hasil kompres)
         await fs.unlink(originalPath).catch(() => {})
       }
     }

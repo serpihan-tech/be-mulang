@@ -230,6 +230,7 @@ export default class TeacherService implements UserContract {
     ]
 
     teachers.map((teacher, index) => {
+      worksheet.getRow(index + 2).height = 39
       worksheet.addRow({
         id: teacher.id,
         name: teacher.name,
