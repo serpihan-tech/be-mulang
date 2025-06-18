@@ -396,14 +396,15 @@ export default class StudentsService implements StudentContract, UserContract {
       .whereHas('academicYear', (ay) => {
         ay.where('id', activeSemesterId)
       })
-      .preload('academicYear')
-      .preload('class')
       .first()
 
     if (!classStudent) return []
 
     return await Schedule.query()
       .where('class_id', classStudent.classId)
+      .whereHas('module', (m) => {
+        m.where('academic_year_id', activeSemesterId)
+      })
       .preload('module', (m) =>
         m.preload('teacher', (t) => {
           t.select('id', 'name')
