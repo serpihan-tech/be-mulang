@@ -240,8 +240,10 @@ export class AnnouncementByAdminService
       const annDate = DateTime.fromISO(ann.date.toString()).setZone('Asia/Jakarta').toSQL()
 
       console.log('annDate : ', annDate, 'this.now : ', this.now)
+      // cek jika input tanggal sama dengan sekarang / hari ini
       if (annDate === this.now) {
         transmit.broadcast(`notifications/${ann.targetRoles}`, {
+          // misal targetRoles = teacher
           message: {
             id: `44${ann.id}`,
             title: ann.title,

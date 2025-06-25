@@ -223,11 +223,11 @@ router.group(() => {
         router.get('/export-excel', [TeacherAbsenceController, 'exportExcel']).use(middleware.role(['admin']))
         router.get('/mine-today', [TeacherAbsenceController, 'getMineToday']).use(middleware.role(['teacher']))
         router.get('/', [TeacherAbsenceController, 'index'])
-        if (Env.get('NODE_ENV') === 'production') {
+        if (Env.get('NODE_ENV') === 'development') {
         router
             .post('/', [TeacherAbsenceController, 'store'])
+            // .use(middleware.ip('absen'))
             .use(middleware.imagecompressor())
-            .use(middleware.ip('absen'))
         } else {
         router
             .post('/', [TeacherAbsenceController, 'store'])
@@ -238,8 +238,8 @@ router.group(() => {
         if (Env.get('NODE_ENV') === 'production') {
         router
             .patch('/:id', [TeacherAbsenceController, 'update'])
-            .use(middleware.imagecompressor())
             .use(middleware.ip('absen'))
+            .use(middleware.imagecompressor())
         } else {
         router
             .patch('/:id', [TeacherAbsenceController, 'update'])
@@ -273,5 +273,5 @@ router.group(() => {
 
 // Cek IP Address
 router.get('/cek-ip', async ({ request, response }) => {
-    return response.ok({ ip: request.ip })
-}).use(middleware.ip('absen'))
+    return response.ok({ ip: request.ip() })
+}).use(middleware.ip('cek-ip'))

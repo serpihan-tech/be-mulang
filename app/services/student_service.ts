@@ -30,6 +30,7 @@ export default class StudentsService implements StudentContract, UserContract {
       .firstOrFail()
   }
 
+  // Mengambil data semua siswa
   async index(page: number, params?: any): Promise<any> {
     const pages = page
     const limit = 10

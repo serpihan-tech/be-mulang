@@ -1,14 +1,6 @@
 import scheduler from 'adonisjs-scheduler/services/main'
 import AnnouncementSchedules from '../app/schedules/announcement_schedules.js'
 
-// scheduler.command('inspire').everyFiveSeconds()
-
-// scheduler
-//   .call(() => {
-//     console.log('Pruge DB!')
-//   })
-//   .everyFifteenSeconds()
-
 scheduler
   .call(async () => {
     try {

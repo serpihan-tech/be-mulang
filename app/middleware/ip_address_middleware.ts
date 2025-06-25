@@ -9,6 +9,7 @@ export default class IpAddressMiddleware {
      */
     const ip: string = ctx.request.ip()
 
+    // console.log(ip)
     // ganti IP Sekolah
     if (ip !== Env.get('SCHOOL_IP_ADDRESS')?.toString()) {
       // * 103.23.103.97 IP Digital Center jaringan UNNES-ID
